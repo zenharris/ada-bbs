@@ -59,50 +59,57 @@ package body Pong_Bot is
                          Editlength => 20,
                          Edline => Edline,
                          MaxLength => 20);
-      Clear;
-      Refresh;
-
-      --  Specify the server, port, and nick of our bot
-      Bot := Irc.Bot.Create ("irc.us.ircnet.net", 6667, Nick => To_String(Edline));
-
-      --  Normally, you would use Irc.Commands.Install (Bot) to add
-      --  the standard command set.
-      Bot.On_Message ("PING", Irc.Commands.Ping_Server'Access);
 
 
 
-      --  Connect the socket and identify the bot (send NICK and USER)
-      Bot.Connect;
-      Bot.Identify;
 
-      Bot.Join ("#worldchat");
+      c := Texaco.c;
+      if Character'Val (c) /= ESC then
 
-      --  Loop until program is killed or an error occurs
-      Read_Loop.Start;
-
-      loop
-         Add (Standard_Window,
-              Line => Lines-1,
-              Column => 0,
-              Str => " 1 Whois |2 Nick |3 Me |4 Version|5 Time |6 Clientinfo|7 Source| Esc exit");
+         Clear;
          Refresh;
 
-         Edline := To_Unbounded_String("");
-         Texaco.Line_Editor(Standard_Window,
-                            StartLine => Lines-2,
-                            StartColumn => 0,
-                            EditLength => Columns,
-                            Edline => Edline,
-                            MaxLength => 400);
-         c := Texaco.c;
-         if c in Special_Key_Code'Range then
-            case c is
-            when Key_F1 =>
-               Bot.Command(Cmd => "WHOIS",Args => To_String(Edline));
+         --  Specify the server, port, and nick of our bot
+         Bot := Irc.Bot.Create ("irc.us.ircnet.net", 6667, Nick => To_String(Edline));
+
+         --  Normally, you would use Irc.Commands.Install (Bot) to add
+         --  the standard command set.
+         Bot.On_Message ("PING", Irc.Commands.Ping_Server'Access);
 
 
-            when Key_F2 =>
-               Bot.Command(Cmd => "NICK",Args => To_String(Edline));
+
+         --  Connect the socket and identify the bot (send NICK and USER)
+         Bot.Connect;
+         Bot.Identify;
+
+         Bot.Join ("#worldchat");
+
+         --  Loop until program is killed or an error occurs
+         Read_Loop.Start;
+
+         loop
+            Add (Standard_Window,
+                 Line => Lines-1,
+                 Column => 0,
+                 Str => " 1 Whois |2 Nick |3 Me |4 Version|5 Time |6 Clientinfo|7 Source| Esc exit");
+            Refresh;
+
+            Edline := To_Unbounded_String("");
+            Texaco.Line_Editor(Standard_Window,
+                               StartLine => Lines-2,
+                               StartColumn => 0,
+                               EditLength => Columns,
+                               Edline => Edline,
+                               MaxLength => 400);
+            c := Texaco.c;
+            if c in Special_Key_Code'Range then
+               case c is
+               when Key_F1 =>
+                  Bot.Command(Cmd => "WHOIS",Args => To_String(Edline));
+
+
+               when Key_F2 =>
+                  Bot.Command(Cmd => "NICK",Args => To_String(Edline));
 
                when Key_F3 =>
 
@@ -122,34 +129,37 @@ package body Pong_Bot is
                   Bot.Privmsg (To_String(Edline), Character'val(1)&"SOURCE"&Character'val(1));
                when others => null;
 
-            end case;
+               end case;
 
-         elsif c in Real_Key_Code'Range then
+            elsif c in Real_Key_Code'Range then
 
-            Ch := Character'Val (c);
-            case Ch is
-
-
-            when CR | LF =>
-
-               Bot.Privmsg ("#worldchat", To_String(Edline));
-               Edline := To_Unbounded_String("");
-               Texaco.Current_Char := 1;
-            when ESC =>
-               begin
-                  Bot.Command("QUIT",":Exiting Normally");
-                  exit;
-               end;
-            when others => null;
-
-            end case;
-         end if;
-      end loop;
+               Ch := Character'Val (c);
+               case Ch is
 
 
+               when CR | LF =>
+
+                  Bot.Privmsg ("#worldchat", To_String(Edline));
+                  Edline := To_Unbounded_String("");
+                  Texaco.Current_Char := 1;
+               when ESC =>
+                  begin
+                     Bot.Command("QUIT",":Exiting Normally");
+                     exit;
+                  end;
+               when others => null;
+
+               end case;
+            end if;
+         end loop;
+
+
+         -- Abort Read_Loop;
+
+         --  Close the socket
+         Bot.Disconnect;
+      end if;
       Abort Read_Loop;
 
-      --  Close the socket
-      Bot.Disconnect;
    end Irc_Client;
 end Pong_Bot;
