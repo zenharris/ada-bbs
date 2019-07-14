@@ -89,7 +89,7 @@ package body Texaco is
                   if Integer(Current_Char) <= Length(Edline) then
                      Current_Char := Current_Char + 1;
                   end if;
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)and then Length(Edline) < MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) < MaxLength then
                      ScreenOffset := ScreenOffset +(Integer(Columns-StartColumn) -1);
                   end if;
                when Key_F1 | Key_F2 | Key_F3 | Key_F4 | Key_F5 | Key_F6 | Key_F7 | Key_F8 => exit;
@@ -120,7 +120,7 @@ package body Texaco is
 
                   Current_Char := Current_Char +1;
 
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn) and then Length(Edline) < MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) < MaxLength then
                      ScreenOffset := ScreenOffset + (Integer(Columns-StartColumn)-1);
                   end if;
 

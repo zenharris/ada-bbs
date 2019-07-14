@@ -1,7 +1,5 @@
 
---  This bot simply connects to an IRC server and sticks
---  around without doing much of anything. Most simplistic
---  example.
+
 
 package body Pong_Bot is
 
@@ -16,6 +14,7 @@ package body Pong_Bot is
       task Read_Loop is
          entry Start;
       end Read_Loop;
+
       task body Read_Loop is
          Col : Column_Position;
          Lin  : Line_Position;
@@ -56,7 +55,7 @@ package body Pong_Bot is
       Texaco.Line_Editor(Standard_Window,
                          StartLine => Lines-3,
                          StartColumn => 14,
-                         Editlength => 21,
+                         Editlength => 20,
                          Edline => Edline,
                          MaxLength => 20);
       Clear;
@@ -84,7 +83,7 @@ package body Pong_Bot is
          Add (Standard_Window,
               Line => Lines-1,
               Column => 0,
-              Str => " 1 Whois | 2 Nick  | 3 Me    |4 Version| 5 Time  |6 Clientinfo   Esc exit");
+              Str => " 1 Whois |2 Nick |3 Me |4 Version|5 Time |6 Clientinfo|7 Source| Esc exit");
          Refresh;
 
          Edline := To_Unbounded_String("");
@@ -117,6 +116,9 @@ package body Pong_Bot is
                when Key_F6 =>
 
                   Bot.Privmsg (To_String(Edline), Character'val(1)&"CLIENTINFO"&Character'val(1));
+               when Key_F7 =>
+
+                  Bot.Privmsg (To_String(Edline), Character'val(1)&"SOURCE"&Character'val(1));
                when others => null;
 
             end case;
