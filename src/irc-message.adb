@@ -357,6 +357,10 @@ package body Irc.Message is
      --      (This.Sender & "» " & This.Command & " " & This.Args));
    end Print;
 
+   -- End of modifications for Ncurses
+   -- and use as an IRC Client
+   -- MIT License
+   -- Copyright (c) 2019 Michael Brown
 
    procedure Parse_Privmsg (Msg : in out Message) is
    begin
