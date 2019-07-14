@@ -92,6 +92,13 @@ package body Irc.Message is
       return Msg;
    end Parse_Line;
 
+
+   -- Print and Print_Line severly modified for Ncurses
+   -- And use as an IRC Client
+   -- MIT License
+   -- Copyright (c) 2019 Michael Brown
+
+
    Current_Line : Line_Position := 3;
 
    procedure Print_Line (Text_Line : SU.Unbounded_String) is
@@ -162,16 +169,25 @@ package body Irc.Message is
       Refresh;
    end;
 
+   -- Print and Print_Line severly modified for Ncurses
+   -- And use as an IRC Client
+   -- MIT License
+   -- Copyright (c) 2019 Michael Brown
 
+
+   ClientVersion : constant String := "0.1.6 beta";
 
    procedure Print (This : Message) is
       use Ada.Text_IO;
       SenderNick,SenderArgs : SU.Unbounded_String;
 
       VersionReply   : SU.Unbounded_String :=
-        SU.To_Unbounded_String(Character'Val(01)&"VERSION Ada IRC Ver 0.1.4 beta Running on Linux"&Character'Val(01));
+        SU.To_Unbounded_String(Character'Val(01)&"VERSION Ada IRC Ver "& ClientVersion &" Running on Linux"&Character'Val(01));
       ClientInfoReply   : SU.Unbounded_String :=
-        SU.To_Unbounded_String(Character'Val(01)&"CLIENTINFO VERSION TIME CLIENTINFO ACTION"&Character'Val(01));
+        SU.To_Unbounded_String(Character'Val(01)&"CLIENTINFO VERSION TIME SOURCE CLIENTINFO ACTION"&Character'Val(01));
+
+      SourceReply   : SU.Unbounded_String :=
+        SU.To_Unbounded_String(Character'Val(01)&"SOURCE https://github.com/zenharris/ada-bbs"&Character'Val(01));
 
       Now : Time;
 
@@ -221,6 +237,12 @@ package body Irc.Message is
                                  Args => SU.To_String(SenderNick) &" :"&
                                    SU.To_String(ClientInfoReply));
 
+         elsif SU.Index( SenderArgs,Character'Val(01)&"SOURCE"&Character'Val(01)) = 1 then
+
+            Pong_Bot.Bot.Command(Cmd => "NOTICE",
+                                 Args => SU.To_String(SenderNick) &" :"&
+                                   SU.To_String(SourceReply));
+
          elsif SU.Index(SenderArgs,Character'Val(01)&"ACTION") = 1 then
             Print_Line ( "* " & SenderNick &
                  SU.Unbounded_Slice(SenderArgs,SU.Index(SenderArgs," "),SU.Length( SenderArgs)-1));
@@ -250,6 +272,13 @@ package body Irc.Message is
             SenderArgs := SU.Unbounded_Slice(SenderArgs,Index(SenderArgs," "),SU.Length(SenderArgs)-1);
             Print_Line ("*** ClientInfo "& SenderNick &
                           " supports " & SenderArgs );
+
+         elsif SU.Index(SenderArgs,Character'Val(01)&"SOURCE") = 1 then
+
+            SenderArgs := SU.Unbounded_Slice(SenderArgs,Index(SenderArgs," "),SU.Length(SenderArgs)-1);
+            Print_Line ("*** Source Reply "& SenderNick &
+                          " available at " & SenderArgs );
+
          end if;
 
       elsif This.Command = "QUIT" then
@@ -269,6 +298,7 @@ package body Irc.Message is
       elsif This.Command = "MODE" then
          Print_Line ("*** Mode change " & SU.Unbounded_Slice(This.Args,SU.Index(This.Args," ")+1,SU.Length( This.Args)) &
                        " by " & This.Sender );
+
       elsif This.Command = "311" then
 
          Split(Fields,This.Args);
