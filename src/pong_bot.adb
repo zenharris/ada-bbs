@@ -51,6 +51,7 @@ package body Pong_Bot is
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
       Add (Column => 0,Line => Lines - 3,Str => "Enter Nick : ");
       Clear_To_End_Of_Line;
+
       Edline := To_Unbounded_String("");
       Texaco.Line_Editor(Standard_Window,
                          StartLine => Lines-3,
@@ -92,7 +93,7 @@ package body Pong_Bot is
                             StartColumn => 0,
                             EditLength => Columns,
                             Edline => Edline,
-                            MaxLength => Integer((Columns-1)*5)-2);
+                            MaxLength => 400);
          c := Texaco.c;
          if c in Special_Key_Code'Range then
             case c is
