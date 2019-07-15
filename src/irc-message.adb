@@ -180,7 +180,7 @@ package body Irc.Message is
    -- Copyright (c) 2019 Zen Harris
 
 
-   ClientVersion : constant String := "0.1.6 beta";
+   ClientVersion : constant String := "0.1.7 beta";
 
    procedure Print (This : Message) is
       use Ada.Text_IO;
@@ -204,10 +204,15 @@ package body Irc.Message is
       procedure Split (InVector : in out FieldsVector.Vector; InString : in SU.Unbounded_String) is
          Cursor : Integer;
          scratch : SU.Unbounded_String := InString;
+         AppendStr : SU.Unbounded_String;
       begin
          Cursor := SU.Index(scratch," ");
          while  Cursor /= 0 loop
-            InVector.Append(SU.To_Unbounded_String(SU.Slice (Source => scratch,Low => 1,High => Cursor-1)));
+            AppendStr := To_Unbounded_String(Slice (Source => scratch,Low => 1,High => Cursor-1));
+            if Length(AppendStr) > 0 then
+               InVector.Append(AppendStr);
+            end if;
+           -- InVector.Append(SU.To_Unbounded_String(SU.Slice (Source => scratch,Low => 1,High => Cursor-1)));
             SU.Delete(scratch,1,Cursor);
             Cursor := SU.Index(scratch," ");
             if Cursor = 0 and then SU.Length(scratch) > 0 then

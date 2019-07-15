@@ -2,6 +2,8 @@
 -- This was an example bot now converted to an IRC Client
 -- Copyright (c) 2019 Zen Harris
 
+with Ada.Containers.Vectors;
+with Ada.Containers; use Ada.Containers;
 
 package body Pong_Bot is
 
@@ -47,6 +49,71 @@ package body Pong_Bot is
          end loop;
       end Read_Loop;
 
+      package FieldsVector is new Ada.Containers.Vectors (Natural,
+                                                          Unbounded_String);
+      use FieldsVector;
+      Fields : FieldsVector.Vector;
+
+      procedure Split (InVector : in out FieldsVector.Vector; InString : in Unbounded_String) is
+         Cursor : Integer;
+         scratch : Unbounded_String := InString;
+         AppendStr : Unbounded_String;
+      begin
+         Cursor := Index(scratch," ");
+         while  Cursor /= 0 loop
+            AppendStr := To_Unbounded_String(Slice (Source => scratch,Low => 1,High => Cursor-1));
+            if Length(AppendStr) > 0 then
+               InVector.Append(AppendStr);
+            end if;
+
+            Delete(scratch,1,Cursor);
+            Cursor := Index(scratch," ");
+            if Cursor = 0 and then Length(scratch) > 0 then
+               InVector.Append(scratch);
+            end if;
+         end loop;
+      end Split;
+
+      procedure Process_Command (CommandLine : Unbounded_String) is
+      begin
+         Clear(Fields);
+         Split (Fields,CommandLine);
+
+         if Fields.Length > 1 then
+
+            if Fields.Element(0) = "/whois" then
+               Bot.Command(Cmd => "WHOIS",Args => To_String(Fields.Element(1)));
+
+            elsif Fields.Element(0) = "/nick" then
+               Bot.Command(Cmd => "NICK",Args => To_String(Fields.Element(1)));
+
+            elsif Fields.Element(0) = "/me" then
+               Bot.Privmsg ("#worldchat", Character'val(1)&"ACTION "&
+                              To_String(Unbounded_Slice(CommandLine,index(CommandLine," ")+1,Length(CommandLine)) )
+                            &Character'val(1));
+
+            elsif Fields.Element(0) = "/version" then
+               Bot.Privmsg (To_String(Fields.Element(1)),
+                            Character'val(1)&"VERSION"&Character'val(1));
+
+            elsif Fields.Element(0) = "/time" then
+               Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"TIME"&Character'val(1));
+
+            elsif Fields.Element(0) = "/clientinfo" then
+               Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"CLIENTINFO"&Character'val(1));
+
+            elsif Fields.Element(0) = "/source" then
+               Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"SOURCE"&Character'val(1));
+
+            elsif Fields.Element(0) = "/help" then
+               Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
+               Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
+               Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
+               Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /quit "));
+            end if;
+         end if;
+
+      end Process_Command;
 
 
    begin
@@ -91,7 +158,7 @@ package body Pong_Bot is
             Add (Standard_Window,
                  Line => Lines-1,
                  Column => 0,
-                 Str => " 1 Whois |2 Nick |3 Me |4 Version|5 Time |6 Clientinfo|7 Source| Esc exit");
+                 Str => "/help for commands  Esc exit");
             Refresh;
 
             Edline := To_Unbounded_String("");
@@ -104,29 +171,8 @@ package body Pong_Bot is
             c := Texaco.c;
             if c in Special_Key_Code'Range then
                case c is
-               when Key_F1 =>
-                  Bot.Command(Cmd => "WHOIS",Args => To_String(Edline));
+               when Key_F1 => null;
 
-
-               when Key_F2 =>
-                  Bot.Command(Cmd => "NICK",Args => To_String(Edline));
-
-               when Key_F3 =>
-
-                  Bot.Privmsg ("#worldchat", Character'val(1)&"ACTION "& To_String(Edline) &Character'val(1));
-
-               when Key_F4 =>
-
-                  Bot.Privmsg (To_String(Edline), Character'val(1)&"VERSION"&Character'val(1));
-               when Key_F5 =>
-
-                  Bot.Privmsg (To_String(Edline), Character'val(1)&"TIME"&Character'val(1));
-               when Key_F6 =>
-
-                  Bot.Privmsg (To_String(Edline), Character'val(1)&"CLIENTINFO"&Character'val(1));
-               when Key_F7 =>
-
-                  Bot.Privmsg (To_String(Edline), Character'val(1)&"SOURCE"&Character'val(1));
                when others => null;
 
                end case;
@@ -136,10 +182,14 @@ package body Pong_Bot is
                Ch := Character'Val (c);
                case Ch is
 
-
                when CR | LF =>
 
-                  Bot.Privmsg ("#worldchat", To_String(Edline));
+                  if Index(Source => Edline,Pattern => "/") = 1 then
+                     Process_Command(Edline);
+                  else
+                     Bot.Privmsg ("#worldchat", To_String(Edline));
+                  end if;
+
                   Edline := To_Unbounded_String("");
                   Texaco.Current_Char := 1;
                when ESC =>
