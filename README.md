@@ -2,7 +2,7 @@
 
 An ncurses based small menu system, IRC client and general purpose input line editor all under development to create a BBS system written in Ada.
 
-Uses Irc.bot library https://github.com/erik/ada-irc to make the IRC client.
+Thanks to Irc.bot library https://github.com/erik/ada-irc with which I made the IRC client.
 
 
 
