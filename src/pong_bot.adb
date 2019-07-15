@@ -105,7 +105,9 @@ package body Pong_Bot is
             elsif Fields.Element(0) = "/source" then
                Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"SOURCE"&Character'val(1));
 
-            elsif Fields.Element(0) = "/help" then
+            end if;
+         else
+            if Fields.Element(0) = "/help" then
                Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
                Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
                Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
