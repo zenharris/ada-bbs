@@ -1,4 +1,6 @@
 
+-- This was an example bot now converted to an IRC Client
+-- Copyright (c) 2019 Zen Harris
 
 
 package body Pong_Bot is
@@ -59,8 +61,6 @@ package body Pong_Bot is
                          Editlength => 20,
                          Edline => Edline,
                          MaxLength => 20);
-
-
 
 
       c := Texaco.c;
