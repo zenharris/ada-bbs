@@ -24,6 +24,11 @@
 
 
 
+-- Print and Print_Line severly modified for Ncurses
+-- And use as an IRC Client
+-- MIT License
+-- Copyright (c) 2019 Zen Harris
+
 
 
 with Ada.Text_IO;
@@ -96,7 +101,7 @@ package body Irc.Message is
    -- Print and Print_Line severly modified for Ncurses
    -- And use as an IRC Client
    -- MIT License
-   -- Copyright (c) 2019 Michael Brown
+   -- Copyright (c) 2019 Zen Harris
 
 
    Current_Line : Line_Position := 3;
@@ -170,9 +175,9 @@ package body Irc.Message is
    end;
 
    -- Print and Print_Line severly modified for Ncurses
-   -- And use as an IRC Client
+   -- and use as an IRC Client
    -- MIT License
-   -- Copyright (c) 2019 Michael Brown
+   -- Copyright (c) 2019 Zen Harris
 
 
    ClientVersion : constant String := "0.1.6 beta";
@@ -360,7 +365,7 @@ package body Irc.Message is
    -- End of modifications for Ncurses
    -- and use as an IRC Client
    -- MIT License
-   -- Copyright (c) 2019 Michael Brown
+   -- Copyright (c) 2019 Zen Harris
 
    procedure Parse_Privmsg (Msg : in out Message) is
    begin
