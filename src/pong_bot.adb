@@ -5,7 +5,7 @@
 with Ada.Containers.Vectors;
 with Ada.Containers; use Ada.Containers;
 
-With Display_Warning;
+
 
 package body Pong_Bot is
 
@@ -14,6 +14,7 @@ package body Pong_Bot is
       c :Key_Code;
       Ch : Character;
       Edline : Unbounded_String;
+      Channel : Unbounded_String := To_Unbounded_String("#worldchat");
       Lines : Line_Position;
       Columns : Column_Position;
 
@@ -100,7 +101,7 @@ package body Pong_Bot is
                Bot.Command(Cmd => "NICK",Args => To_String(Fields.Element(1)));
 
             elsif Fields.Element(0) = "/me" then
-               Bot.Privmsg ("#worldchat", Character'val(1)&"ACTION "&
+               Bot.Privmsg (To_String(Channel), Character'val(1)&"ACTION "&
                               To_String(Unbounded_Slice(CommandLine,index(CommandLine," ")+1,Length(CommandLine)) )
                             &Character'val(1));
 
@@ -167,7 +168,7 @@ package body Pong_Bot is
          Bot.Connect;
          Bot.Identify;
 
-         Bot.Join ("#worldchat");
+         Bot.Join (To_String(Channel));
 
          --  Loop until program is killed or an error occurs
          Read_Loop.Start;
@@ -205,7 +206,7 @@ package body Pong_Bot is
                   if Index(Source => Edline,Pattern => "/") = 1 then
                      Process_Command(Edline);
                   else
-                     Bot.Privmsg ("#worldchat", To_String(Edline));
+                     Bot.Privmsg (To_String(Channel), To_String(Edline));
                   end if;
 
                   Edline := To_Unbounded_String("");
