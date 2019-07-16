@@ -1,9 +1,11 @@
 
 -- This was an example bot now converted to an IRC Client
--- Copyright (c) 2019 Zen Harris
+-- Copyright (c) 2019 House Harris Software - Zen Harris
 
 with Ada.Containers.Vectors;
 with Ada.Containers; use Ada.Containers;
+
+With Display_Warning;
 
 package body Pong_Bot is
 
@@ -59,19 +61,29 @@ package body Pong_Bot is
          scratch : Unbounded_String := InString;
          AppendStr : Unbounded_String;
       begin
-         Cursor := Index(scratch," ");
-         while  Cursor /= 0 loop
-            AppendStr := To_Unbounded_String(Slice (Source => scratch,Low => 1,High => Cursor-1));
-            if Length(AppendStr) > 0 then
-               InVector.Append(AppendStr);
-            end if;
 
-            Delete(scratch,1,Cursor);
-            Cursor := Index(scratch," ");
-            if Cursor = 0 and then Length(scratch) > 0 then
+         Cursor := Index(scratch," ");
+
+         if Cursor /= 0 then
+           while  Cursor /= 0 loop
+               AppendStr := To_Unbounded_String(Slice (Source => scratch,Low => 1,High => Cursor-1));
+               if Length(AppendStr) > 0 then
+                  InVector.Append(AppendStr);
+               end if;
+
+               Delete(scratch,1,Cursor);
+               Cursor := Index(scratch," ");
+               if Cursor = 0 and then Length(scratch) > 0 then
+                  InVector.Append(scratch);
+               end if;
+            end loop;
+         else
+            if Length(scratch) > 0 then
                InVector.Append(scratch);
             end if;
-         end loop;
+
+         end if;
+
       end Split;
 
       procedure Process_Command (CommandLine : Unbounded_String) is
@@ -107,12 +119,16 @@ package body Pong_Bot is
 
             end if;
          else
-            if Fields.Element(0) = "/help" then
-               Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
-               Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
-               Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
-               Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /quit "));
+            if Fields.Length = 1 then
+
+               if Fields.Element(0) = "/help" then
+                  Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /quit "));
+               end if;
             end if;
+
          end if;
 
       end Process_Command;
