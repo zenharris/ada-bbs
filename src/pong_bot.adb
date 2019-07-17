@@ -17,6 +17,7 @@ package body Pong_Bot is
       Channel : Unbounded_String := To_Unbounded_String("#worldchat");
       Lines : Line_Position;
       Columns : Column_Position;
+      Quit : Boolean := False;
 
       task Read_Loop is
          entry Start;
@@ -87,7 +88,7 @@ package body Pong_Bot is
 
       end Split;
 
-      procedure Process_Command (CommandLine : Unbounded_String) is
+      procedure Process_Command (CommandLine : Unbounded_String; Quit : in out Boolean ) is
       begin
          Clear(Fields);
          Split (Fields,CommandLine);
@@ -127,6 +128,10 @@ package body Pong_Bot is
                   Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /quit "));
+               elsif Fields.Element(0) = "/quit" then
+                  Quit := True;
+
+
                end if;
             end if;
 
@@ -204,7 +209,12 @@ package body Pong_Bot is
                when CR | LF =>
 
                   if Index(Source => Edline,Pattern => "/") = 1 then
-                     Process_Command(Edline);
+                     Process_Command(Edline,Quit);
+                     if Quit then
+                        Bot.Command("QUIT",":Exiting Normally");
+                        exit;
+                     end if;
+
                   else
                      Bot.Privmsg (To_String(Channel), To_String(Edline));
                   end if;
