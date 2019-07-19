@@ -16,6 +16,9 @@ with Texaco;
 
 with Pong_Bot;
 
+with Serpent;
+
+
 procedure Main is
    c : Key_Code;
    Lines : Line_Position;
@@ -102,11 +105,18 @@ procedure Main is
       return True;
    end;
 
+   function Run_Serpent return Boolean is
+   begin
+      Serpent;
+
+      return True;
+   end;
+
    Menu1 : Process_Menu.Menu_Type  :=
       ((new String'("View Source"),Run_Fkey1'Unrestricted_Access),
       (new String'("IRC Chat"),Run_Pong_Bot'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
-      (new String'("(Oh my!)"),test_func'Unrestricted_Access),
+      (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Newts"),test_func'Unrestricted_Access),
       (new String'("Platypi"),test_func'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
