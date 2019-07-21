@@ -114,7 +114,7 @@ package body Irc.Bot is
       use Ada.Streams;
 
       Channel : Stream_Access;
-      scratch : SU.Unbounded_String;
+      scratch,MsgTarget,SenderNick : SU.Unbounded_String;
    begin
       This.Should_Be_Connected;
 
@@ -124,13 +124,23 @@ package body Irc.Bot is
 
 
 
-            scratch := SU.To_Unbounded_String(Raw (Raw'First .. Raw'Last - 2));
+            scratch := SU.To_Unbounded_String(Raw (Raw'First+8 .. Raw'Last - 2));
+            MsgTarget := SU.Unbounded_Slice(scratch,1,SU.Index(scratch,":")-2);
             scratch := SU.To_Unbounded_String(SU.Slice(scratch,SU.Index(scratch,":")+1,SU.Length(scratch)));
 
             if SU.Index(scratch,Character'Val(1)&"VERSION"&Character'Val(1)) = 1 then
                Irc.Message.Print_Line(SU.To_Unbounded_String("*** Sending Version Request"));
+            elsif SU.Index(scratch,Character'Val(1)&"ACTION") = 1 then
+               scratch := SU.To_Unbounded_String(SU.Slice(scratch,SU.Index(scratch," ")+1,SU.Length(scratch)-1));
+               Irc.Message.Print_Line("* "& scratch);
             else
-               Irc.Message.Print_Line(">" & scratch);
+               if SU.Index(MsgTarget,"#") = 1 then
+                  Irc.Message.Print_Line(">" & scratch);
+               else
+
+                  Irc.Message.Print_Line("-> *"& MsgTarget &"* "& scratch);
+               end if;
+
             end if;
 
          else

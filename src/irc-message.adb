@@ -180,11 +180,11 @@ package body Irc.Message is
    -- Copyright (c) 2019 Zen Harris
 
 
-   ClientVersion : constant String := "0.1.8 beta";
+   ClientVersion : constant String := "0.1.10 beta";
 
    procedure Print (This : Message) is
       use Ada.Text_IO;
-      SenderNick,SenderArgs : SU.Unbounded_String;
+      SenderNick,SenderArgs,MsgTarget : SU.Unbounded_String;
 
       VersionReply   : SU.Unbounded_String :=
         SU.To_Unbounded_String(Character'Val(01)&"VERSION Ada IRC Ver "& ClientVersion &" Running on Linux"&Character'Val(01));
@@ -225,6 +225,7 @@ package body Irc.Message is
 
       if This.Command = "PRIVMSG" then
          SenderArgs := SU.Unbounded_Slice(This.Args,SU.Index(This.Args,":")+1,SU.Length( This.Args));
+         MsgTarget := SU.Unbounded_Slice(This.Args,1,SU.Index(This.Args,":")-1);
          SenderNick := SU.Unbounded_Slice(This.Sender,1,SU.Index(This.Sender,"!")-1);
 
         -- if SU.Index(SenderArgs,Character'Val(1)&"VERSION"&Character'Val(1)) = 1 then
@@ -257,11 +258,16 @@ package body Irc.Message is
             Print_Line ( "* " & SenderNick &
                  SU.Unbounded_Slice(SenderArgs,SU.Index(SenderArgs," "),SU.Length( SenderArgs)-1));
          else
-            Print_Line ( "<" & SenderNick & "> " & SenderArgs);
+            if Su.Index(MsgTarget,"#") = 1 then
+               Print_Line ( "<" & SenderNick & "> " & SenderArgs);
+            else
+               Print_Line ( "*" & SenderNick & "* " & SenderArgs);
+            end if;
          end if;
       elsif This.Command = "NOTICE" then
 
          SenderNick := SU.Unbounded_Slice(This.Sender,1,SU.Index(This.Sender,"!")-1);
+
          SenderArgs := SU.Unbounded_Slice(This.Args,SU.Index(This.Args,":")+1,SU.Length( This.Args));
          -- strip off header /00 and tail /00
 

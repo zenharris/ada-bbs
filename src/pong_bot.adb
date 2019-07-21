@@ -88,6 +88,16 @@ package body Pong_Bot is
 
       end Split;
 
+      function FieldsMerge (MergeStart : integer; MergeEnd : Integer ) return Unbounded_String is
+         OutString : Unbounded_String := To_Unbounded_String("");
+      begin
+         for i in MergeStart..MergeEnd loop
+            Append(OutString,Fields.Element(i) & " ");
+         end loop;
+         return OutString;
+      end FieldsMerge;
+
+
       procedure Process_Command (CommandLine : Unbounded_String; Quit : in out Boolean ) is
       begin
          Clear(Fields);
@@ -119,6 +129,14 @@ package body Pong_Bot is
             elsif Fields.Element(0) = "/source" then
                Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"SOURCE"&Character'val(1));
 
+            elsif Fields.Element(0) = "/msg" then
+               if Fields.Length > 2 then
+                  Bot.Privmsg (To_String(Fields.Element(1)),
+                               --To_String(Unbounded_Slice(CommandLine,index(CommandLine," ")+1,Length(CommandLine)) )
+                               To_String(FieldsMerge(2,Integer(Fields.Length)-1))
+                              );
+               end if;
+
             end if;
          else
             if Fields.Length = 1 then
@@ -127,10 +145,10 @@ package body Pong_Bot is
                   Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /quit "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /msg <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("                            /quit "));
                elsif Fields.Element(0) = "/quit" then
                   Quit := True;
-
 
                end if;
             end if;
@@ -165,6 +183,7 @@ package body Pong_Bot is
 
          --  Normally, you would use Irc.Commands.Install (Bot) to add
          --  the standard command set.
+
          Bot.On_Message ("PING", Irc.Commands.Ping_Server'Access);
 
 
@@ -184,6 +203,7 @@ package body Pong_Bot is
                  Column => 0,
                  Str => "/help for commands  Esc exit");
             Refresh;
+
 
             Edline := To_Unbounded_String("");
             Texaco.Line_Editor(Standard_Window,
@@ -214,7 +234,6 @@ package body Pong_Bot is
                         Bot.Command("QUIT",":Exiting Normally");
                         exit;
                      end if;
-
                   else
                      Bot.Privmsg (To_String(Channel), To_String(Edline));
                   end if;
@@ -232,12 +251,10 @@ package body Pong_Bot is
             end if;
          end loop;
 
-
-         -- Abort Read_Loop;
-
          --  Close the socket
          Bot.Disconnect;
       end if;
+
       Abort Read_Loop;
 
    end Irc_Client;
