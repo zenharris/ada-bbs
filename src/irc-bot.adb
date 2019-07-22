@@ -242,6 +242,12 @@ package body Irc.Bot is
             Pair.Func (This, Msg);
          end if;
 
+     --    Regexp.Match (Pair.Regex, SU.To_String (Msg.Args), Matches);
+
+      --   if Matches (0) /= Regexp.No_Match then
+      --      Pair.Func (This, Msg);
+      --   end if;
+
       end loop;
 
    end Do_Message;

@@ -5,7 +5,11 @@
 with Ada.Containers.Vectors;
 with Ada.Containers; use Ada.Containers;
 
+With Irc.Commands; use Irc.Commands;
+with Irc.Message; use Irc.Message;
+with Irc.Bot; use Irc.Bot;
 
+with GNAT.Regpat; use GNAT.Regpat;
 
 package body Pong_Bot is
 
@@ -98,6 +102,10 @@ package body Pong_Bot is
       end FieldsMerge;
 
 
+      Suppress_Response : Boolean := True;
+      Local_Response : Boolean := True;
+
+
       procedure Process_Command (CommandLine : Unbounded_String; Quit : in out Boolean ) is
       begin
          Clear(Fields);
@@ -129,8 +137,27 @@ package body Pong_Bot is
             elsif Fields.Element(0) = "/source" then
                Bot.Privmsg (To_String(Fields.Element(1)), Character'val(1)&"SOURCE"&Character'val(1));
 
+            elsif Fields.Element(0) = "/response" then
+
+               if Fields.Element(1) = "on" then
+                  --Bot.On_Regexp(OnRegexp => ".*",Func => Response_Processor'Unrestricted_Access);
+                  Suppress_Response := False;
+                  Local_Response := False;
+                  Irc.Message.Print_Line(To_Unbounded_String("Response Processor On"));
+               elsif Fields.Element(1) = "off" then
+                  Suppress_Response := True;
+                  Irc.Message.Print_Line(To_Unbounded_String("Response Processor Off"));
+               elsif Fields.Element(1) = "local" then
+                  Suppress_Response := False;
+                  Local_Response := True;
+                  Irc.Message.Print_Line(To_Unbounded_String("Response Processor On Local"));
+               end if;
+
+
             elsif Fields.Element(0) = "/msg" then
                if Fields.Length > 2 then
+
+
                   Bot.Privmsg (To_String(Fields.Element(1)),
                                --To_String(Unbounded_Slice(CommandLine,index(CommandLine," ")+1,Length(CommandLine)) )
                                To_String(FieldsMerge(2,Integer(Fields.Length)-1))
@@ -146,7 +173,7 @@ package body Pong_Bot is
                   Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
                   Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /msg <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("                            /quit "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/response <on|off|local>    /quit "));
                elsif Fields.Element(0) = "/quit" then
                   Quit := True;
 
@@ -156,6 +183,58 @@ package body Pong_Bot is
          end if;
 
       end Process_Command;
+
+
+
+
+      type String_Access is access String;
+
+      type Response_Record is record
+         MatchRegex : String_Access;
+         Response : String_Access;
+         Counter : Integer;
+      end record;
+      type Response_Type is array (Positive range <>) of Response_Record;
+
+      ResponseTable : Response_Type  :=
+        ((new String'(".*sun.*"),new String'("The Sun"),0),
+         (new String'(".*hypnotoad.*"),new String'("GRGGRGRRBRBBRBRRGRGGRGRRBRBBRBRR"),0),
+         (new String'(".*conjob.*"),new String'("Conjob Right on man"),0),
+         (new String'(".*cat.*"),new String'("Cool for Hep Cats"),0),
+         (new String'(".*time.*"),new String'("Time time time time see whats become of me"),0),
+         (new String'(".*weather.*"),new String'("Nice weather we;re having here"),0));
+
+
+      procedure Response_Processor (Conn : in out Irc.Commands.Connection;
+                                    Msg  :        IrcMessage) is
+
+         Regex : GNAT.Regpat.Pattern_Matcher (1024);
+         Matches : GNAT.Regpat.Match_Array (0 .. 1);
+      begin
+         if Suppress_Response = False then
+            for i in ResponseTable'Range loop
+               GNAT.Regpat.Compile (Regex, ResponseTable(i).MatchRegex.all);
+               GNAT.Regpat.Match (Regex, To_String (Msg.Args), Matches);
+
+               if Matches (0) /= GNAT.Regpat.No_Match then
+                  --  Pair.Func (This, Msg);
+                  if Local_Response then
+                     Irc.Message.Print_Line(To_Unbounded_String(ResponseTable(i).Response.all &" "&
+                                           Slice(Msg.Sender,1,Index(Msg.Sender,"!")-1)
+                                           ));
+                  else
+                     Bot.Privmsg (To_String(Channel), ResponseTable(i).Response.all &" "&
+                                    Slice(Msg.Sender,1,Index(Msg.Sender,"!")-1)
+                                 );
+                  end if;
+                  ResponseTable(i).Counter := ResponseTable(i).Counter + 1;
+               end if;
+
+            end loop;
+         end if;
+
+      end Response_Processor;
+
 
 
    begin
@@ -186,6 +265,8 @@ package body Pong_Bot is
 
          Bot.On_Message ("PING", Irc.Commands.Ping_Server'Access);
 
+         -- Bot.On_Regexp(OnRegexp => ".*",Func => Response_Processor'Unrestricted_Access);
+         Bot.On_Regexp(OnRegexp => "^PRIVMSG",Func => Response_Processor'Unrestricted_Access);
 
 
          --  Connect the socket and identify the bot (send NICK and USER)
