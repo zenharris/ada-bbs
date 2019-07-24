@@ -180,7 +180,7 @@ package body Irc.Message is
    -- Copyright (c) 2019 Zen Harris
 
 
-   ClientVersion : constant String := "0.1.11 beta";
+   ClientVersion : constant String := "0.1.12 beta";
 
    procedure Print (This : Message) is
       use Ada.Text_IO;

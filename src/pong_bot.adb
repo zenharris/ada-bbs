@@ -11,7 +11,14 @@ with Irc.Bot; use Irc.Bot;
 
 with GNAT.Regpat; use GNAT.Regpat;
 
+with Ada.Calendar;            use Ada.Calendar;
+with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
+
+with Ada.Strings.Maps.Constants;
+with Ada.Strings.Fixed;
+
 package body Pong_Bot is
+   package SU renames Ada.Strings.Unbounded;
 
    procedure Irc_Client is
     --  Bot : Irc.Bot.Connection; moved to pong_bot.ads
@@ -56,6 +63,8 @@ package body Pong_Bot is
             end;
          end loop;
       end Read_Loop;
+
+      procedure Clear_Response;
 
       package FieldsVector is new Ada.Containers.Vectors (Natural,
                                                           Unbounded_String);
@@ -151,12 +160,13 @@ package body Pong_Bot is
                   Suppress_Response := False;
                   Local_Response := True;
                   Irc.Message.Print_Line(To_Unbounded_String("Response Processor On Local"));
+               elsif Fields.Element(1) = "clear" then
+                  Clear_Response;
+                  Irc.Message.Print_Line(To_Unbounded_String("Response Processor Cleared"));
                end if;
-
 
             elsif Fields.Element(0) = "/msg" then
                if Fields.Length > 2 then
-
 
                   Bot.Privmsg (To_String(Fields.Element(1)),
                                --To_String(Unbounded_Slice(CommandLine,index(CommandLine," ")+1,Length(CommandLine)) )
@@ -169,11 +179,11 @@ package body Pong_Bot is
             if Fields.Length = 1 then
 
                if Fields.Element(0) = "/help" then
-                  Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>           /nick <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("/me <action description>    /version <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>            /clientinfo <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>          /msg <nickname> "));
-                  Irc.Message.Print_Line(To_Unbounded_String("/response <on|off|local>    /quit "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/whois <nickname>              /nick <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/me <action description>       /version <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/time <nickname>               /clientinfo <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/source <nickname>             /msg <nickname> "));
+                  Irc.Message.Print_Line(To_Unbounded_String("/response <on|off|local|clear> /quit "));
                elsif Fields.Element(0) = "/quit" then
                   Quit := True;
 
@@ -189,20 +199,42 @@ package body Pong_Bot is
 
       type String_Access is access String;
 
+      type Response_Array is Array (0 .. 2) of String_Access;
+
       type Response_Record is record
          MatchRegex : String_Access;
-         Response : String_Access;
+         Response : Response_Array;
+        -- Response2 : String_Access;
          Counter : Integer;
       end record;
       type Response_Type is array (Positive range <>) of Response_Record;
 
       ResponseTable : Response_Type  :=
-        ((new String'(".*sun.*"),new String'("The Sun"),0),
-         (new String'(".*hypnotoad.*"),new String'("GRGGRGRRBRBBRBRRGRGGRGRRBRBBRBRR"),0),
-         (new String'(".*conjob.*"),new String'("Conjob Right on man"),0),
-         (new String'(".*cat.*"),new String'("Cool for Hep Cats"),0),
-         (new String'(".*time.*"),new String'("Time time time time see whats become of me"),0),
-         (new String'(".*weather.*"),new String'("Nice weather we;re having here"),0));
+        ((new String'(".*\bsun\b.*"),
+         (new String'("Hello Sun"),new String'("Sun and Moon"),new String'("That'a alot of sun")),0),
+         (new String'(".*\b[Hh]ypnotoad\b.*|.*\b[Ff]uturama\b.*"),
+          (new String'("All Praise to The Hypnotoad GRGGRGRRBRBBRBRRGRGGRGRRBRBBRBRR"),
+           new String'("GRGGRGRRBRBBRBRRGR"),
+         new String'("Aye, it was a good show")),0),
+         (new String'(".*\bconjob\b.*|.*\bconm[ea]n\b.*"),
+          (new String'("Conjob Right on"),new String'("You;ve been ripped off man"),new String'("You're saying conjob alot")),0),
+         (new String'(".*\bcat\b.*"),
+          (new String'("Hep Cats"),new String'("Cool for Cats"),new String'("Stop Saying the word cat")),0),
+         (new String'(".*\bfish\b.*"),
+          (new String'("Neither fish nor flesh"),new String'("and to eat no fish"),new String'("But enough of fish")),0),
+         (new String'(".*\btime\b.*"),
+          (new String'("Time time time time see whats become of me"),
+           new String'("Great Gobbling Gobstoppers is that the time!?"),
+         new String'("I guess thats all I have to say about time")),0),
+         (new String'(".*\bweather\b.*"),
+          (new String'("Nice weather we;re having here"),new String'("The weather's on the change"),new String'("Lines form in feint dischord")),0));
+
+      procedure Clear_Response is
+      begin
+         for i in ResponseTable'Range loop
+            ResponseTable(i).Counter := 0;
+         end loop;
+      end Clear_Response;
 
 
       procedure Response_Processor (Conn : in out Irc.Commands.Connection;
@@ -210,24 +242,43 @@ package body Pong_Bot is
 
          Regex : GNAT.Regpat.Pattern_Matcher (1024);
          Matches : GNAT.Regpat.Match_Array (0 .. 1);
+         Now : Time;
+         Next : Time;
+         D    : Duration := 0.1;
+         L  : Integer;
+         scratch : Unbounded_String;
       begin
          if Suppress_Response = False then
             for i in ResponseTable'Range loop
                GNAT.Regpat.Compile (Regex, ResponseTable(i).MatchRegex.all);
-               GNAT.Regpat.Match (Regex, To_String (Msg.Args), Matches);
+
+               scratch :=  SU.Unbounded_Slice(Msg.Args,SU.Index(Msg.Args,":")+1,SU.Length( Msg.Args));
+
+               scratch := To_Unbounded_String(Ada.Strings.Fixed.Translate(To_String(scratch),
+                                              Ada.Strings.Maps.Constants.Lower_Case_Map));
+
+
+               GNAT.Regpat.Match (Regex, To_String(scratch) , Matches);
 
                if Matches (0) /= GNAT.Regpat.No_Match then
                   --  Pair.Func (This, Msg);
-                  if Local_Response then
-                     Irc.Message.Print_Line(To_Unbounded_String(ResponseTable(i).Response.all &" "&
-                                           Slice(Msg.Sender,1,Index(Msg.Sender,"!")-1)
-                                           ));
-                  else
-                     Bot.Privmsg (To_String(Channel), ResponseTable(i).Response.all &" "&
-                                    Slice(Msg.Sender,1,Index(Msg.Sender,"!")-1)
-                                 );
+
+
+                  if ResponseTable(i).Counter <= ResponseTable(i).Response'Last then
+                     Now := Clock;
+                     L := ResponseTable(i).Response(ResponseTable(i).Counter).all'Length;
+                     Next := Now + (D*L) ;
+                     delay until Next;
+
+                     if Local_Response then
+                        Irc.Message.Print_Line(To_Unbounded_String(
+                                               ResponseTable(i).Response(ResponseTable(i).Counter).all));
+                     else
+                        Bot.Privmsg (To_String(Channel),
+                                     ResponseTable(i).Response(ResponseTable(i).Counter).all);
+                     end if;
+                     ResponseTable(i).Counter := ResponseTable(i).Counter + 1;
                   end if;
-                  ResponseTable(i).Counter := ResponseTable(i).Counter + 1;
                end if;
 
             end loop;
