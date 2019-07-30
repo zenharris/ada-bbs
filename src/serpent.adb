@@ -238,8 +238,14 @@ begin
    end loop main;
    Move_Cursor(line=>Lines/2,column=>(Columns-10)/2);
    Put("Game Over!");
+
+   while Get_Keystroke in Special_Key_Code'Range loop
+      null;
+   end loop;
+
    Set_Timeout_Mode(mode=>Blocking,Amount=>0);
-   Display_Warning.Warning("Game Over!");
+
+   -- Display_Warning.Warning("Game Over!");
    --key := Get_Keystroke;
    -- End_Windows;
 end serpent;

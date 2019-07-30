@@ -10,6 +10,7 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 --with Ada.Characters.Handling; use Ada.Characters.Handling;
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+-- with Ada.Containers.Doubly_Linked_Lists;
 with Text_File_Scroller;
 with Process_Menu;
 with Texaco;
@@ -105,6 +106,26 @@ procedure Main is
       return True;
    end;
 
+   function Run_Text_Editor return Boolean is
+    --  Edline : Unbounded_String := To_Unbounded_String("");
+    --  c : Key_Code;
+
+   begin
+
+             Texaco.Text_Editor(Standard_Window,TopLine => 5,BottomLine => 20,MaxLines => 100);
+
+             Clear;
+             Refresh;
+
+             Texaco.Dump_List;
+
+   --   Add(Standard_Window,Column => 0,Line => 10,Str => To_String(Edline));
+   --   Refresh;
+      c := Get_Keystroke;
+      return True;
+   end;
+
+
    function Run_Serpent return Boolean is
    begin
       Serpent;
@@ -117,7 +138,7 @@ procedure Main is
       (new String'("IRC Chat"),Run_Pong_Bot'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
-      (new String'("Newts"),test_func'Unrestricted_Access),
+      (new String'("Text Editor"),Run_Text_Editor'Unrestricted_Access),
       (new String'("Platypi"),test_func'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 

@@ -204,20 +204,21 @@ package body Pong_Bot is
       type Response_Record is record
          MatchRegex : String_Access;
          Response : Response_Array;
-        -- Response2 : String_Access;
          Counter : Integer;
       end record;
       type Response_Type is array (Positive range <>) of Response_Record;
 
       ResponseTable : Response_Type  :=
         ((new String'(".*\bsun\b.*"),
-         (new String'("Hello Sun"),new String'("Sun and Moon"),new String'("That'a alot of sun")),0),
+         (new String'("The Sun's coming up, like a big bald head"),new String'("Sun and Moon"),new String'("That'a alot of sun")),0),
          (new String'(".*\b[Hh]ypnotoad\b.*|.*\b[Ff]uturama\b.*"),
           (new String'("All Praise to The Hypnotoad GRGGRGRRBRBBRBRRGRGGRGRRBRBBRBRR"),
            new String'("GRGGRGRRBRBBRBRRGR"),
          new String'("Aye, it was a good show")),0),
          (new String'(".*\bconjob\b.*|.*\bconm[ea]n\b.*"),
           (new String'("Conjob Right on"),new String'("You;ve been ripped off man"),new String'("You're saying conjob alot")),0),
+         (new String'(".*\bwine\b.*|.*\bdrink\b.*"),
+          (new String'("Try the wine!"),new String'("I see you enjoya fine wine, Have another Glass!"),new String'("And the water turned wine")),0),
          (new String'(".*\bcat\b.*"),
           (new String'("Hep Cats"),new String'("Cool for Cats"),new String'("Stop Saying the word cat")),0),
          (new String'(".*\bfish\b.*"),
@@ -225,9 +226,14 @@ package body Pong_Bot is
          (new String'(".*\btime\b.*"),
           (new String'("Time time time time see whats become of me"),
            new String'("Great Gobbling Gobstoppers is that the time!?"),
-         new String'("I guess thats all I have to say about time")),0),
+           new String'("I guess thats all I have to say about time")),0),
+         (new String'(".*\bcoffee\b.*"),
+          (new String'("I feel disoriented if I can't go to the cafe in the morning"),
+           new String'("Coffee rich Coffee strong"),
+         new String'("Beans of madness")),0),
          (new String'(".*\bweather\b.*"),
-          (new String'("Nice weather we;re having here"),new String'("The weather's on the change"),new String'("Lines form in feint dischord")),0));
+          (new String'("The weather's on the change"),
+           new String'("Lines form in feint dischord"),new String'("And the stormwatch brews a concert of kings")),0));
 
       procedure Clear_Response is
       begin
@@ -244,7 +250,7 @@ package body Pong_Bot is
          Matches : GNAT.Regpat.Match_Array (0 .. 1);
          Now : Time;
          Next : Time;
-         D    : Duration := 0.1;
+         D    : Duration := 0.05;
          L  : Integer;
          scratch : Unbounded_String;
       begin
