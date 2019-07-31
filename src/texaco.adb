@@ -278,6 +278,11 @@ package body Texaco is
 
             case Character'Val (c) is
             when CR | LF =>
+
+               if Integer(Current_Char) > SU.Length(Element(curs)) then
+                  Current_Char := Column_Position(SU.Length(Element(curs))+1);
+               end if;
+
                CarryOver :=To_Unbounded_String( SU.Slice(Source => Element(curs),
                                                          Low => Integer(Current_Char),
                                                          High => SU.Length(Element(curs))));
@@ -333,14 +338,17 @@ package body Texaco is
          if LineNum < TermLnth-1 then
             LineNum := LineNum + 1;
          else
-            LineNum := 0;
+            Move_Cursor(Line => 0,Column => 0);
+            Delete_Line;
+            Refresh;
+            -- LineNum := 0;
          end if;
 
 
       end Print;
    begin
       Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-     Text_Buffer.Iterate(Print'access);
+      Text_Buffer.Iterate(Print'access);
 
 
    end Dump_List;
