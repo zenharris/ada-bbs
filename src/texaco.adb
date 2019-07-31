@@ -211,7 +211,6 @@ package body Texaco is
                Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
             end if;
 
-
             Clear_To_End_Of_Line(win1);
             LineNum := LineNum +1;
             if LineNum+ TopLine > BottomLine then
@@ -244,9 +243,7 @@ package body Texaco is
                      Edline => EditBuffer,TextEditMode => True);
          Text_Buffer.Replace_Element(curs,New_Item => EditBuffer);
 
-         if Texaco.Current_Char > Wdth then
-            Texaco.Current_Char := Wdth;
-         end if;
+
 
          if c in Special_Key_Code'Range then
             case c is
@@ -263,6 +260,10 @@ package body Texaco is
                  -- CurrentLine := CurrentLine + 1;
                end if;
 
+               if Texaco.Current_Char > Wdth-1 then
+                  Texaco.Current_Char := Wdth-1;
+               end if;
+
             when Key_Cursor_Up => Null;
                if curs /= Text_Buffer.First then
                   String_List.Previous(curs);
@@ -272,6 +273,10 @@ package body Texaco is
                      Scroll_Down;
                   end if;
                end if;
+               if Texaco.Current_Char > Wdth-1 then
+                  Texaco.Current_Char := Wdth-1;
+               end if;
+
             when others => null;
             end case;
          elsif c in Real_Key_Code'Range then
