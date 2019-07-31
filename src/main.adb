@@ -25,38 +25,38 @@ procedure Main is
    Lines : Line_Position;
    Columns : Column_Position;
 
-   task Display_Current_Time is
-      entry Start;
-   end Display_Current_Time;
+ --  task Display_Current_Time is
+ --     entry Start;
+ --  end Display_Current_Time;
 
-   task body Display_Current_Time is
-      Next : Time;
-      D    : Duration := 1.0;
-      Now : Time := Clock;
-      win1 : Window;
-      Col : Column_Position;
-      Lin  : Line_Position;
-   begin
-      accept Start;
-      win1 := Sub_Window(Win => Standard_Window,
-                         Number_Of_Lines => 1,
-                         Number_Of_Columns => 32,
-                         First_Line_Position => 1,
-                         First_Column_Position => 48);
-      -- Box(win1);
-      Refresh(Win => win1);
-      loop
-         Now := Clock;
-
-         Next := Now + D;
-         Get_Cursor_Position(Line => Lin,Column => Col);
-         Add (Win => win1,Line => 0,Column => 0,Str => " Sys Time " & Image (Now));
-         Refresh(Win => win1);
-         Move_Cursor(Line => Lin,Column => Col);
-         Refresh;
-         delay until Next;
-      end loop;
-   end Display_Current_Time;
+ --  task body Display_Current_Time is
+ --     Next : Time;
+ --     D    : Duration := 1.0;
+ --     Now : Time := Clock;
+ --     win1 : Window;
+ --     Col : Column_Position;
+ --     Lin  : Line_Position;
+ --  begin
+ --     accept Start;
+ --     win1 := Sub_Window(Win => Standard_Window,
+ --                        Number_Of_Lines => 1,
+ --                        Number_Of_Columns => 32,
+ --                        First_Line_Position => 1,
+ --                        First_Column_Position => 48);
+ --     -- Box(win1);
+ --     Refresh(Win => win1);
+ --     loop
+ --        Now := Clock;
+ --
+ --        Next := Now + D;
+ --        Get_Cursor_Position(Line => Lin,Column => Col);
+ --        Add (Win => win1,Line => 0,Column => 0,Str => " Sys Time " & Image (Now));
+ --        Refresh(Win => win1);
+ --        Move_Cursor(Line => Lin,Column => Col);
+ --        Refresh;
+ --        delay until Next;
+ --     end loop;
+ --  end Display_Current_Time;
 
 
 
@@ -68,7 +68,7 @@ procedure Main is
 
    function logout return Boolean is
    begin
-      Abort Display_Current_Time;
+   --   Abort Display_Current_Time;
       End_Windows;
       Curses_Free_All;
 
@@ -161,7 +161,7 @@ begin
    Refresh;
 
 
-   Display_Current_Time.Start;
+  -- Display_Current_Time.Start;
 
    Move_Cursor (Line => 1, Column => 10);
    Add (Str => " This Is a Test  ");
@@ -200,7 +200,7 @@ begin
 
    end loop;
 
-   Abort Display_Current_Time;
+   -- Abort Display_Current_Time;
    End_Windows;
    Curses_Free_All;
 
