@@ -201,17 +201,22 @@ package body Texaco is
                endpoint := Integer(Wdth);
             else
                endpoint := Length(Element(curs2));
+
+            end if;
+            if endpoint > 0 then
+               Add(win1,
+                   Column => 0,Line => LineNum + TopLine,
+                   Str => Slice(Element(curs2),1,endpoint) );
+            else
+               Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
             end if;
 
-            Add(win1,
-                Column => 0,Line => LineNum + TopLine,
-                Str => Slice(Element(curs2),1,endpoint) );
 
             Clear_To_End_Of_Line(win1);
             LineNum := LineNum +1;
             if LineNum+ TopLine > BottomLine then
                exit;
-            elsif curs = Text_Buffer.Last then
+            elsif curs2 = Text_Buffer.Last then
                exit;
             else
                String_List.Next(curs2);
@@ -230,7 +235,7 @@ package body Texaco is
       Current_Char := 1;
 
       loop
-         Redraw_Screen;
+        Redraw_Screen;
 
          EditBuffer := Element(curs);
          Line_Editor(win1,StartLine => TopLine + CurrentLine,
@@ -238,6 +243,10 @@ package body Texaco is
                      EditLength => Wdth-1,MaxLength => 200, -- Integer(Wdth-1),
                      Edline => EditBuffer,TextEditMode => True);
          Text_Buffer.Replace_Element(curs,New_Item => EditBuffer);
+
+         if Texaco.Current_Char > Wdth then
+            Texaco.Current_Char := Wdth;
+         end if;
 
          if c in Special_Key_Code'Range then
             case c is
@@ -268,21 +277,20 @@ package body Texaco is
          elsif c in Real_Key_Code'Range then
 
             case Character'Val (c) is
-            when CR | LF => null;
-               if curs = Text_Buffer.Last then
+            when CR | LF =>
+               CarryOver :=To_Unbounded_String( SU.Slice(Source => Element(curs),
+                                                         Low => Integer(Current_Char),
+                                                         High => SU.Length(Element(curs))));
 
-                  Text_Buffer.Append(To_Unbounded_String(""));
+               Remainder :=To_Unbounded_String( SU.Slice(Source => Element(curs),
+                                                         Low => 1,
+                                                         High => Integer(Current_Char)-1 ));
+               if curs = Text_Buffer.Last then
+                  Text_Buffer.Replace_Element(curs,New_Item => Remainder);
+                  Text_Buffer.Append(CarryOver);
                   curs := Text_Buffer.Last;
 
                else
-                  CarryOver :=To_Unbounded_String( SU.Slice(Source => Element(curs),
-                                                            Low => Integer(Current_Char),
-                                                            High => SU.Length(Element(curs))));
-
-                  Remainder :=To_Unbounded_String( SU.Slice(Source => Element(curs),
-                                                            Low => 1,
-                                                            High => Integer(Current_Char)-1 ));
-
                   Text_Buffer.Replace_Element(curs,New_Item => Remainder);
 
                   String_List.Next(curs);
@@ -313,17 +321,25 @@ package body Texaco is
 
    procedure Dump_List is
       LineNum : Line_Position := 0;
+      TermLnth : Line_Position;
+      TermWdth : Column_Position;
       procedure Print(Position : Cursor) is
       begin
          -- Put_Line(To_String(Element(Position)));
          Add(Standard_Window,
              Column => 0,Line => LineNum,
              Str => To_String(Element(Position)));
-             Refresh;
-             LineNum := LineNum + 1;
+         Refresh;
+         if LineNum < TermLnth-1 then
+            LineNum := LineNum + 1;
+         else
+            LineNum := 0;
+         end if;
+
+
       end Print;
    begin
-
+      Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
      Text_Buffer.Iterate(Print'access);
 
 
