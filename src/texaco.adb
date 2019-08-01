@@ -102,7 +102,7 @@ package body Texaco is
                   end if;
 
 
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) < MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) <= MaxLength then
                      ScreenOffset := ScreenOffset +(Integer(Columns-StartColumn) -1);
                   end if;
 
@@ -141,7 +141,7 @@ package body Texaco is
 
                   Current_Char := Current_Char +1;
 
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) < MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) <= MaxLength then
                      ScreenOffset := ScreenOffset + (Integer(Columns-StartColumn)-1);
                   end if;
 
@@ -167,20 +167,40 @@ package body Texaco is
       EditBuffer,CarryOver,Remainder : Unbounded_String;
       endpoint : Integer;
 
+      procedure GotoPos (Line : Line_Position;Column : Column_Position) is
+         Line2 : Line_Position := Line;
+         Column2 : Column_Position := Column;
+      begin
+         if Line2 >= Lnth then
+            Line2 := Lnth-1;
+         end if;
+         if Line2 < 0 then
+            Line2 := 0;
+         end if;
+         if Column2 >= Wdth then
+            Column2 := Wdth-1;
+         end if;
+         if Column2 < 0 then
+            Column2 := 0;
+         end if;
+         Move_Cursor(win1,Line => Line2,Column => Column2);
+
+      end GotoPos;
+
       procedure Scroll_Up is
       begin
-         Move_Cursor(win1,Line   => TopLine,Column => 0);
+         GotoPos(Line   => TopLine,Column => 0);
          Delete_Line(win1);
-         Move_Cursor(win1,Line   => BottomLine,Column => 0);
+         GotoPos(Line   => BottomLine,Column => 0);
          Insert_Line(win1);
          Refresh(win1);
       end Scroll_Up;
 
       procedure Scroll_Down is
       begin
-         Move_Cursor(win1,Line   => BottomLine,Column => 0);
+         GotoPos(Line   => BottomLine,Column => 0);
          Delete_Line(win1);
-         Move_Cursor(win1,Line   => TopLine,Column => 0);
+         GotoPos(Line   => TopLine,Column => 0);
          Insert_Line(win1);
          Refresh(win1);
       end Scroll_Down;
@@ -211,7 +231,8 @@ package body Texaco is
                    Column => 0,Line => LineNum + TopLine,
                    Str => Slice(Element(curs2),1,endpoint) );
             else
-               Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
+               -- Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
+               GotoPos(Line => LineNum + TopLine,Column => 0);
             end if;
             Clear_To_End_Of_Line(win1);
 
@@ -227,6 +248,7 @@ package body Texaco is
          end loop;
          Refresh;
       end Redraw_Screen;
+
 
 
    begin
