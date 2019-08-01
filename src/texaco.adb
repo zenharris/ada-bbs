@@ -197,8 +197,8 @@ package body Texaco is
 
          loop
 
-            if Length(Element(curs2)) > Integer(Wdth) then
-               endpoint := Integer(Wdth);
+            if Length(Element(curs2)) > Integer(Wdth)-1 then
+               endpoint := Integer(Wdth)-1;
             else
                endpoint := Length(Element(curs2));
 
@@ -260,6 +260,7 @@ package body Texaco is
                  -- CurrentLine := CurrentLine + 1;
                end if;
 
+               -- Avoids cursor being beyond edge of screen crash on Up Arrow
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
@@ -273,6 +274,8 @@ package body Texaco is
                      Scroll_Down;
                   end if;
                end if;
+
+               -- Avoids cursor being beyond edge of screen crash on Down Arrow
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
@@ -284,6 +287,7 @@ package body Texaco is
             case Character'Val (c) is
             when CR | LF =>
 
+               -- Avoids cursor being beyond the end of the line crash on Caridge return
                if Integer(Current_Char) > SU.Length(Element(curs)) then
                   Current_Char := Column_Position(SU.Length(Element(curs))+1);
                end if;
