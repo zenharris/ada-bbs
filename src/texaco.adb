@@ -37,8 +37,11 @@ package body Texaco is
          else
             endpoint := Length(Edline);
          end if;
-         Add (win1,Column => StartColumn,Line => StartLine,
-              Str => Slice(Edline,ScreenOffset+1,endpoint));
+         if endpoint > 0 then
+            Add (win1,Column => StartColumn,Line => StartLine,
+                 Str => Slice(Edline,ScreenOffset+1,endpoint));
+         end if;
+
 
         -- Refresh(win1);
 
@@ -201,8 +204,8 @@ package body Texaco is
                endpoint := Integer(Wdth)-1;
             else
                endpoint := Length(Element(curs2));
-
             end if;
+
             if endpoint > 0 then
                Add(win1,
                    Column => 0,Line => LineNum + TopLine,
@@ -210,8 +213,8 @@ package body Texaco is
             else
                Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
             end if;
-
             Clear_To_End_Of_Line(win1);
+
             LineNum := LineNum +1;
             if LineNum+ TopLine > BottomLine then
                exit;
@@ -220,6 +223,7 @@ package body Texaco is
             else
                String_List.Next(curs2);
             end if;
+
          end loop;
          Refresh;
       end Redraw_Screen;
@@ -260,7 +264,7 @@ package body Texaco is
                  -- CurrentLine := CurrentLine + 1;
                end if;
 
-               -- Avoids cursor being beyond edge of screen crash on Down Arrow
+               -- Avoids cursor being beyond edge of screen crash on Down Arrow for long lines
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
@@ -275,7 +279,7 @@ package body Texaco is
                   end if;
                end if;
 
-               -- Avoids cursor being beyond edge of screen crash on Up Arrow
+               -- Avoids cursor being beyond edge of screen crash on Up Arrow for long lines
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
@@ -287,7 +291,7 @@ package body Texaco is
             case Character'Val (c) is
             when CR | LF =>
 
-               -- Avoids cursor being beyond the end of the line crash on Caridge return
+               -- Avoids cursor being beyond the end of the line crash on Caridge return for long lines
                if Integer(Current_Char) > SU.Length(Element(curs)) then
                   Current_Char := Column_Position(SU.Length(Element(curs))+1);
                end if;
