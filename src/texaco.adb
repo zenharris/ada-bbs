@@ -247,7 +247,7 @@ package body Texaco is
 
          if c in Special_Key_Code'Range then
             case c is
-            when Key_Cursor_Down => null;
+            when Key_Cursor_Down =>
 
                if curs /= Text_Buffer.Last then
                   String_List.Next(curs);
@@ -260,12 +260,12 @@ package body Texaco is
                  -- CurrentLine := CurrentLine + 1;
                end if;
 
-               -- Avoids cursor being beyond edge of screen crash on Up Arrow
+               -- Avoids cursor being beyond edge of screen crash on Down Arrow
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
 
-            when Key_Cursor_Up => Null;
+            when Key_Cursor_Up =>
                if curs /= Text_Buffer.First then
                   String_List.Previous(curs);
                   if CurrentLine > 0 then
@@ -275,7 +275,7 @@ package body Texaco is
                   end if;
                end if;
 
-               -- Avoids cursor being beyond edge of screen crash on Down Arrow
+               -- Avoids cursor being beyond edge of screen crash on Up Arrow
                if Texaco.Current_Char > Wdth-1 then
                   Texaco.Current_Char := Wdth-1;
                end if;
