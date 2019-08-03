@@ -107,20 +107,17 @@ procedure Main is
    end;
 
    function Run_Text_Editor return Boolean is
-    --  Edline : Unbounded_String := To_Unbounded_String("");
-    --  c : Key_Code;
 
    begin
 
-             Texaco.Text_Editor(Standard_Window,TopLine => 5,BottomLine => 20,MaxLines => 100);
+             Texaco.Text_Editor(Standard_Window,TopLine => 5,BottomLine => Lines-4,MaxLines => 100);
 
              Clear;
              Refresh;
 
              Texaco.Dump_List;
 
-   --   Add(Standard_Window,Column => 0,Line => 10,Str => To_String(Edline));
-   --   Refresh;
+
       c := Get_Keystroke;
       return True;
    end;
@@ -177,7 +174,7 @@ begin
       Add (Line => Lines - 2,Column => 1, Str => " Func 1  |  Func 2 |  Func 3 |  Func 4 |");
       Refresh;
 
-      c := Get_Keystroke;
+      c := Texaco.GetKey;  -- Get_Keystroke;
       if c in Special_Key_Code'Range then
          case c is
          when Key_F1 =>

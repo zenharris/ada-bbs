@@ -4,6 +4,16 @@ package body Texaco is
   --    Ch : Character;
   --    Current_Char : Column_Position := 1;
 
+   function GetKey (win1 : Window := Standard_Window) return Key_Code is
+      Inkey : Key_Code;
+   begin
+      Inkey := Get_Keystroke(win1);
+      return (Inkey);
+   exception
+      when CONSTRAINT_ERROR =>
+         return (c);
+   end GetKey;
+
    procedure Line_Editor (win1 : Window;
                           StartLine : Line_Position;
                           StartColumn :Column_Position;
@@ -50,7 +60,7 @@ package body Texaco is
                      Column => StartColumn + (Current_Char-Column_Position(ScreenOffset)) -1);
 
          Refresh(win1);
-         c := Get_Keystroke;
+         c := GetKey;
          if c in Special_Key_Code'Range then
             case c is
             when Key_Backspace =>
@@ -102,14 +112,14 @@ package body Texaco is
                   end if;
 
 
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) <= MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 then
                      ScreenOffset := ScreenOffset +(Integer(Columns-StartColumn) -1);
                   end if;
 
-               when Key_Cursor_Up | Key_Cursor_Down | Key_F1 | Key_F2 | Key_F3 | Key_F4 | Key_F5 | Key_F6 | Key_F7 | Key_F8 => exit;
+               when Key_Cursor_Up | Key_Cursor_Down | Key_Shift_Delete_Char | Key_F1 | Key_F2 | Key_F3 | Key_F4 | Key_F5 | Key_F6 | Key_F7 | Key_F8 => exit;
 
 
-               when others => null;
+               when others => exit; --null;
             end case;
          elsif c in Real_Key_Code'Range then
 
@@ -141,7 +151,7 @@ package body Texaco is
 
                   Current_Char := Current_Char +1;
 
-                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 and then Length(Edline) <= MaxLength then
+                  if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 then
                      ScreenOffset := ScreenOffset + (Integer(Columns-StartColumn)-1);
                   end if;
 
@@ -150,8 +160,12 @@ package body Texaco is
             end case;
          end if;
       end loop;
-
+   exception
+      when CONSTRAINT_ERROR =>
+         null;
    end Line_Editor;
+
+
 
 
 
@@ -160,47 +174,29 @@ package body Texaco is
                           BottomLine :Line_Position;
                           MaxLines : Integer) is
 
-      curs : Cursor;
+      curs,TempCurs : Cursor;
       CurrentLine : Line_Position := 0;
-      Lnth : Line_Position;
-      Wdth : Column_Position;
+      TermLnth : Line_Position;
+      TermWdth : Column_Position;
       EditBuffer,CarryOver,Remainder : Unbounded_String;
       endpoint : Integer;
 
-      procedure GotoPos (Line : Line_Position;Column : Column_Position) is
-         Line2 : Line_Position := Line;
-         Column2 : Column_Position := Column;
-      begin
-         if Line2 >= Lnth then
-            Line2 := Lnth-1;
-         end if;
-         if Line2 < 0 then
-            Line2 := 0;
-         end if;
-         if Column2 >= Wdth then
-            Column2 := Wdth-1;
-         end if;
-         if Column2 < 0 then
-            Column2 := 0;
-         end if;
-         Move_Cursor(win1,Line => Line2,Column => Column2);
 
-      end GotoPos;
 
       procedure Scroll_Up is
       begin
-         GotoPos(Line   => TopLine,Column => 0);
+         Move_Cursor(win1,Line   => TopLine,Column => 0);
          Delete_Line(win1);
-         GotoPos(Line   => BottomLine,Column => 0);
+         Move_Cursor(win1,Line   => BottomLine,Column => 0);
          Insert_Line(win1);
          Refresh(win1);
       end Scroll_Up;
 
       procedure Scroll_Down is
       begin
-         GotoPos(Line   => BottomLine,Column => 0);
+         Move_Cursor(win1,Line   => BottomLine,Column => 0);
          Delete_Line(win1);
-         GotoPos(Line   => TopLine,Column => 0);
+         Move_Cursor(win1,Line   => TopLine,Column => 0);
          Insert_Line(win1);
          Refresh(win1);
       end Scroll_Down;
@@ -220,8 +216,8 @@ package body Texaco is
 
          loop
 
-            if Length(Element(curs2)) > Integer(Wdth)-1 then
-               endpoint := Integer(Wdth)-1;
+            if Length(Element(curs2)) > Integer(TermWdth)-1 then
+               endpoint := Integer(TermWdth)-1;
             else
                endpoint := Length(Element(curs2));
             end if;
@@ -231,8 +227,7 @@ package body Texaco is
                    Column => 0,Line => LineNum + TopLine,
                    Str => Slice(Element(curs2),1,endpoint) );
             else
-               -- Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
-               GotoPos(Line => LineNum + TopLine,Column => 0);
+               Move_Cursor(win1,Line => LineNum + TopLine,Column => 0);
             end if;
             Clear_To_End_Of_Line(win1);
 
@@ -253,22 +248,22 @@ package body Texaco is
 
    begin
 
-      Get_Size(Number_Of_Lines => Lnth,Number_Of_Columns => Wdth);
+      Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
       Text_Buffer.Clear;
       Text_Buffer.Append(To_Unbounded_String(""));
       curs := Text_Buffer.First;
       Current_Char := 1;
 
       loop
+         Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
         Redraw_Screen;
 
          EditBuffer := Element(curs);
          Line_Editor(win1,StartLine => TopLine + CurrentLine,
                      StartColumn => 0,
-                     EditLength => Wdth-1,MaxLength => 200, -- Integer(Wdth-1),
+                     EditLength => TermWdth-1,MaxLength => 1000, -- Integer(Wdth-1),
                      Edline => EditBuffer,TextEditMode => True);
          Text_Buffer.Replace_Element(curs,New_Item => EditBuffer);
-
 
 
          if c in Special_Key_Code'Range then
@@ -280,15 +275,13 @@ package body Texaco is
                   if CurrentLine < BottomLine-TopLine then
                      CurrentLine := CurrentLine + 1;
                   else
-                     -- scroll up
                      Scroll_Up;
                   end if;
-                 -- CurrentLine := CurrentLine + 1;
                end if;
 
                -- Avoids cursor being beyond edge of screen crash on Down Arrow for long lines
-               if Texaco.Current_Char > Wdth-1 then
-                  Texaco.Current_Char := Wdth-1;
+               if Texaco.Current_Char > TermWdth-1 then
+                  Texaco.Current_Char := TermWdth-1;
                end if;
 
             when Key_Cursor_Up =>
@@ -302,9 +295,34 @@ package body Texaco is
                end if;
 
                -- Avoids cursor being beyond edge of screen crash on Up Arrow for long lines
-               if Texaco.Current_Char > Wdth-1 then
-                  Texaco.Current_Char := Wdth-1;
+               if Texaco.Current_Char > TermWdth-1 then
+                  Texaco.Current_Char := TermWdth-1;
                end if;
+            when Key_Shift_Delete_Char =>
+
+               TempCurs := curs;
+               if TempCurs /= Text_Buffer.Last then
+                  String_List.Next(curs);
+                  Text_Buffer.Delete(TempCurs);
+                  Delete_Line(win1);
+                  Move_Cursor(win1,Line   => BottomLine,Column => 0);
+                  Insert_Line(win1);
+               elsif TempCurs /= Text_Buffer.First then
+                  String_List.Previous(curs);
+                  if CurrentLine > 0 then
+                     CurrentLine := CurrentLine - 1;
+                  else
+                     Scroll_Down;
+                  end if;
+                  Text_Buffer.Delete(TempCurs);
+                  Delete_Line(win1);
+                  Move_Cursor(win1,Line   => BottomLine,Column => 0);
+                  Insert_Line(win1);
+               end if;
+
+
+
+               Refresh(win1);
 
             when others => null;
             end case;
@@ -325,14 +343,13 @@ package body Texaco is
                Remainder :=To_Unbounded_String( SU.Slice(Source => Element(curs),
                                                          Low => 1,
                                                          High => Integer(Current_Char)-1 ));
+
                if curs = Text_Buffer.Last then
                   Text_Buffer.Replace_Element(curs,New_Item => Remainder);
                   Text_Buffer.Append(CarryOver);
                   curs := Text_Buffer.Last;
-
                else
                   Text_Buffer.Replace_Element(curs,New_Item => Remainder);
-
                   String_List.Next(curs);
                   Text_Buffer.Insert(Before => curs,New_Item => CarryOver);
                   String_List.Previous(curs);
@@ -342,7 +359,6 @@ package body Texaco is
                if CurrentLine < BottomLine-TopLine then
                   CurrentLine := CurrentLine + 1;
                else
-                  -- scroll up
                   Scroll_Up;
                end if;
 
@@ -354,9 +370,11 @@ package body Texaco is
 
          end if;
 
+
       end loop;
-
-
+   exception
+      when CONSTRAINT_ERROR =>
+         null;
    end Text_Editor;
 
    procedure Dump_List is
@@ -365,7 +383,6 @@ package body Texaco is
       TermWdth : Column_Position;
       procedure Print(Position : Cursor) is
       begin
-         -- Put_Line(To_String(Element(Position)));
          Add(Standard_Window,
              Column => 0,Line => LineNum,
              Str => To_String(Element(Position)));
@@ -376,16 +393,11 @@ package body Texaco is
             Move_Cursor(Line => 0,Column => 0);
             Delete_Line;
             Refresh;
-            -- LineNum := 0;
          end if;
-
-
       end Print;
    begin
       Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
       Text_Buffer.Iterate(Print'access);
-
-
    end Dump_List;
 
 

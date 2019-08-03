@@ -116,8 +116,16 @@ package body Irc.Message is
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
 
+      if Current_Line > Lines-1 then
+         Current_Line := Lines-1;
+      end if;
+
       ScrollRegionTop := 3;
       ScrollRegionBottom := Lines - 3;
+
+      if Current_Line > ScrollRegionBottom then
+         Current_Line := ScrollRegionBottom;
+      end if;
 
 
       if (Current_Line < ScrollRegionBottom) then

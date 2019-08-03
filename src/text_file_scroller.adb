@@ -7,6 +7,8 @@ With Ada.Text_IO.Unbounded_IO;
 
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
+with Texaco; -- For GetKey function
+
 procedure Text_File_Scroller (FileName : String) is
    File : File_Type;
    Line_Counter : Line_Position := 3;
@@ -84,7 +86,7 @@ begin
       -- Clear;
       Redraw_List;
       Add (Line => Lines - 2,Column => 1, Str => " Page Up/Down Arrow Up/Down                                Esc exit");
-      c := Get_Keystroke;
+      c := Texaco.GetKey; --Get_Keystroke;
       if c in Special_Key_Code'Range then
          case c is
             when Key_Cursor_Down =>

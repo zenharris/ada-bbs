@@ -17,6 +17,8 @@ package Texaco is
    use String_List;
    Text_Buffer : String_List.List;
 
+   function GetKey (win1 : Window := Standard_Window) return Key_Code;
+
    -- procedure Line_Editor (Edline : in out Unbounded_String);
    procedure Line_Editor (win1 : Window;
                           StartLine : Line_Position;

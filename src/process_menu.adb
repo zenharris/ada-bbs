@@ -5,6 +5,7 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
 with Display_Warning; use Display_Warning;
+with Texaco;  -- For GetKey input function
 
 package body Process_Menu is
 
@@ -60,7 +61,7 @@ package body Process_Menu is
 
       loop
          HiLite(menu_win,Menu_Array,Current_Line);
-         c := Get_Keystroke;
+         c := Texaco.GetKey; --Get_Keystroke;
          if c in Special_Key_Code'Range then
             case c is
             when Key_Cursor_Down =>

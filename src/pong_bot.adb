@@ -215,7 +215,7 @@ package body Pong_Bot is
           (new String'("All Praise to The Hypnotoad GRGGRGRRBRBBRBRRGRGGRGRRBRBBRBRR"),
            new String'("GRGGRGRRBRBBRBRRGR"),
          new String'("Aye, it was a good show")),0),
-         (new String'(".*\bconjob\b.*|.*\bconm[ea]n\b.*"),
+         (new String'(".*\bconjob\b.*|.*\bconm[ea]n\b.*|.*\bbusted\b.*"),
           (new String'("Conjob Right on"),new String'("You;ve been ripped off man"),new String'("You're saying conjob alot")),0),
          (new String'(".*\bwine\b.*|.*\bdrink\b.*"),
           (new String'("Try the wine!"),new String'("I see you enjoya fine wine, Have another Glass!"),new String'("And the water turned wine")),0),
@@ -223,10 +223,6 @@ package body Pong_Bot is
           (new String'("Hep Cats"),new String'("Cool for Cats"),new String'("Stop Saying the word cat")),0),
          (new String'(".*\bfish\b.*"),
           (new String'("Neither fish nor flesh"),new String'("and to eat no fish"),new String'("But enough of fish")),0),
-         (new String'(".*\btime\b.*"),
-          (new String'("Time time time time see whats become of me"),
-           new String'("Great Gobbling Gobstoppers is that the time!?"),
-           new String'("I guess thats all I have to say about time")),0),
          (new String'(".*\bcoffee\b.*"),
           (new String'("I feel disoriented if I can't go to the cafe in the morning"),
            new String'("Coffee rich Coffee strong"),
@@ -336,6 +332,7 @@ package body Pong_Bot is
          Read_Loop.Start;
 
          loop
+            Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
             Add (Standard_Window,
                  Line => Lines-1,
                  Column => 0,
