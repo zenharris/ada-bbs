@@ -14,6 +14,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Text_File_Scroller;
 with Process_Menu;
 with Texaco;
+with Message.Reader;
 
 with Pong_Bot;
 
@@ -106,21 +107,21 @@ procedure Main is
       return True;
    end;
 
-   function Run_Text_Editor return Boolean is
+   function Run_Message_Post return Boolean is
 
    begin
 
-             Texaco.Text_Editor(Standard_Window,TopLine => 5,BottomLine => Lines-4,MaxLines => 100);
+      Message.Reader.Post_Message;
 
-             Clear;
-             Refresh;
-
-             Texaco.Dump_List;
-
-
-      c := Get_Keystroke;
       return True;
    end;
+
+   function Run_Message return Boolean is
+   begin
+      Message.Reader.Read_Messages;
+      -- c := Get_Keystroke;
+      return True;
+   end Run_Message;
 
 
    function Run_Serpent return Boolean is
@@ -135,8 +136,8 @@ procedure Main is
       (new String'("IRC Chat"),Run_Pong_Bot'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
-      (new String'("Text Editor"),Run_Text_Editor'Unrestricted_Access),
-      (new String'("Platypi"),test_func'Unrestricted_Access),
+      (new String'("Post Message"),Run_Message_Post'Unrestricted_Access),
+      (new String'("Read Messages"),Run_Message'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 
