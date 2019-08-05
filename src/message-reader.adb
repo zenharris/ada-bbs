@@ -139,10 +139,6 @@ package body Message.Reader is
          exit when not swapped;
       end loop;
 
-
-
-
-
    end Read_Directory;
 
 
@@ -182,7 +178,7 @@ package body Message.Reader is
       Clear;
 
       Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-      TopLine := 3;
+      TopLine := 4;
       BottomLine := TermLnth - 4;
       CurrentLine := 0;
       Read_Directory;
@@ -241,12 +237,41 @@ package body Message.Reader is
       File : File_Type;
       Nick, Subject, Msgid : Unbounded_String;
 
-      Now         : Time := Clock;
 
-      Now_Year    : Year_Number;
-      Now_Month   : Month_Number;
-      Now_Day     : Day_Number;
-      Now_Seconds : Day_Duration;
+
+      function Generate_UID return Unbounded_String is
+         Now         : Time := Clock;
+         Now_Year    : Year_Number;
+         Now_Month   : Month_Number;
+         Now_Day     : Day_Number;
+         Now_Seconds : Day_Duration;
+         DayPad, MonthPad : Unbounded_String;
+
+      begin
+         Split (Now,
+                Now_Year,
+                Now_Month,
+                Now_Day,
+                Now_Seconds);
+         if (Now_Day < 10) then
+            DayPad := To_Unbounded_String("0"& SF.Trim(Day_Number'Image (Now_Day),Ada.Strings.Left));
+         else
+            DayPad := To_Unbounded_String(SF.Trim(Day_Number'Image (Now_Day),Ada.Strings.Left));
+         end if;
+         if (Now_Month < 10) then
+            MonthPad := To_Unbounded_String("0"& SF.Trim(Month_Number'Image (Now_Month),Ada.Strings.Left));
+         else
+            MonthPad := To_Unbounded_String(SF.Trim(Month_Number'Image (Now_Month),Ada.Strings.Left));
+         end if;
+
+
+       return To_Unbounded_String(SF.Trim(Year_Number'Image (Now_Year),Ada.Strings.Left) &
+           To_String(MonthPad) &
+           To_String(DayPad) &
+           SF.Trim(Duration'Image (Now_Seconds),Ada.Strings.Left));
+
+      end Generate_UID;
+
 
       procedure Write_Line (Position : String_List.Cursor) is
       begin
@@ -260,7 +285,7 @@ package body Message.Reader is
 
 
       Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-      TopLine := 3;
+      TopLine := 4;
       BottomLine := TermLnth - 4;
 
       Add (Line => 1,Column => 0,Str => "Nick : ");
@@ -286,23 +311,16 @@ package body Message.Reader is
                             MaxLength => 60);
          exit when Subject /= "";
       end loop;
+      Add (Line => 3,Column => 0, Str => "Enter your Message text. Esc to exit");
+      Refresh;
 
 
       Texaco.Text_Editor(Standard_Window,TopLine => TopLine,BottomLine => BottomLine,MaxLines => 100);
 
       if not Text_Buffer.Is_Empty then
 
-         Now := Clock;
-         Split (Now,
-                Now_Year,
-                Now_Month,
-                Now_Day,
-                Now_Seconds);
 
-         Msgid := To_Unbounded_String("a" & Year_Number'Image (Now_Year) &
-           Month_Number'Image (Now_Month) &
-           Day_Number'Image (Now_Day) &
-           Duration'Image (Now_Seconds));
+         Msgid := Generate_UID;
 
 
          Create (File => File,
