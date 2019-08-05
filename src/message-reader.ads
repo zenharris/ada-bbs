@@ -6,16 +6,19 @@ use Ada.Directories;
 with Terminal_Interface.Curses; use Terminal_Interface.Curses;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Fixed;
 with Ada.Calendar;            use Ada.Calendar;
 
 With Ada.Text_IO.Unbounded_IO;
 
 with Ada.Containers.Doubly_Linked_Lists;
 
+with Display_Warning;
 
 package Message.Reader is
    package SU renames Ada.Strings.Unbounded;
    package SUIO renames Ada.Text_IO.Unbounded_IO;
+   package SF renames Ada.Strings.Fixed;
 
    type Directory_Record is record
       FileName : Unbounded_String;

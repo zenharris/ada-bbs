@@ -237,6 +237,19 @@ package body Message.Reader is
       File : File_Type;
       Nick, Subject, Msgid : Unbounded_String;
 
+      function Pad (InStr : String;PadWdth : Integer) return String is
+         padstr,tmpstr : Unbounded_String;
+      begin
+         tmpstr := To_Unbounded_String(SF.Trim(Instr,Ada.Strings.Left));
+         if SU.Length(tmpstr) < PadWdth then
+            for i in SU.Length(tmpstr) .. PadWdth-1 loop
+               padstr := padstr & '0';
+            end loop;
+            return To_String(padstr) & To_String(tmpstr);
+         else
+            return To_String(tmpstr);
+         end if;
+      end Pad;
 
 
       function Generate_UID return Unbounded_String is
@@ -245,7 +258,6 @@ package body Message.Reader is
          Now_Month   : Month_Number;
          Now_Day     : Day_Number;
          Now_Seconds : Day_Duration;
-         DayPad, MonthPad : Unbounded_String;
 
       begin
          Split (Now,
@@ -254,22 +266,10 @@ package body Message.Reader is
                 Now_Day,
                 Now_Seconds);
 
-         if (Now_Day < 10) then
-            DayPad := To_Unbounded_String("0"& SF.Trim(Day_Number'Image (Now_Day),Ada.Strings.Left));
-         else
-            DayPad := To_Unbounded_String(SF.Trim(Day_Number'Image (Now_Day),Ada.Strings.Left));
-         end if;
-         if (Now_Month < 10) then
-            MonthPad := To_Unbounded_String("0"& SF.Trim(Month_Number'Image (Now_Month),Ada.Strings.Left));
-         else
-            MonthPad := To_Unbounded_String(SF.Trim(Month_Number'Image (Now_Month),Ada.Strings.Left));
-         end if;
-
-
        return To_Unbounded_String(SF.Trim(Year_Number'Image (Now_Year),Ada.Strings.Left) &
-           To_String(MonthPad) &
-           To_String(DayPad) &
-           SF.Trim(Duration'Image (Now_Seconds),Ada.Strings.Left));
+           Pad(Month_Number'Image (Now_Month),2) &
+           Pad(Day_Number'Image (Now_Day),2) &
+           Pad(Duration'Image (Now_Seconds),16));
 
       end Generate_UID;
 
