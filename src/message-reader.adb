@@ -253,6 +253,7 @@ package body Message.Reader is
                 Now_Month,
                 Now_Day,
                 Now_Seconds);
+
          if (Now_Day < 10) then
             DayPad := To_Unbounded_String("0"& SF.Trim(Day_Number'Image (Now_Day),Ada.Strings.Left));
          else
@@ -317,24 +318,34 @@ package body Message.Reader is
 
       Texaco.Text_Editor(Standard_Window,TopLine => TopLine,BottomLine => BottomLine,MaxLines => 100);
 
+
+
       if not Text_Buffer.Is_Empty then
+        if Display_Warning.GetYN("Do you want to save this message Y/N") then
+            Add (Line => 3,Column => 0, Str => "Posting Message");
+            Clear_To_End_Of_Line;
+            Refresh;
+            Msgid := Generate_UID;
 
 
-         Msgid := Generate_UID;
+            Create (File => File,
+                    Mode => Out_File,
+                    Name => To_String("messages/" & Msgid & ".msg"));
 
+            SUIO.Put_Line(File,"Sender: " & Nick);
+            SUIO.Put_Line(File,"Subject: " & Subject);
+            SUIO.Put_Line(File,"Msgid: " & Msgid);
+            SUIO.Put_Line(File,To_Unbounded_String(""));
 
-         Create (File => File,
-               Mode => Out_File,
-               Name => To_String("messages/" & Msgid & ".msg"));
+            Text_Buffer.Iterate(Write_Line'access);
 
-         SUIO.Put_Line(File,"Sender: " & Nick);
-         SUIO.Put_Line(File,"Subject: " & Subject);
-         SUIO.Put_Line(File,"Msgid: " & Msgid);
-         SUIO.Put_Line(File,To_Unbounded_String(""));
+            Close (File);
+         else
+            Add (Line => 3,Column => 0, Str => "Cancelling Message");
+            Clear_To_End_Of_Line;
+            Refresh;
+         end if;
 
-         Text_Buffer.Iterate(Write_Line'access);
-
-         Close (File);
       end if;
 
 

@@ -363,7 +363,10 @@ package body Texaco is
                end if;
 
 
-            when ESC => exit;
+            when ESC =>
+               if Display_Warning.GetYN("Do you want to exit the editor Y/N") then
+                  exit;
+               end if;
 
             when others => null;
             end case;
