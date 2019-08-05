@@ -77,6 +77,8 @@ package body Message.Reader is
       File : File_Type;
 
       HeaderType, HeaderText, Sender, Subject, scratch : Unbounded_String;
+      I, J, curs : Cursor;
+      swapped : Boolean;
 
    begin
       Clear(Directory_Buffer);
@@ -107,7 +109,7 @@ package body Message.Reader is
             end loop;
 
             Directory_Buffer.Append(New_Item => (To_Unbounded_String(Full_Name(Dir)),
-                                                 Sender &"  "& Subject) );
+                                                 Sender & Character'Val (9) & Subject) );
 
             exit;
 
@@ -119,6 +121,27 @@ package body Message.Reader is
       end loop;
 
       End_Search(Dir_Search);
+
+
+      -- Bubble Sort Director Buffer
+      loop
+         curs := Directory_Buffer.First;
+         swapped := False;
+         while curs /= Directory_Buffer.Last loop
+            I := curs;
+            Directory_List.Next(curs);
+            J := curs;
+            if Element(J).FileName < Element(I).FileName then
+               Swap(Directory_Buffer,I,J);
+               swapped := True;
+            end if;
+         end loop;
+         exit when not swapped;
+      end loop;
+
+
+
+
 
    end Read_Directory;
 
@@ -243,24 +266,24 @@ package body Message.Reader is
       Add (Line => 1,Column => 0,Str => "Nick : ");
       Nick := To_Unbounded_String("");
       loop
-      Texaco.Line_Editor(Standard_Window,
-                         StartLine => 1,
-                         StartColumn => 7,
-                         Editlength => 20,
-                         Edline => Nick,
-                         MaxLength => 20);
+         Texaco.Line_Editor(Standard_Window,
+                            StartLine => 1,
+                            StartColumn => 7,
+                            Editlength => 20,
+                            Edline => Nick,
+                            MaxLength => 20);
          exit when Nick /= "";
       end loop;
 
       Add (Line => 2,Column => 0,Str => "Subject : ");
       Subject := To_Unbounded_String("");
       loop
-      Texaco.Line_Editor(Standard_Window,
-                         StartLine => 2,
-                         StartColumn => 11,
-                         Editlength => 60,
-                         Edline => Subject,
-                         MaxLength => 60);
+         Texaco.Line_Editor(Standard_Window,
+                            StartLine => 2,
+                            StartColumn => 11,
+                            Editlength => 60,
+                            Edline => Subject,
+                            MaxLength => 60);
          exit when Subject /= "";
       end loop;
 
