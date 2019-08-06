@@ -14,6 +14,7 @@ With Ada.Text_IO.Unbounded_IO;
 with Ada.Containers.Doubly_Linked_Lists;
 
 with Display_Warning;
+with Process_Menu;
 
 package Message.Reader is
    package SU renames Ada.Strings.Unbounded;
@@ -34,6 +35,6 @@ package Message.Reader is
 
    procedure Read_Messages;
 
-   procedure Post_Message;
+   function Post_Message return Boolean;
 
 end Message.Reader;

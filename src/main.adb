@@ -111,9 +111,8 @@ procedure Main is
 
    begin
 
-      Message.Reader.Post_Message;
+      return Message.Reader.Post_Message;
 
-      return True;
    end;
 
    function Run_Message return Boolean is
@@ -132,12 +131,11 @@ procedure Main is
    end;
 
    Menu1 : Process_Menu.Menu_Type  :=
-      ((new String'("View Source"),Run_Fkey1'Unrestricted_Access),
+     ((new String'("Message Forum"),Run_Message'Unrestricted_Access),
       (new String'("IRC Chat"),Run_Pong_Bot'Unrestricted_Access),
-      (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
-      (new String'("Post Message"),Run_Message_Post'Unrestricted_Access),
-      (new String'("Read Messages"),Run_Message'Unrestricted_Access),
+      (new String'("View Source"),Run_Fkey1'Unrestricted_Access),
+      (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 

@@ -4,6 +4,8 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with Ada.Containers.Doubly_Linked_Lists;
 
+with Display_Warning;
+
 
 package Texaco is
    c :Key_Code;
