@@ -158,10 +158,16 @@ package body Message.Reader is
       return True;
    end ReRead_Directory;
 
+   function Post_Reply return Boolean is
+   begin
+      Display_Warning.Warning("Replys  Not Implemented yet");
+      return True;
+   end;
+
 
    MessageMenu : Process_Menu.Menu_Type  :=
      ((new String'("Post Message"),Post_Message'Access),
-      (new String'("Post Reply"),Post_Message'Access),
+      (new String'("Post Reply"),Post_Reply'Access),
      (new String'("Reload Msgs"),ReRead_Directory'Access));
 
 
@@ -188,10 +194,10 @@ package body Message.Reader is
                Refresh;
 
                Directory_List.Next(curs2);
+
                LineNum := LineNum +1;
                exit when LineNum+ TopLine >= BottomLine;
             end loop;
-
             Add(Standard_Window,Line => TopLine + LineNum,Column => 0,Str => To_String(Element(curs2).Prompt) );
             Clear_To_End_Of_Line;
             Refresh;
@@ -390,9 +396,6 @@ package body Message.Reader is
 
       return True;
    end Post_Message;
-
-
-
 
 
 
