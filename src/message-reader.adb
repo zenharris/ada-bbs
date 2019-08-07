@@ -4,6 +4,7 @@ with Texaco; use Texaco;
 package body Message.Reader is
 
    CurrentLine : Line_Position := 0;
+   CurrentCurs : Cursor;
    TopLine : Line_Position;
    TermLnth : Line_Position;
    TermWdth : Column_Position;
@@ -11,23 +12,35 @@ package body Message.Reader is
 
    Curr_Dir : string := Current_Directory;
 
-    procedure Scroll_Up is
-      begin
-         Move_Cursor(Line   => TopLine,Column => 0);
-         Delete_Line;
-         Move_Cursor(Line   => BottomLine,Column => 0);
-         Insert_Line;
-         Refresh;
-      end Scroll_Up;
+   procedure Scroll_Up is
+   begin
+      Move_Cursor(Line   => TopLine,Column => 0);
+      Delete_Line;
+      Move_Cursor(Line   => BottomLine,Column => 0);
+      Insert_Line;
+      Refresh;
+   end Scroll_Up;
 
-      procedure Scroll_Down is
-      begin
-         Move_Cursor(Line   => BottomLine,Column => 0);
-         Delete_Line;
-         Move_Cursor(Line   => TopLine,Column => 0);
-         Insert_Line;
-         Refresh;
-      end Scroll_Down;
+   procedure Scroll_Down is
+   begin
+      Move_Cursor(Line   => BottomLine,Column => 0);
+      Delete_Line;
+      Move_Cursor(Line   => TopLine,Column => 0);
+      Insert_Line;
+      Refresh;
+   end Scroll_Down;
+
+   Procedure Clear_Region is
+   begin
+      for i in TopLine .. BottomLine loop
+         Move_Cursor(Line   => i,Column => 0);
+         Clear_To_End_Of_Line;
+         -- Refresh;
+      end loop;
+      -- CurrentLine := 0;
+   end Clear_Region;
+
+
 
    procedure Increment (IncLine : in out Line_Position) is
    begin
@@ -103,7 +116,7 @@ package body Message.Reader is
    end Read_Header;
 
 
-   procedure Read_Directory is
+   procedure Read_Directory (ReplyID : Unbounded_String := To_Unbounded_String("")) is
       Dir : Directory_Entry_Type;
       Dir_Search : Search_Type;
 
@@ -121,12 +134,22 @@ package body Message.Reader is
                    Pattern => "*.msg");
       loop
          Get_Next_Entry(Dir_Search, Dir);
-
+         ReplyTo := To_Unbounded_String("");
+         Msgid := To_Unbounded_String("");
          Read_Header(Full_Name(Dir),Sender  => Sender,
                      Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
 
-         Directory_Buffer.Append(New_Item => (To_Unbounded_String(Full_Name(Dir)),
-                                              Sender & Character'Val (9) & Subject) );
+         if SU.Length(ReplyID) > 0   then
+
+            if ReplyTo = ReplyID or else Msgid = ReplyID then
+               Directory_Buffer.Append(New_Item => (To_Unbounded_String(Full_Name(Dir)),
+                                                    Sender & Character'Val (9) & Subject) );
+            end if;
+
+         else
+             Directory_Buffer.Append(New_Item => (To_Unbounded_String(Full_Name(Dir)),
+                                                  Sender & Character'Val (9) & Subject) );
+         end if;
 
          exit when not More_Entries(Dir_Search);
       end loop;
@@ -159,29 +182,92 @@ package body Message.Reader is
    end ReRead_Directory;
 
    function Post_Reply return Boolean is
+      Sender, Subject, MsgId, ReplyTo : Unbounded_String;
    begin
-      Display_Warning.Warning("Replys  Not Implemented yet");
-      return True;
+     -- Display_Warning.Warning("Replys  Not Implemented yet");
+
+       Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
+                   Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
+
+       return Post_Message(MsgId,Subject);
+
    end;
+
+   function Post_Thread_Reply return Boolean is
+      Sender, Subject, MsgId, ReplyTo : Unbounded_String;
+   begin
+     -- Display_Warning.Warning("Replys  Not Implemented yet");
+
+       Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
+                   Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
+      if SU.Length(ReplyTo) > 0 then
+         return Post_Message(ReplyTo,Subject);
+      else
+         Display_Warning.Warning("Selected message not part of a thread");
+         return False;
+      end if;
+
+   end Post_Thread_Reply;
+
+
+
+   function Show_Thread return Boolean is
+      Sender, Subject, MsgId, ReplyTo : Unbounded_String;
+      DefaultLength : Ada.Containers.Count_Type := 1;
+   begin
+
+       Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
+                   Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
+
+      if SU.Length(ReplyTo) = 0 then
+
+         Read_Directory(ReplyID => MsgId);
+         if Directory_Buffer.Length = DefaultLength then
+            Display_Warning.Warning("No Replys to this message");
+            Read_Directory;
+            -- return False;
+         end if;
+         CurrentLine := 0;
+         CurrentCurs := Directory_Buffer.First;
+      else
+        Read_Directory(ReplyID => ReplyTo);
+         CurrentLine := 0;
+         CurrentCurs := Directory_Buffer.First;
+      end if;
+
+      return True;
+
+   end Show_Thread;
+
+
+   function Run_Post_Message return Boolean is
+   begin
+
+      return Post_Message;
+
+   end Run_Post_Message;
 
 
    MessageMenu : Process_Menu.Menu_Type  :=
-     ((new String'("Post Message"),Post_Message'Access),
-      (new String'("Post Reply"),Post_Reply'Access),
-     (new String'("Reload Msgs"),ReRead_Directory'Access));
+     ((new String'("Show Replys"),Show_Thread'Access),
+      (new String'("Post Message"),Run_Post_Message'Access),
+      (new String'("Reply To Message"),Post_Reply'Access),
+      (new String'("Reply To Thread"),Post_Thread_Reply'Access),
+      (new String'("Reload Msgs"),ReRead_Directory'Access));
 
 
 
    procedure Read_Messages is
-      curs : Cursor;
+
       c : Key_Code;
 
       procedure Redraw_Screen is
          curs2 : Cursor;
          LineNum : Line_Position := 0;
       begin
+         Clear_Region;
          if not Directory_Buffer.Is_Empty then
-            curs2 := curs;
+            curs2 := CurrentCurs;
             for i in 1 .. CurrentLine loop
                if curs2 /= Directory_Buffer.First then
                   Directory_List.Previous(curs2);
@@ -216,40 +302,42 @@ package body Message.Reader is
 
       Read_Directory;
 
-      curs := Directory_Buffer.First;
+      CurrentCurs := Directory_Buffer.First;
 
       Redraw_Screen;
 
       loop
-         Add (Line => TermLnth - 2,Column => 1, Str => " Func 1  |                        Esc exit");
+         Add (Line => TermLnth - 2,Column => 1, Str => "|          | Func 2  |                        End to exit");
          Clear_To_End_Of_Line;
          Refresh;
 
-         HiLite(Standard_Window,Element(curs).Prompt,CurrentLine+TopLine);
+         HiLite(Standard_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
 
          c := Get_Keystroke;
 
          if c in Special_Key_Code'Range then
             case c is
-            when Key_F1 =>
-               FindElement := Element(curs);
-               Process_Menu.Open_Menu (Function_Number => 1,Menu_Array => MessageMenu );
-               curs := Directory_Buffer.Find(Item => FindElement);
+            when Key_F2 =>
+               FindElement := Element(CurrentCurs);
+               Process_Menu.Open_Menu (Function_Number => 2,Menu_Array => MessageMenu );
+               CurrentCurs := Directory_Buffer.Find(Item => FindElement);
                Clear;
                Redraw_Screen;
             when Key_Cursor_Down =>
-               if (curs /= Directory_Buffer.Last) then
-                  LoLite(Standard_Window,Element(curs).Prompt,CurrentLine+TopLine);
+               if (CurrentCurs /= Directory_Buffer.Last) then
+                  LoLite(Standard_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
                   Increment(CurrentLine);
-                  Directory_List.Next(curs);
+                  Directory_List.Next(CurrentCurs);
                end if;
             when Key_Cursor_Up =>
-               if (curs /= Directory_Buffer.First) then
+               if (CurrentCurs /= Directory_Buffer.First) then
                   -- LoLite(menu_win,Menu_Array,Current_Line);
-                  LoLite(Standard_Window,Element(curs).Prompt,CurrentLine+TopLine);
+                  LoLite(Standard_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
                   Decrement(CurrentLine);
-                  Directory_List.Previous(curs);
+                  Directory_List.Previous(CurrentCurs);
                end if;
+            when Key_End =>
+               exit;
             when others => null;
             end case;
          elsif c in Real_Key_Code'Range then
@@ -259,13 +347,14 @@ package body Message.Reader is
             case Character'Val (c) is
             when LF | CR =>
                begin
-                  Text_File_Scroller(To_String(Element(curs).FileName));
+                  Text_File_Scroller(To_String(Element(CurrentCurs).FileName));
                   Redraw_Screen;
                end;
             when ESC =>
-               begin
-                  exit;
-               end;
+               Null;
+           --    begin
+           --       exit;
+           --    end;
             when others => null;
             end case;
          end if;
@@ -274,7 +363,8 @@ package body Message.Reader is
 
    end Read_Messages;
 
-   function Post_Message return Boolean is
+   function Post_Message (ReplyID : in Unbounded_String := To_Unbounded_String("");
+                          ReplySubject : in Unbounded_String := To_Unbounded_String("")) return Boolean is
       FileName : Unbounded_String := To_Unbounded_String("messages/test.txt");
       File : File_Type;
       Nick, Subject, Msgid, FName : Unbounded_String;
@@ -343,7 +433,10 @@ package body Message.Reader is
       end loop;
 
       Add (Line => 2,Column => 0,Str => "Subject : ");
-      Subject := To_Unbounded_String("");
+      if (SU.Length(ReplySubject) > 0) then
+         Subject := ReplySubject;
+      end if;
+
       loop
          Texaco.Line_Editor(Standard_Window,
                             StartLine => 2,
@@ -377,6 +470,10 @@ package body Message.Reader is
             SUIO.Put_Line(File,"Sender: " & Nick);
             SUIO.Put_Line(File,"Subject: " & Subject);
             SUIO.Put_Line(File,"Msgid: " & Msgid);
+            if SU.Length(ReplyID) /= 0 then
+               SUIO.Put_Line(File,"ReplyTo: " & ReplyID);
+            end if;
+
             SUIO.Put_Line(File,To_Unbounded_String(""));
 
             Text_Buffer.Iterate(Write_Line'access);
