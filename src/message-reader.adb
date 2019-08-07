@@ -225,12 +225,11 @@ package body Message.Reader is
          if Directory_Buffer.Length = DefaultLength then
             Display_Warning.Warning("No Replys to this message");
             Read_Directory;
-            -- return False;
          end if;
          CurrentLine := 0;
          CurrentCurs := Directory_Buffer.First;
       else
-        Read_Directory(ReplyID => ReplyTo);
+         Read_Directory(ReplyID => ReplyTo);
          CurrentLine := 0;
          CurrentCurs := Directory_Buffer.First;
       end if;
@@ -249,11 +248,11 @@ package body Message.Reader is
 
 
    MessageMenu : Process_Menu.Menu_Type  :=
-     ((new String'("Show Replys"),Show_Thread'Access),
-      (new String'("Post Message"),Run_Post_Message'Access),
+     ((new String'("Show Reply Thread"),Show_Thread'Access),
+      (new String'("Post New Message"),Run_Post_Message'Access),
       (new String'("Reply To Message"),Post_Reply'Access),
       (new String'("Reply To Thread"),Post_Thread_Reply'Access),
-      (new String'("Reload Msgs"),ReRead_Directory'Access));
+      (new String'("Reload Messgages"),ReRead_Directory'Access));
 
 
 
@@ -434,7 +433,15 @@ package body Message.Reader is
 
       Add (Line => 2,Column => 0,Str => "Subject : ");
       if (SU.Length(ReplySubject) > 0) then
-         Subject := ReplySubject;
+
+         if SU.Index(ReplySubject,"Re.") = 1 then
+            Subject := ReplySubject;
+         else
+            Subject := "Re. " & ReplySubject;
+         end if;
+
+
+
       end if;
 
       loop
