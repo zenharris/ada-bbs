@@ -186,10 +186,12 @@ package body Message.Reader is
    begin
      -- Display_Warning.Warning("Replys  Not Implemented yet");
 
-       Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
-                   Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
+      Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
+                  Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
 
-       return Post_Message(MsgId,Subject);
+      Subject := "Re. " & Subject;
+
+      return Post_Message(MsgId,Subject);
 
    end;
 
@@ -252,7 +254,7 @@ package body Message.Reader is
       (new String'("Post New Message"),Run_Post_Message'Access),
       (new String'("Reply To Message"),Post_Reply'Access),
       (new String'("Reply To Thread"),Post_Thread_Reply'Access),
-      (new String'("Reload Messgages"),ReRead_Directory'Access));
+      (new String'("Reload Messages"),ReRead_Directory'Access));
 
 
 
