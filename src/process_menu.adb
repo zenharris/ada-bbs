@@ -13,7 +13,6 @@ package body Process_Menu is
       menu_win : Window;
       Ch :Character;
       Current_Line : Integer := 1;
-      Retval : Boolean;
 
       c : Key_Code;
       Lines : Line_Position;
@@ -87,7 +86,7 @@ package body Process_Menu is
                   Clear(Win => menu_win);
                   Refresh(menu_win);
                   Delete (Win => menu_win);
-                  Retval := Menu_Array(Current_Line).Func.all;
+                  Menu_Array(Current_Line).Func.all;
                   return;
                   -- exit;
                end;

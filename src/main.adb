@@ -67,20 +67,20 @@ procedure Main is
    end test_func;
 
 
-   function logout return Boolean is
+   procedure logout is
    begin
    --   Abort Display_Current_Time;
       End_Windows;
       Curses_Free_All;
 
       raise PROGRAM_ERROR with "Aborted because User Logout.  Bye";
-      return True;
+
    end logout;
 
-   function Run_Fkey1 return Boolean is
+   procedure Run_Fkey1 is
    begin
       Text_File_Scroller("main.adb");
-      return(True);
+
    end;
 
    function Run_Pong_Bot return Boolean is
@@ -90,7 +90,7 @@ procedure Main is
       return True;
    end;
 
-   function Run_Line_Editor return Boolean is
+   procedure Run_Line_Editor is
       Edline : Unbounded_String := To_Unbounded_String("");
       c : Key_Code;
    begin
@@ -104,16 +104,10 @@ procedure Main is
       Add(Standard_Window,Column => 0,Line => 10,Str => To_String(Edline));
       Refresh;
       c := Get_Keystroke;
-      return True;
-   end;
-
-   function Run_Message_Post return Boolean is
-
-   begin
-
-      return Message.Reader.Post_Message;
 
    end;
+
+
 
    function Run_Message return Boolean is
    begin
@@ -131,9 +125,9 @@ procedure Main is
    end;
 
    Menu1 : Process_Menu.Menu_Type  :=
-     ((new String'("Message Forum"),Run_Message'Unrestricted_Access),
-      (new String'("IRC Chat"),Run_Pong_Bot'Unrestricted_Access),
-      (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
+     ((new String'("Message Forum"),Message.Reader.Read_Messages'Unrestricted_Access),
+      (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
+      (new String'("Serpent Game"),Serpent'Unrestricted_Access),
       (new String'("View Source"),Run_Fkey1'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));

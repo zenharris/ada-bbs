@@ -10,7 +10,7 @@ package  Process_Menu is
    type Function_Access is access function return Boolean;
    type Menu_Record is record
       Prompt : String_Access;
-      Func : Function_Access;
+      Func :  access procedure;  --Function_Access;
    end record;
    type Menu_Type is array (Positive range <>) of Menu_Record;
 
