@@ -36,6 +36,7 @@ package body Message.Reader is
       for i in TopLine .. BottomLine loop
          Move_Cursor(Line   => i,Column => 2);
          Clear_To_End_Of_Line;
+
          -- Refresh;
       end loop;
       -- CurrentLine := 0;
@@ -108,6 +109,10 @@ package body Message.Reader is
          Add(Standard_Window,Line => TopLine + LineNum,Column => 2,Str => To_String(Element(curs2).Prompt) );
          Clear_To_End_Of_Line;
          Refresh;
+
+         Add (Line => TermLnth - 2,Column => 1, Str => "          | Func 2  |                        End to exit");
+         Clear_To_End_Of_Line;
+         Box;
       end if;
    end Redraw_Screen;
 
@@ -293,7 +298,10 @@ package body Message.Reader is
       (new String'("Reply To Thread"),Post_Thread_Reply'Access),
       (new String'("Reply To Message"),Post_Reply'Access),
       (new String'("Post New Message"),Run_Post_Message'Access),
-      (new String'("Reload Messages"),ReRead_Directory'Access));
+      (new String'("Reload Messages"),ReRead_Directory'Access),
+      (new String'("User Login"),Message.Login.Login_User'Access),
+      (new String'("Create User"),Message.Login.Create_User'Access));
+
 
 
 
@@ -314,18 +322,13 @@ package body Message.Reader is
       CurrentCurs := Directory_Buffer.First;
 
 
+      Redraw_Screen;
+
+
+
+      Refresh;
 
       loop
-         Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-         BottomLine := TermLnth - 4;
-         Clear;
-         Box;
-
-         Redraw_Screen;
-
-         Add (Line => TermLnth - 2,Column => 1, Str => "|          | Func 2  |                        End to exit");
-         Clear_To_End_Of_Line;
-         Refresh;
 
          HiLite(Standard_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
 
@@ -352,7 +355,16 @@ package body Message.Reader is
                   Decrement(CurrentLine);
                   Directory_List.Previous(CurrentCurs);
                end if;
-            when Key_End =>
+               when Key_Resize =>
+                  Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+                  BottomLine := TermLnth - 4;
+                  Clear;
+                  Redraw_Screen;
+
+                 -- Add (Line => TermLnth - 2,Column => 1, Str => "          | Func 2  |                        End to exit");
+                 -- Clear_To_End_Of_Line;
+                 -- Box;
+               when Key_End =>
                exit;
             when others => null;
             end case;

@@ -52,88 +52,98 @@ package body Message.Post is
       end Write_Line;
 
    begin
-      Clear;
+
+      if UserLoggedIn then
+
+         Clear;
 
 
-      Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-      TopLine := 4;
-      BottomLine := TermLnth - 4;
+         Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+         TopLine := 4;
+         BottomLine := TermLnth - 4;
 
-      Add (Line => 1,Column => 0,Str => "Nick : ");
-      Nick := To_Unbounded_String("");
-      loop
-         Texaco.Line_Editor(Standard_Window,
-                            StartLine => 1,
-                            StartColumn => 7,
-                            Editlength => 15,
-                            Edline => Nick,
-                            MaxLength => 15);
-         exit when Nick /= "";
-      end loop;
+         Nick := UserLoggedName;
 
-      Add (Line => 2,Column => 0,Str => "Subject : ");
-      if (SU.Length(ReplySubject) > 0) then
-
-         if SU.Index(ReplySubject,"Re.") = 1 then
-            Subject := ReplySubject;
-         else
-            Subject := "Re. " & ReplySubject;
-         end if;
-
-      end if;
-
-      loop
-         Texaco.Line_Editor(Standard_Window,
-                            StartLine => 2,
-                            StartColumn => 11,
-                            Editlength => 60,
-                            Edline => Subject,
-                            MaxLength => 60);
-         exit when Subject /= "";
-      end loop;
-      Add (Line => 3,Column => 0, Str => "Enter your Message text. Esc to exit");
-      Refresh;
+         Add (Line => 1,Column => 0,Str => "Nick : " & To_String(Nick));
 
 
-      Texaco.Text_Editor(Standard_Window,TopLine => TopLine,BottomLine => BottomLine,MaxLines => 100);
+       --  Nick := To_Unbounded_String("");
+       --  loop
+       --     Texaco.Line_Editor(Standard_Window,
+       --                        StartLine => 1,
+       --                        StartColumn => 7,
+       --                        Editlength => 15,
+       --                        Edline => Nick,
+       --                        MaxLength => 15);
+       --     exit when Nick /= "";
+       --  end loop;
 
 
+         if (SU.Length(ReplySubject) > 0) then
 
-      if not Text_Buffer.Is_Empty then
-        if Display_Warning.GetYN("Do you want to save this message Y/N") then
-            Add (Line => 3,Column => 0, Str => "Posting Message");
-            Clear_To_End_Of_Line;
-            Refresh;
-
-            Msgid := Generate_UID;
-
-            FName := Msgid & ".msg";
-            Create (File => File,
-                    Mode => Out_File,
-                    Name => To_String("messages/" & FName));
-
-            SUIO.Put_Line(File,"Sender: " & Nick);
-            SUIO.Put_Line(File,"Subject: " & Subject);
-            SUIO.Put_Line(File,"Msgid: " & Msgid);
-            if SU.Length(ReplyID) /= 0 then
-               SUIO.Put_Line(File,"ReplyTo: " & ReplyID);
+            if SU.Index(ReplySubject,"Re.") = 1 then
+               Subject := ReplySubject;
+            else
+               Subject := "Re. " & ReplySubject;
             end if;
 
-            SUIO.Put_Line(File,To_Unbounded_String(""));
-
-            Text_Buffer.Iterate(Write_Line'access);
-
-            Close (File);
-
-            Directory_Buffer.Append(New_Item => (To_Unbounded_String(Curr_Dir&"/messages/"&To_String(FName)),
-                                                 CharPad(Nick,15) & Subject) );
-
-         else
-            Add (Line => 3,Column => 0, Str => "Cancelling Message");
-            Clear_To_End_Of_Line;
-            Refresh;
          end if;
+         Add (Line => 2,Column => 0,Str => "Subject : ");
+         loop
+            Texaco.Line_Editor(Standard_Window,
+                               StartLine => 2,
+                               StartColumn => 11,
+                               Editlength => 60,
+                               Edline => Subject,
+                               MaxLength => 60);
+            exit when Subject /= "";
+         end loop;
+         Add (Line => 3,Column => 0, Str => "Enter your Message text. Esc to exit");
+         Refresh;
 
+
+         Texaco.Text_Editor(Standard_Window,TopLine => TopLine,BottomLine => BottomLine,MaxLines => 100);
+
+
+
+         if not Text_Buffer.Is_Empty then
+            if Display_Warning.GetYN("Do you want to save this message Y/N") then
+               Add (Line => 3,Column => 0, Str => "Posting Message");
+               Clear_To_End_Of_Line;
+               Refresh;
+
+               Msgid := Generate_UID;
+
+               FName := Msgid & ".msg";
+               Create (File => File,
+                       Mode => Out_File,
+                       Name => To_String("messages/" & FName));
+
+               SUIO.Put_Line(File,"Sender: " & Nick);
+               SUIO.Put_Line(File,"Subject: " & Subject);
+               SUIO.Put_Line(File,"Msgid: " & Msgid);
+               if SU.Length(ReplyID) /= 0 then
+                  SUIO.Put_Line(File,"ReplyTo: " & ReplyID);
+               end if;
+
+               SUIO.Put_Line(File,To_Unbounded_String(""));
+
+               Text_Buffer.Iterate(Write_Line'access);
+
+               Close (File);
+
+               Directory_Buffer.Append(New_Item => (To_Unbounded_String(Curr_Dir&"/messages/"&To_String(FName)),
+                                                    CharPad(Nick,15) & Subject) );
+
+            else
+               Add (Line => 3,Column => 0, Str => "Cancelling Message");
+               Clear_To_End_Of_Line;
+               Refresh;
+            end if;
+
+         end if;
+      else
+         Display_Warning.Warning("You Must be Logged In to Post");
       end if;
 
    end Post_Message;
