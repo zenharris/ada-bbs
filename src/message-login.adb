@@ -58,7 +58,8 @@ Package body Message.Login is
 
    procedure Create_User is
       File : File_Type;
-      UserName, FullName, Password, Fname : Unbounded_String;
+      UserName, FullName, Password, Password2, Fname : Unbounded_String;
+      NowDate : Time := Clock;
    begin
       Clear;
       Box;
@@ -69,7 +70,8 @@ Package body Message.Login is
                             StartColumn => 15,
                             Editlength => 16,
                             Edline => UserName,
-                            MaxLength => 15);
+                            MaxLength => 15,
+                           SuppressSpaces => True);
 
          -- FName := UserName & ".cfg";
 
@@ -98,12 +100,25 @@ Package body Message.Login is
 
       Add (Line => 4,Column => 2,Str => "Password : ");
       loop
-         Texaco.Line_Editor(Standard_Window,
-                            StartLine => 4,
-                            StartColumn => 15,
-                            Editlength => 16,
-                            Edline => Password,
-                            MaxLength => 15);
+         Texaco.Password_Editor(Standard_Window,
+                                StartLine => 4,
+                                StartColumn => 15,
+                                Edline => Password,
+                                MaxLength => 15);
+         Add (Line => 5,Column => 2,Str => "Re-Type Password : ");
+         Texaco.Password_Editor(Standard_Window,
+                                StartLine => 5,
+                                StartColumn => 21,
+                                Edline => Password2,
+                                MaxLength => 15);
+
+         if Password /= Password2 then
+            Display_Warning.Warning("Passwords Do Not Match");
+            Password := To_Unbounded_String("");
+            Password2 := To_Unbounded_String("");
+         end if;
+
+
          exit when Password /= "";
       end loop;
 
@@ -118,7 +133,7 @@ Package body Message.Login is
          SUIO.Put_Line(File,"UserName: " & UserName);
          SUIO.Put_Line(File,"FullName: " & FullName);
          SUIO.Put_Line(File,"Password: " & Password);
-
+         SUIO.Put_Line(File,"CreateDate: " & To_Unbounded_String(Image (NowDate)));
 
          SUIO.Put_Line(File,To_Unbounded_String(""));
 
@@ -142,17 +157,17 @@ Package body Message.Login is
                             StartColumn => 15,
                             Editlength => 16,
                             Edline => InputUserName,
-                            MaxLength => 15);
+                            MaxLength => 15,
+                           SuppressSpaces => True);
 
          exit when InputUserName /= "";
       end loop;
 
       Add (Line => 3,Column => 2,Str => "Password : ");
       loop
-         Texaco.Line_Editor(Standard_Window,
+         Texaco.Password_Editor(Standard_Window,
                             StartLine => 3,
                             StartColumn => 15,
-                            Editlength => 16,
                             Edline => InputPassword,
                             MaxLength => 15);
          exit when InputPassword /= "";
@@ -168,6 +183,7 @@ Package body Message.Login is
                      FullName => FullName,
                      Password => Password);
          if InputPassword = Password then
+
             UserLoggedIn := True;
             UserLoggedName := UserName;
             UserLoggedFullName := FullName;
@@ -177,8 +193,6 @@ Package body Message.Login is
             Display_Warning.Warning("Login Failed");
          end if;
 
-
-         null;
       else
          Display_Warning.Warning("Login Failed");
       end if;

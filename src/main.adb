@@ -95,12 +95,11 @@ procedure Main is
       c : Key_Code;
    begin
 
-      Texaco.Line_Editor(Standard_Window,
+      Texaco.Password_Editor(Standard_Window,
                          StartLine => Lines-3,
                          StartColumn => 0,
-                         EditLength => Columns,
-                         Edline => Edline,
-                         MaxLength => Integer((Columns-1)*5)-2);
+                          Edline => Edline,
+                         MaxLength => 15);
       Add(Standard_Window,Column => 0,Line => 10,Str => To_String(Edline));
       Refresh;
       c := Get_Keystroke;

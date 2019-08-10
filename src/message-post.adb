@@ -7,6 +7,7 @@ package body Message.Post is
       FileName : Unbounded_String := To_Unbounded_String("messages/test.txt");
       File : File_Type;
       Nick, Subject, Msgid, FName : Unbounded_String;
+      PostDate : Time := Clock;
 
       function Pad (InStr : String;PadWdth : Integer) return String is
          padstr,tmpstr : Unbounded_String;
@@ -30,6 +31,7 @@ package body Message.Post is
          Now_Day     : Day_Number;
          Now_Seconds : Day_Duration;
       begin
+
          Split (Now,
                 Now_Year,
                 Now_Month,
@@ -67,17 +69,6 @@ package body Message.Post is
          Add (Line => 1,Column => 0,Str => "Nick : " & To_String(Nick));
 
 
-       --  Nick := To_Unbounded_String("");
-       --  loop
-       --     Texaco.Line_Editor(Standard_Window,
-       --                        StartLine => 1,
-       --                        StartColumn => 7,
-       --                        Editlength => 15,
-       --                        Edline => Nick,
-       --                        MaxLength => 15);
-       --     exit when Nick /= "";
-       --  end loop;
-
 
          if (SU.Length(ReplySubject) > 0) then
 
@@ -88,6 +79,7 @@ package body Message.Post is
             end if;
 
          end if;
+
          Add (Line => 2,Column => 0,Str => "Subject : ");
          loop
             Texaco.Line_Editor(Standard_Window,
@@ -121,7 +113,9 @@ package body Message.Post is
 
                SUIO.Put_Line(File,"Sender: " & Nick);
                SUIO.Put_Line(File,"Subject: " & Subject);
+               SUIO.Put_Line(File,"PostDate: " & To_Unbounded_String(Image (PostDate)));
                SUIO.Put_Line(File,"Msgid: " & Msgid);
+
                if SU.Length(ReplyID) /= 0 then
                   SUIO.Put_Line(File,"ReplyTo: " & ReplyID);
                end if;

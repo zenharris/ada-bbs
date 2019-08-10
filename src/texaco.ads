@@ -28,11 +28,18 @@ package Texaco is
                           EditLength : Column_Position;
                           Edline : in out Unbounded_String;
                           MaxLength : Integer;
-                          TextEditMode : Boolean := False);
+                          TextEditMode : Boolean := False;
+                         SuppressSpaces : Boolean := False);
 
    procedure Text_Editor (win1 : Window;
                           TopLine : Line_Position;
                           BottomLine :Line_Position;
                           MaxLines : Integer);
    procedure Dump_List;
+
+   procedure Password_Editor (Win1 : Window;
+                              StartLine : Line_Position;
+                              StartColumn :Column_Position;
+                              Edline : in out Unbounded_String;
+                              MaxLength : Integer);
 end Texaco;

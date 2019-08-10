@@ -19,6 +19,7 @@ package body Message.Reader is
       Delete_Line;
       Move_Cursor(Line   => BottomLine,Column => 0);
       Insert_Line;
+      Box;
       Refresh;
    end Scroll_Up;
 
@@ -28,6 +29,7 @@ package body Message.Reader is
       Delete_Line;
       Move_Cursor(Line   => TopLine,Column => 0);
       Insert_Line;
+      Box;
       Refresh;
    end Scroll_Down;
 
@@ -36,8 +38,6 @@ package body Message.Reader is
       for i in TopLine .. BottomLine loop
          Move_Cursor(Line   => i,Column => 2);
          Clear_To_End_Of_Line;
-
-         -- Refresh;
       end loop;
       -- CurrentLine := 0;
    end Clear_Region;
@@ -321,10 +321,7 @@ package body Message.Reader is
 
       CurrentCurs := Directory_Buffer.First;
 
-
       Redraw_Screen;
-
-
 
       Refresh;
 
@@ -355,17 +352,12 @@ package body Message.Reader is
                   Decrement(CurrentLine);
                   Directory_List.Previous(CurrentCurs);
                end if;
-               when Key_Resize =>
-                  Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-                  BottomLine := TermLnth - 4;
-                  Clear;
-                  Redraw_Screen;
-
-                 -- Add (Line => TermLnth - 2,Column => 1, Str => "          | Func 2  |                        End to exit");
-                 -- Clear_To_End_Of_Line;
-                 -- Box;
-               when Key_End =>
-               exit;
+            when Key_Resize =>
+               Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+               BottomLine := TermLnth - 4;
+               Clear;
+               Redraw_Screen;
+            when Key_End => exit;
             when others => null;
             end case;
          elsif c in Real_Key_Code'Range then
@@ -378,11 +370,7 @@ package body Message.Reader is
                   Text_File_Scroller(To_String(Element(CurrentCurs).FileName));
                   Redraw_Screen;
                end;
-            when ESC =>
-               Null;
-           --    begin
-           --       exit;
-           --    end;
+            when ESC => Null;
             when others => null;
             end case;
          end if;

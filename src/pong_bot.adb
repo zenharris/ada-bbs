@@ -299,9 +299,10 @@ package body Pong_Bot is
       Texaco.Line_Editor(Standard_Window,
                          StartLine => Lines-3,
                          StartColumn => 14,
-                         Editlength => 20,
+                         Editlength => 21,
                          Edline => Edline,
-                         MaxLength => 20);
+                         MaxLength => 20,
+                        SuppressSpaces => True);
 
 
       c := Texaco.c;
