@@ -148,6 +148,7 @@ Package body Message.Login is
    procedure Login_User is
    InputUserName, InputPassword, Fname, UserName,FullName,Password : Unbounded_String;
    begin
+
       Clear;
       Box;
       Add (Line => 2,Column => 2,Str => "UserName : ");
@@ -158,7 +159,7 @@ Package body Message.Login is
                             Editlength => 16,
                             Edline => InputUserName,
                             MaxLength => 15,
-                           SuppressSpaces => True);
+                            SuppressSpaces => True);
 
          exit when InputUserName /= "";
       end loop;
@@ -166,10 +167,10 @@ Package body Message.Login is
       Add (Line => 3,Column => 2,Str => "Password : ");
       loop
          Texaco.Password_Editor(Standard_Window,
-                            StartLine => 3,
-                            StartColumn => 15,
-                            Edline => InputPassword,
-                            MaxLength => 15);
+                                StartLine => 3,
+                                StartColumn => 15,
+                                Edline => InputPassword,
+                                MaxLength => 15);
          exit when InputPassword /= "";
       end loop;
 

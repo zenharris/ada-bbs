@@ -8,6 +8,7 @@ package body Message.Post is
       File : File_Type;
       Nick, Subject, Msgid, FName : Unbounded_String;
       PostDate : Time := Clock;
+      Cancelled : Boolean := False;
 
       function Pad (InStr : String;PadWdth : Integer) return String is
          padstr,tmpstr : Unbounded_String;
@@ -99,17 +100,14 @@ package body Message.Post is
 
 
          if not Text_Buffer.Is_Empty then
-            if Display_Warning.GetYN("Do you want to save this message Y/N") then
-               Add (Line => 3,Column => 0, Str => "Posting Message");
-               Clear_To_End_Of_Line;
-               Refresh;
+            if Texaco.Save then
 
                Msgid := Generate_UID;
 
-               FName := Msgid & ".msg";
+               FName := "messages/" & Msgid & ".msg";
                Create (File => File,
                        Mode => Out_File,
-                       Name => To_String("messages/" & FName));
+                       Name => To_String(FName));
 
                SUIO.Put_Line(File,"Sender: " & Nick);
                SUIO.Put_Line(File,"Subject: " & Subject);
@@ -130,9 +128,8 @@ package body Message.Post is
                                                     CharPad(Nick,15) & Subject) );
 
             else
-               Add (Line => 3,Column => 0, Str => "Cancelling Message");
-               Clear_To_End_Of_Line;
-               Refresh;
+               Display_Warning.Warning("Cancelling Message");
+
             end if;
 
          end if;

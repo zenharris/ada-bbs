@@ -234,9 +234,7 @@ package body Texaco is
             end case;
          end if;
       end loop;
-   exception
-      when CONSTRAINT_ERROR =>
-         null;
+
    end Line_Editor;
 
 
@@ -254,6 +252,7 @@ package body Texaco is
       TermWdth : Column_Position;
       EditBuffer,CarryOver,Remainder : Unbounded_String;
       endpoint : Integer;
+      Cancelled : Boolean := False;
 
 
 
@@ -327,6 +326,7 @@ package body Texaco is
       Text_Buffer.Append(To_Unbounded_String(""));
       curs := Text_Buffer.First;
       Current_Char := 1;
+
 
       loop
          Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
@@ -438,7 +438,8 @@ package body Texaco is
 
 
             when ESC =>
-               if Display_Warning.GetYN("Do you want to exit the editor Y/N") then
+               Save := Display_Warning.GetYN("Save & exit(Y)  Discard & exit(N)");
+               if not Display_Warning.Cancel then
                   exit;
                end if;
 
@@ -449,9 +450,7 @@ package body Texaco is
 
 
       end loop;
-   exception
-      when CONSTRAINT_ERROR =>
-         null;
+
    end Text_Editor;
 
    procedure Dump_List is

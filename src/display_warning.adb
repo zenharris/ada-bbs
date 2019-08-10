@@ -1,6 +1,3 @@
-with Terminal_Interface.Curses; use Terminal_Interface.Curses;
-
-with Ada.Text_IO;             use Ada.Text_IO;
 
 
 
@@ -46,7 +43,7 @@ package body Display_Warning is
       c : Key_Code;
       Lines : Line_Position;
       Columns : Column_Position;
-      retval : Boolean;
+      retval : Boolean := False;
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
 
@@ -65,8 +62,9 @@ package body Display_Warning is
            Str => Message);
 
 
-      Add (Win => Display_Window,Column => 1,Line => 4,Str => "y/n to Continue");
+      Add (Win => Display_Window,Column => 1,Line => 4,Str => "y/n Continue  Esc Cancel");
       Refresh(Display_Window);
+      Cancel := False;
       loop
          c := Get_Keystroke;
          case Character'Val (c) is
@@ -75,6 +73,9 @@ package body Display_Warning is
                exit;
             when 'N'|'n' =>
                retval := False;
+               exit;
+            when ESC =>
+               Cancel := True;
                exit;
             when others => null;
          end case;

@@ -11,6 +11,7 @@ package Texaco is
    c :Key_Code;
    Ch : Character;
    Current_Char : Column_Position := 1;
+   Save : Boolean;
 
    -- package DLL renames Ada.Containers.Doubly_Linked_Lists;
    package SU renames Ada.Strings.Unbounded;
