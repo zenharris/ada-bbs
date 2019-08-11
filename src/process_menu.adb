@@ -82,13 +82,10 @@ package body Process_Menu is
             case Ch is
             when LF | CR =>
                begin
-                  -- Display_Warning.Warning ("You Selected " & Menu_Array(Current_Line).Prompt.all);
-                  Clear(Win => menu_win);
-                  Refresh(menu_win);
-                  Delete (Win => menu_win);
+
                   Menu_Array(Current_Line).Func.all;
-                  return;
-                  -- exit;
+
+                  exit;
                end;
             when ESC =>
                begin

@@ -40,32 +40,48 @@ Package body Message.Login is
 
 
 
-   function FileExists (Namen : Unbounded_String) return Boolean is
-      File : File_Type;
-   begin
-      Open (File => File,
-            Mode => In_File,
-            Name => To_String(Namen));
-      Close (File);
-      return True;
-   exception
-      when End_Error =>
-         Close (File);
-         return True;
-      when ADA.IO_EXCEPTIONS.NAME_ERROR =>
-         return False;
-   end FileExists;
+ --  function FileExists (Namen : Unbounded_String) return Boolean is
+ --     File : File_Type;
+ --  begin
+ --     Open (File => File,
+ --           Mode => In_File,
+ --           Name => To_String(Namen));
+ --     Close (File);
+ --     return True;
+ --  exception
+ --     when End_Error =>
+ --        Close (File);
+ --        return True;
+ --     when ADA.IO_EXCEPTIONS.NAME_ERROR =>
+ --        return False;
+ --  end FileExists;
 
    procedure Create_User is
       File : File_Type;
       UserName, FullName, Password, Password2, Fname : Unbounded_String;
       NowDate : Time := Clock;
+      Width,Columns : Column_Position := 50;
+      Length,Lines : Line_Position := 8;
+      Display_Window : Window;
    begin
-      Clear;
-      Box;
-      Add (Line => 2,Column => 2,Str => "UserName : ");
+
+
+      Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
+
+      Display_Window := Sub_Window(Win => Standard_Window,
+                                   Number_Of_Lines => Length,
+                                   Number_Of_Columns => Width,
+                                   First_Line_Position => (Lines - Length) / 2,
+                                   First_Column_Position => (Columns - Width) / 2);
+
+      Clear(Display_Window);
+      Box(Display_Window);
+
+
+
       loop
-         Texaco.Line_Editor(Standard_Window,
+         Add (Display_Window,Line => 2,Column => 2,Str => "UserName : ");
+         Texaco.Line_Editor(Display_Window,
                             StartLine => 2,
                             StartColumn => 15,
                             Editlength => 16,
@@ -75,21 +91,24 @@ Package body Message.Login is
 
          -- FName := UserName & ".cfg";
 
-          Fname :=  To_Unbounded_String(Ada.Strings.Fixed.Translate(To_String(UserName),
-                                              Ada.Strings.Maps.Constants.Lower_Case_Map));
-
-         if FileExists ("users/" & FName & ".cfg") then
-            Display_Warning.Warning("That Username is already in use");
+         Fname :=  To_Unbounded_String(Ada.Strings.Fixed.Translate(To_String(UserName),
+                                       Ada.Strings.Maps.Constants.Lower_Case_Map));
+         Fname := "users/" & FName & ".cfg";
+         if Exists (To_String(FName)) then
+            Display_Warning.Warning("That Username is already in use",Down => Integer(Length-1));
             UserName := To_Unbounded_String("");
+            Redraw(Display_Window,0,Integer(Length)-1);
+            Refresh(Display_Window);
          end if;
 
 
          exit when UserName /= "";
       end loop;
 
-      Add (Line => 3,Column => 2,Str => "Full Name : ");
+
       loop
-         Texaco.Line_Editor(Standard_Window,
+         Add (Display_Window,Line => 3,Column => 2,Str => "Full Name : ");
+         Texaco.Line_Editor(Display_Window,
                             StartLine => 3,
                             StartColumn => 15,
                             Editlength => 31,
@@ -98,37 +117,39 @@ Package body Message.Login is
          exit when FullName /= "";
       end loop;
 
-      Add (Line => 4,Column => 2,Str => "Password : ");
+
       loop
-         Texaco.Password_Editor(Standard_Window,
+         Add (Display_Window,Line => 4,Column => 2,Str => "Password : ");
+         Texaco.Password_Editor(Display_Window,
                                 StartLine => 4,
                                 StartColumn => 15,
                                 Edline => Password,
                                 MaxLength => 15);
-         Add (Line => 5,Column => 2,Str => "Re-Type Password : ");
-         Texaco.Password_Editor(Standard_Window,
+         Add (Display_Window,Line => 5,Column => 2,Str => "Re-Type Password : ");
+         Texaco.Password_Editor(Display_Window,
                                 StartLine => 5,
                                 StartColumn => 21,
                                 Edline => Password2,
                                 MaxLength => 15);
 
          if Password /= Password2 then
-            Display_Warning.Warning("Passwords Do Not Match");
+            Display_Warning.Warning("Passwords Do Not Match",Down => Integer(Length-1));
             Password := To_Unbounded_String("");
             Password2 := To_Unbounded_String("");
+
          end if;
 
 
          exit when Password /= "";
       end loop;
 
-      if Display_Warning.GetYN("Do You want to save this User Y/N") then
+      if Display_Warning.GetYN("Do You want to save this User Y/N",Down => Integer(Length-1)) then
 
 
          -- FName := UserName & ".cfg";
          Create (File => File,
                  Mode => Out_File,
-                 Name => To_String("users/" & FName & ".cfg"));
+                 Name => To_String(FName));
 
          SUIO.Put_Line(File,"UserName: " & UserName);
          SUIO.Put_Line(File,"FullName: " & FullName);
@@ -141,19 +162,36 @@ Package body Message.Login is
          Close (File);
       end if;
 
-
+      Clear(Display_Window);
+      Refresh(Display_Window);
+      Delete (Win => Display_Window);
 
    end Create_User;
 
    procedure Login_User is
-   InputUserName, InputPassword, Fname, UserName,FullName,Password : Unbounded_String;
+      InputUserName, InputPassword, Fname, UserName,FullName,Password : Unbounded_String;
+      Width,Columns : Column_Position := 50;
+      Length,Lines : Line_Position := 8;
+      Display_Window : Window;
    begin
 
-      Clear;
-      Box;
-      Add (Line => 2,Column => 2,Str => "UserName : ");
+
+      Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
+
+      Display_Window := Sub_Window(Win => Standard_Window,
+                                   Number_Of_Lines => Length,
+                                   Number_Of_Columns => Width,
+                                   First_Line_Position => (Lines - Length) / 2,
+                                   First_Column_Position => (Columns - Width) / 2);
+
+      Clear(Display_Window);
+      Box(Display_Window);
+
+
+
       loop
-         Texaco.Line_Editor(Standard_Window,
+         Add (Display_Window,Line => 2,Column => 2,Str => "UserName : ");
+         Texaco.Line_Editor(Display_Window,
                             StartLine => 2,
                             StartColumn => 15,
                             Editlength => 16,
@@ -164,9 +202,10 @@ Package body Message.Login is
          exit when InputUserName /= "";
       end loop;
 
-      Add (Line => 3,Column => 2,Str => "Password : ");
+
       loop
-         Texaco.Password_Editor(Standard_Window,
+         Add (Display_Window,Line => 3,Column => 2,Str => "Password : ");
+         Texaco.Password_Editor(Display_Window,
                                 StartLine => 3,
                                 StartColumn => 15,
                                 Edline => InputPassword,
@@ -179,7 +218,7 @@ Package body Message.Login is
                                     Ada.Strings.Maps.Constants.Lower_Case_Map));
       Fname := "users/" & Fname & ".cfg";
 
-      if FileExists (FName) then
+      if Exists (To_String(FName)) then
          Read_Config(To_String(Fname),UserName => UserName,
                      FullName => FullName,
                      Password => Password);
@@ -188,15 +227,20 @@ Package body Message.Login is
             UserLoggedIn := True;
             UserLoggedName := UserName;
             UserLoggedFullName := FullName;
-            Display_Warning.Warning(To_String("Logged in "& UserLoggedName));
+            Display_Warning.Warning(To_String("Logged in "& UserLoggedName),Down => Integer(Length-1));
 
          else
-            Display_Warning.Warning("Login Failed");
+            Display_Warning.Warning("Login Failed",Down => Integer(Length-1));
          end if;
 
       else
-         Display_Warning.Warning("Login Failed");
+         Display_Warning.Warning("Login Failed",Down => Integer(Length-1));
       end if;
+
+
+      Clear(Display_Window);
+      Refresh(Display_Window);
+      Delete (Win => Display_Window);
 
    end Login_User;
 

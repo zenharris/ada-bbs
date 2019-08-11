@@ -8,6 +8,6 @@ package Display_Warning is
 
    Cancel : Boolean := False;
 
-   procedure Warning (Message : String);
-   function GetYN (Message : String) return Boolean;
+   procedure Warning (Message : String; Down : Integer := 0);
+   function GetYN (Message : String; Down : Integer := 0) return Boolean;
 end Display_Warning;

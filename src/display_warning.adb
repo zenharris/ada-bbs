@@ -3,7 +3,7 @@
 
 package body Display_Warning is
 
-   procedure Warning (Message : String) is
+   procedure Warning (Message : String; Down :Integer := 0) is
       Display_Window : Window;
       Width : Column_Position := 40;
       Length : Line_Position := 5;
@@ -17,7 +17,7 @@ package body Display_Warning is
       Display_Window := Sub_Window(Win => Standard_Window,
                                    Number_Of_Lines => Length,
                                    Number_Of_Columns => Width,
-                                   First_Line_Position => (Lines - Length) / 2,
+                                   First_Line_Position => ((Lines - Length) / 2)+Line_Position(Down),
                                    First_Column_Position => (Columns - Width) / 2);
 
       Clear(Display_Window);
@@ -36,7 +36,7 @@ package body Display_Warning is
       Delete (Win => Display_Window);
    end;
 
-   function GetYN (Message : String) return Boolean is
+   function GetYN (Message : String; Down : Integer := 0) return Boolean is
       Display_Window : Window;
       Width : Column_Position := 40;
       Length : Line_Position := 5;
@@ -50,7 +50,7 @@ package body Display_Warning is
       Display_Window := Sub_Window(Win => Standard_Window,
                                    Number_Of_Lines => Length,
                                    Number_Of_Columns => Width,
-                                   First_Line_Position => (Lines - Length) / 2,
+                                   First_Line_Position => ((Lines - Length) / 2)+Line_Position(Down),
                                    First_Column_Position => (Columns - Width) / 2);
 
       Clear(Display_Window);

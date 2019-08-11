@@ -337,6 +337,10 @@ package body Message.Reader is
                FindElement := Element(CurrentCurs);
                Process_Menu.Open_Menu (Function_Number => 2,Menu_Array => MessageMenu );
                CurrentCurs := Directory_Buffer.Find(Item => FindElement);
+               if CurrentCurs = No_Element then
+                  CurrentCurs := Directory_Buffer.Last;
+               end if;
+
                Clear;
                Redraw_Screen;
             when Key_Cursor_Down =>
@@ -367,8 +371,13 @@ package body Message.Reader is
             case Character'Val (c) is
             when LF | CR =>
                begin
-                  Text_File_Scroller(To_String(Element(CurrentCurs).FileName));
-                  Redraw_Screen;
+                  if Exists(To_String(Element(CurrentCurs).FileName)) then
+                     Text_File_Scroller(To_String(Element(CurrentCurs).FileName));
+                     Redraw_Screen;
+                  else
+                     Display_Warning.Warning("Message Has been deleted");
+                  end if;
+
                end;
             when ESC => Null;
             when others => null;

@@ -60,7 +60,6 @@ package body Message.Post is
 
          Clear;
 
-
          Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
          TopLine := 4;
          BottomLine := TermLnth - 4;
@@ -68,7 +67,6 @@ package body Message.Post is
          Nick := UserLoggedName;
 
          Add (Line => 1,Column => 0,Str => "Nick : " & To_String(Nick));
-
 
 
          if (SU.Length(ReplySubject) > 0) then
@@ -124,11 +122,11 @@ package body Message.Post is
 
                Close (File);
 
-               Directory_Buffer.Append(New_Item => (To_Unbounded_String(Curr_Dir&"/messages/"&To_String(FName)),
+               Directory_Buffer.Append(New_Item => (To_Unbounded_String(Curr_Dir&"/"&To_String(FName)),
                                                     CharPad(Nick,15) & Subject) );
 
             else
-               Display_Warning.Warning("Cancelling Message");
+               Display_Warning.Warning("Posting Cancelled");
 
             end if;
 
