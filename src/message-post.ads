@@ -16,6 +16,10 @@ package Message.Post is
 
    procedure Quote (Msgid : Unbounded_String);
 
+   function Pad (InStr : String;PadWdth : Integer) return String;
+
+   function Generate_UID return Unbounded_String;
+
    procedure Post_Message (ReplyID : in Unbounded_String := To_Unbounded_String("");
                           ReplySubject : in Unbounded_String := To_Unbounded_String(""));
 end Message.Post;

@@ -5,14 +5,27 @@ use  Terminal_Interface.Curses.Text_IO;
 with Terminal_Interface.Curses.Text_IO.Integer_IO;
 with Terminal_Interface.Curses.Text_IO.Fixed_IO;
 
-with Display_Warning;
+
 
 with Ada.Containers.Doubly_Linked_Lists ;
 with Ada.Calendar; use Ada.Calendar;
 With Ada.Numerics.Float_Random;
 use Ada.Numerics.Float_Random;
 
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Fixed;
+with Ada.Text_IO;
+with Ada.Text_IO.Unbounded_IO;
+with Ada.Calendar;            use Ada.Calendar;
+with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
+with Message.Post;
+with Texaco;
+
+
 procedure serpent is
+
+
+
    type T_Position is record
       line : Line_Position;
       column : Column_Position ;
@@ -81,6 +94,7 @@ procedure serpent is
       end loop;
       Add(Line=>point.line, Column=>point.column, ch=>'x');
    end Spawn_Point;
+
 
    snake : list;
    snake_cursor : cursor;
@@ -244,6 +258,45 @@ begin
    end loop;
 
    Set_Timeout_Mode(mode=>Blocking,Amount=>0);
+   curs_visibility := Very_Visible; --  Invisible;
+   Set_Cursor_Visibility(curs_visibility);
+
+
+   declare
+      package SUIO renames Ada.Text_IO.Unbounded_IO;
+      package SU renames Ada.Strings.Unbounded;
+      package SF renames Ada.Strings.Fixed;
+
+
+      FileName, Nick : Unbounded_String;
+      File : Ada.Text_IO.File_Type;
+      Column : Column_Position := (Columns-35)/2;
+      PostDate : Time := Clock;
+   begin
+      Add (Line => Lines/2,Column => Column,Str => "Enter You Nick : ");
+      Clear_To_End_Of_Line;
+      loop
+         Texaco.Line_Editor(Standard_Window,
+                            StartLine => Lines / 2,
+                            StartColumn => Column + 18,
+                            Editlength => 16,
+                            Edline => Nick,
+                            MaxLength => 15);
+         exit when Nick /= "";
+      end loop;
+
+      Filename := "serpent/"& Message.Post.Pad(Integer'Image(score),3)&"-"&Message.Post.Generate_UID&".score";
+      Ada.Text_IO.Create (File => File,
+              Mode => Ada.Text_IO.Out_File,
+              Name => To_String(FileName));
+
+      SUIO.Put_Line(File,"Nick: " & Nick);
+      SUIO.Put_Line(File,"Score:" & To_Unbounded_String(Integer'Image(score)));
+      SUIO.Put_Line(File,"Date: " & To_Unbounded_String(Image (PostDate)));
+      Ada.Text_IO.Close(File);
+   end;
+
+
 
    -- Display_Warning.Warning("Game Over!");
    --key := Get_Keystroke;

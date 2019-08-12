@@ -10,15 +10,11 @@ package body Message.Post is
    begin
       FileName := "messages/"& Msgid &".msg";
 
-     -- Message.Reader.Read_Header(To_String(FileName),Sender  => Sender,
-     --                Subject => Subject,Msgid => MsgidTmp,ReplyTo => ReplyTo);
+      Text_Buffer.Clear;
 
       Open (File => File,
             Mode => In_File,
             Name => To_String(Filename));
-
-      Text_Buffer.Clear;
-
 
       scratch := SUIO.Get_Line(File);
       while scratch /= "" loop
@@ -37,14 +33,50 @@ package body Message.Post is
          Text_Buffer.Append(" > "& scratch);
          scratch := SUIO.Get_Line(File);
       end loop;
-   --   Close (File);
 
    exception
       when End_Error =>
          Close (File);
+      when Name_Error => null;
 
    end Quote;
 
+   function Pad (InStr : String;PadWdth : Integer) return String is
+      padstr,tmpstr : Unbounded_String;
+   begin
+      tmpstr := To_Unbounded_String(SF.Trim(Instr,Ada.Strings.Left));
+      if SU.Length(tmpstr) < PadWdth then
+         for i in SU.Length(tmpstr) .. PadWdth-1 loop
+            padstr := padstr & '0';
+         end loop;
+         return To_String(padstr) & To_String(tmpstr);
+      else
+         return To_String(tmpstr);
+      end if;
+   end Pad;
+
+
+
+   function Generate_UID return Unbounded_String is
+      Now         : Time := Clock;
+      Now_Year    : Year_Number;
+      Now_Month   : Month_Number;
+      Now_Day     : Day_Number;
+      Now_Seconds : Day_Duration;
+   begin
+
+      Split (Now,
+             Now_Year,
+             Now_Month,
+             Now_Day,
+             Now_Seconds);
+
+      return To_Unbounded_String(SF.Trim(Year_Number'Image (Now_Year),Ada.Strings.Left) &
+                                   Pad(Month_Number'Image (Now_Month),2) &
+                                   Pad(Day_Number'Image (Now_Day),2) &
+                                   Pad(Duration'Image (Now_Seconds),16));
+
+   end Generate_UID;
 
 
 
@@ -56,41 +88,6 @@ package body Message.Post is
       PostDate : Time := Clock;
       Cancelled : Boolean := False;
 
-      function Pad (InStr : String;PadWdth : Integer) return String is
-         padstr,tmpstr : Unbounded_String;
-      begin
-         tmpstr := To_Unbounded_String(SF.Trim(Instr,Ada.Strings.Left));
-         if SU.Length(tmpstr) < PadWdth then
-            for i in SU.Length(tmpstr) .. PadWdth-1 loop
-               padstr := padstr & '0';
-            end loop;
-            return To_String(padstr) & To_String(tmpstr);
-         else
-            return To_String(tmpstr);
-         end if;
-      end Pad;
-
-
-      function Generate_UID return Unbounded_String is
-         Now         : Time := Clock;
-         Now_Year    : Year_Number;
-         Now_Month   : Month_Number;
-         Now_Day     : Day_Number;
-         Now_Seconds : Day_Duration;
-      begin
-
-         Split (Now,
-                Now_Year,
-                Now_Month,
-                Now_Day,
-                Now_Seconds);
-
-         return To_Unbounded_String(SF.Trim(Year_Number'Image (Now_Year),Ada.Strings.Left) &
-                                      Pad(Month_Number'Image (Now_Month),2) &
-                                      Pad(Day_Number'Image (Now_Day),2) &
-                                      Pad(Duration'Image (Now_Seconds),16));
-
-      end Generate_UID;
 
 
       procedure Write_Line (Position : String_List.Cursor) is

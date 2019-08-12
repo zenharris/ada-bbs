@@ -10,11 +10,21 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 --with Ada.Characters.Handling; use Ada.Characters.Handling;
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Text_IO.Unbounded_IO;
 -- with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Text_IO;
+with Ada.Directories;
+use Ada.Text_IO;
+use Ada.Directories;
+with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers; use Ada.Containers;
+
+
+
 with Text_File_Scroller;
 with Process_Menu;
 with Texaco;
-with Message.Reader;
+with Message.Reader; use Message.Reader;
 
 with Pong_Bot;
 
@@ -26,6 +36,8 @@ procedure Main is
    Lines : Line_Position;
    Columns : Column_Position;
 
+   package SU renames Ada.Strings.Unbounded;
+   package SUIO renames Ada.Text_IO.Unbounded_IO;
  --  task Display_Current_Time is
  --     entry Start;
  --  end Display_Current_Time;
@@ -123,11 +135,114 @@ procedure Main is
       return True;
    end;
 
+   procedure Read_Score_File (FileName : in String;
+                              Nick : out Unbounded_String;
+                              Score : out Unbounded_String;
+                              Date : out Unbounded_String) is
+
+      HeaderType, HeaderText, scratch : Unbounded_String;
+       File : File_Type;
+   begin
+      Open (File => File,
+            Mode => In_File,
+            Name => Filename);
+
+      scratch := SUIO.Get_Line(File);
+      while scratch /= "" loop
+         HeaderType := To_Unbounded_String(SU.Slice(scratch,1,SU.Index(scratch,":")-1));
+         HeaderText := To_Unbounded_String(SU.Slice(scratch,SU.Index(scratch,":")+2,SU.Length(scratch)));
+         if HeaderType = "Nick" then
+            Nick := HeaderText;
+         elsif HeaderType = "Score" then
+            Score := HeaderText;
+         elsif HeaderType = "Date" then
+            Date := HeaderText;
+         end if;
+         scratch := SUIO.Get_Line(File);
+      end loop;
+      Close (File);
+   exception
+      when End_Error =>
+         Close (File);
+         null;
+   end Read_Score_File;
+
+
+   procedure Serpent_Scoreboard is
+      use Message.Reader.Directory_List;
+      Curr_Dir : string := Current_Directory;
+      Dbuff : Message.Reader.Directory_List.List;
+      Dir : Directory_Entry_Type;
+      Dir_Search : Search_Type;
+      Nick,Score,Date : Unbounded_String;
+      I, J, SortCurs : Cursor;
+      swapped : Boolean;
+      Linenum : Line_Position := 1;
+      Display_Window : Window;
+      Width,Columns : Column_Position := 30;
+      Length,Lines : Line_Position := 20;
+   begin
+      Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
+      Display_Window := Sub_Window(Win => Standard_Window,
+                                   Number_Of_Lines => Length,
+                                   Number_Of_Columns => Width,
+                                   First_Line_Position => (Lines - Length) / 2,
+                                   First_Column_Position => (Columns - Width) / 2);
+
+      Clear(Display_Window);
+      Box(Display_Window);
+      Refresh(Display_Window);
+
+
+      Start_Search(Search => Dir_Search,
+                   Directory => Curr_Dir&"/serpent",
+                   Pattern => "*.score");
+      loop
+         Get_Next_Entry(Dir_Search, Dir);
+         Read_Score_File(Full_Name(Dir),Nick,Score,Date);
+         Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
+                                                    Message.Reader.CharPad(Nick,15) & Score ) );
+        exit when not More_Entries(Dir_Search);
+      end loop;
+      End_Search(Dir_Search);
+
+      loop
+         SortCurs := Dbuff.First;
+         swapped := False;
+         while SortCurs /= Dbuff.Last loop
+            I := SortCurs;
+            Directory_List.Next(SortCurs);
+            J := SortCurs;
+            if Element(J).FileName > Element(I).FileName then
+               Swap(Dbuff,I,J);
+               swapped := True;
+            end if;
+         end loop;
+         exit when not swapped;
+      end loop;
+
+      SortCurs := Dbuff.First;
+      while SortCurs /= Dbuff.Last loop
+         Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
+         Linenum := Linenum + 1;
+         Directory_List.Next(SortCurs);
+         exit when Linenum = Lines-1;
+      end loop;
+      Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
+      Refresh(Display_Window);
+      c := Texaco.GetKey;
+      Clear(Display_Window);
+      Refresh(Display_Window);
+      Delete (Win => Display_Window);
+
+   end Serpent_Scoreboard;
+
+
    Menu1 : Process_Menu.Menu_Type  :=
      ((new String'("Message Forum"),Message.Reader.Read_Messages'Unrestricted_Access),
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
       (new String'("Serpent Game"),Serpent'Unrestricted_Access),
-      (new String'("View Source"),Run_Fkey1'Unrestricted_Access),
+      (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
