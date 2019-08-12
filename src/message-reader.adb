@@ -237,6 +237,7 @@ package body Message.Reader is
 
       Subject := "Re. " & Subject;
 
+      Message.Post.Quote(Msgid => Msgid);
       Message.Post.Post_Message(MsgId,Subject);
 
    end;
@@ -248,6 +249,7 @@ package body Message.Reader is
        Read_Header(To_String(Element(CurrentCurs).FileName) ,Sender  => Sender,
                    Subject => Subject,Msgid => Msgid,ReplyTo => ReplyTo);
       if SU.Length(ReplyTo) > 0 then
+         Message.Post.Quote(Msgid => Msgid);
          Message.Post.Post_Message(ReplyTo,Subject);
       else
          Display_Warning.Warning("Selected message not part of a thread");
@@ -273,12 +275,21 @@ package body Message.Reader is
             Display_Warning.Warning("No Replys to this message");
             Read_Directory;
          end if;
-         CurrentLine := 0;
-         CurrentCurs := Directory_Buffer.First;
+         if CurrentLine > Line_Position(Directory_Buffer.Length-1) then
+            CurrentLine := Line_Position(Directory_Buffer.Length-1);
+         end if;
+
+       --  CurrentLine := 0;
+       --  CurrentCurs := Directory_Buffer.First;
       else
          Read_Directory(ReplyID => ReplyTo);
-         CurrentLine := 0;
-         CurrentCurs := Directory_Buffer.First;
+         if CurrentLine > Line_Position(Directory_Buffer.Length) then
+            -- CurrentLine := 0; -- Line_Position(Directory_Buffer.Length);
+            -- CurrentCurs := Directory_Buffer.Last;
+            null;
+         end if;
+       --  CurrentLine := 0;
+       --  CurrentCurs := Directory_Buffer.First;
       end if;
 
    end Show_Thread;
@@ -286,7 +297,7 @@ package body Message.Reader is
 
    procedure Run_Post_Message is
    begin
-
+      Text_Buffer.Clear;
       Message.Post.Post_Message;
 
 
@@ -308,6 +319,7 @@ package body Message.Reader is
    procedure Read_Messages is
       c : Key_Code;
       FindElement : Directory_Record;
+
    begin
 
       Clear;
@@ -341,6 +353,23 @@ package body Message.Reader is
                   CurrentCurs := Directory_Buffer.Last;
                end if;
 
+               -- Try to make CurrentLine right for repositioned CurrentCurs
+               if Line_Position(Directory_Buffer.Length) < BottomLine-TopLine then
+                  declare
+                     CountCurs : Cursor := Directory_Buffer.First;
+                     Counter : Integer := 0;
+                  begin
+                     while CountCurs /= Directory_Buffer.Last loop
+
+                        exit when CountCurs = CurrentCurs;
+                        Counter := Counter +1;
+                        CountCurs := Directory_List.Next(CountCurs);
+
+                     end loop;
+                     CurrentLine := Line_Position(Counter);
+                  end;
+               end if;
+
                Clear;
                Redraw_Screen;
             when Key_Cursor_Down =>
@@ -351,7 +380,6 @@ package body Message.Reader is
                end if;
             when Key_Cursor_Up =>
                if (CurrentCurs /= Directory_Buffer.First) then
-                  -- LoLite(menu_win,Menu_Array,Current_Line);
                   LoLite(Standard_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
                   Decrement(CurrentLine);
                   Directory_List.Previous(CurrentCurs);

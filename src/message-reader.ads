@@ -44,9 +44,16 @@ package Message.Reader is
 
    Curr_Dir : string := Current_Directory;
 
+
    procedure Read_Directory (ReplyID : Unbounded_String := To_Unbounded_String(""));
 
    procedure Read_Messages;
+
+   procedure Read_Header (FileName : in String;
+                          Sender : out Unbounded_String;
+                          Subject : out Unbounded_String;
+                          Msgid : out Unbounded_String;
+                          ReplyTo : out Unbounded_String);
 
   -- function Post_Message  (ReplyID : in Unbounded_String := To_Unbounded_String("");
   --                         ReplySubject : in Unbounded_String := To_Unbounded_String("") )  return Boolean;

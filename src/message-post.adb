@@ -2,9 +2,55 @@ with Message.Reader; use Message.Reader;
 
 package body Message.Post is
 
+   procedure Quote (Msgid : Unbounded_String) is
+
+      FileName, scratch : Unbounded_String;
+      File : File_Type;
+      Sender, HeaderType,HeaderText : Unbounded_String;
+   begin
+      FileName := "messages/"& Msgid &".msg";
+
+     -- Message.Reader.Read_Header(To_String(FileName),Sender  => Sender,
+     --                Subject => Subject,Msgid => MsgidTmp,ReplyTo => ReplyTo);
+
+      Open (File => File,
+            Mode => In_File,
+            Name => To_String(Filename));
+
+      Text_Buffer.Clear;
+
+
+      scratch := SUIO.Get_Line(File);
+      while scratch /= "" loop
+         HeaderType := To_Unbounded_String(SU.Slice(scratch,1,SU.Index(scratch,":")-1));
+         HeaderText := To_Unbounded_String(SU.Slice(scratch,SU.Index(scratch,":")+2,SU.Length(scratch)));
+         if HeaderType = "Sender" then
+            Sender := HeaderText;
+            end if;
+         scratch := SUIO.Get_Line(File);
+      end loop;
+
+      Text_Buffer.Append("In reply to "& Sender);
+
+      scratch := SUIO.Get_Line(File);
+      loop
+         Text_Buffer.Append(" > "& scratch);
+         scratch := SUIO.Get_Line(File);
+      end loop;
+   --   Close (File);
+
+   exception
+      when End_Error =>
+         Close (File);
+
+   end Quote;
+
+
+
+
   procedure Post_Message (ReplyID : in Unbounded_String := To_Unbounded_String("");
                           ReplySubject : in Unbounded_String := To_Unbounded_String("")) is
-      FileName : Unbounded_String := To_Unbounded_String("messages/test.txt");
+      -- FileName : Unbounded_String := To_Unbounded_String("messages/test.txt");
       File : File_Type;
       Nick, Subject, Msgid, FName : Unbounded_String;
       PostDate : Time := Clock;
@@ -94,7 +140,6 @@ package body Message.Post is
 
 
          Texaco.Text_Editor(Standard_Window,TopLine => TopLine,BottomLine => BottomLine,MaxLines => 100);
-
 
 
          if not Text_Buffer.Is_Empty then

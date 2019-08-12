@@ -14,6 +14,8 @@ with Display_Warning;
 package Message.Post is
    package SU renames Ada.Strings.Unbounded;
 
+   procedure Quote (Msgid : Unbounded_String);
+
    procedure Post_Message (ReplyID : in Unbounded_String := To_Unbounded_String("");
                           ReplySubject : in Unbounded_String := To_Unbounded_String(""));
 end Message.Post;

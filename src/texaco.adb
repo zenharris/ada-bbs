@@ -322,7 +322,7 @@ package body Texaco is
    begin
 
       Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-      Text_Buffer.Clear;
+      -- Text_Buffer.Clear;
       Text_Buffer.Append(To_Unbounded_String(""));
       curs := Text_Buffer.First;
       Current_Char := 1;
