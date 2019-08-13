@@ -221,6 +221,8 @@ package body Pong_Bot is
           (new String'("Try the wine!"),new String'("I see you enjoya fine wine, Have another Glass!"),new String'("And the water turned wine")),0),
          (new String'(".*\bcat\b.*"),
           (new String'("Hep Cats"),new String'("Cool for Cats"),new String'("Stop Saying the word cat")),0),
+         (new String'(".*\strange\b.*"),
+          (new String'("STSSTSTTRARRARAANGNNGNGGEGEE"),new String'("That IS strange"),new String'("Never a stranger")),0),
          (new String'(".*\bfish\b.*"),
           (new String'("Neither fish nor flesh"),new String'("and to eat no fish"),new String'("But enough of fish")),0),
          (new String'(".*\bcoffee\b.*"),

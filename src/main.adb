@@ -71,6 +71,7 @@ procedure Main is
  --     end loop;
  --  end Display_Current_Time;
 
+   procedure Serpent_Scoreboard;
 
 
    function test_func return Boolean is
@@ -128,11 +129,11 @@ procedure Main is
    end Run_Message;
 
 
-   function Run_Serpent return Boolean is
+   procedure Run_Serpent is
    begin
       Serpent;
+      Serpent_Scoreboard;
 
-      return True;
    end;
 
    procedure Read_Score_File (FileName : in String;
@@ -230,6 +231,7 @@ procedure Main is
       end loop;
       Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
       Refresh(Display_Window);
+
       c := Texaco.GetKey;
       Clear(Display_Window);
       Refresh(Display_Window);
@@ -241,7 +243,7 @@ procedure Main is
    Menu1 : Process_Menu.Menu_Type  :=
      ((new String'("Message Forum"),Message.Reader.Read_Messages'Unrestricted_Access),
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
-      (new String'("Serpent Game"),Serpent'Unrestricted_Access),
+      (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
       (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));

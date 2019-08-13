@@ -294,6 +294,7 @@ begin
       SUIO.Put_Line(File,"Score:" & To_Unbounded_String(Integer'Image(score)));
       SUIO.Put_Line(File,"Date: " & To_Unbounded_String(Image (PostDate)));
       Ada.Text_IO.Close(File);
+
    end;
 
 
