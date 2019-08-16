@@ -180,7 +180,7 @@ procedure Main is
       swapped : Boolean;
       Linenum : Line_Position := 1;
       Display_Window : Window;
-      Width,Columns : Column_Position := 30;
+      Width,Columns : Column_Position := 46;
       Length,Lines : Line_Position := 20;
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
@@ -202,7 +202,8 @@ procedure Main is
          Get_Next_Entry(Dir_Search, Dir);
          Read_Score_File(Full_Name(Dir),Nick,Score,Date);
          Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
-                                                    Message.Reader.CharPad(Nick,15) & Score ) );
+                       Message.Reader.CharPad(Nick,15) &
+                         Message.Reader.CharPad(Score,5) & Date ) );
         exit when not More_Entries(Dir_Search);
       end loop;
       End_Search(Dir_Search);
@@ -227,12 +228,29 @@ procedure Main is
          Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
          Linenum := Linenum + 1;
          Directory_List.Next(SortCurs);
-         exit when Linenum = Lines-1;
+         if Linenum = Length -2 then
+            Refresh(Display_Window);
+            c := Texaco.GetKey;
+            if not (c in Special_Key_Code'Range) then
+               exit when (c in Real_Key_Code'Range) and then (Character'val(c) = ESC);
+            end if;
+
+            Clear(Display_Window);
+            Box(Display_Window);
+            Linenum := 1;
+         end if;
+
+         -- exit when Linenum = Length-2;
       end loop;
       Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
       Refresh(Display_Window);
+      if not (c in Special_Key_Code'Range) then
+         if not ( c in Real_Key_Code'Range and then Character'Val(c) = ESC) then
+            c := Texaco.GetKey;
+         end if;
+      end if;
 
-      c := Texaco.GetKey;
+
       Clear(Display_Window);
       Refresh(Display_Window);
       Delete (Win => Display_Window);

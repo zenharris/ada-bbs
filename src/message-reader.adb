@@ -110,7 +110,7 @@ package body Message.Reader is
          Clear_To_End_Of_Line;
          Refresh;
 
-         Add (Line => TermLnth - 2,Column => 1, Str => "          | Func 2  |                        End to exit");
+         Add (Line => TermLnth - 2,Column => 1, Str => "          | Func 2  |                        Esc to exit");
          Clear_To_End_Of_Line;
          Box;
       end if;
@@ -313,6 +313,17 @@ package body Message.Reader is
       (new String'("User Login"),Message.Login.Login_User'Access),
       (new String'("Create User"),Message.Login.Create_User'Access));
 
+   function Count_Back(Csr : Cursor) return integer is
+      CountCsr : Cursor := Csr;
+      Counter : Integer := 1;
+   begin
+      loop
+         exit when CountCsr = Directory_Buffer.First;
+         Directory_List.Previous(CountCsr);
+         Counter := Counter +1;
+      end loop;
+      return Counter;
+   end Count_Back;
 
 
 
@@ -384,12 +395,37 @@ package body Message.Reader is
                   Decrement(CurrentLine);
                   Directory_List.Previous(CurrentCurs);
                end if;
+               when Key_Next_Page =>
+                  for i in 0 .. BottomLine-TopLine loop
+                     if CurrentCurs /= Directory_Buffer.Last then
+                        Directory_List.Next(CurrentCurs);
+                     end if;
+                  end loop;
+                  Redraw_Screen;
+               when Key_Previous_Page =>
+                  for i in 0 .. BottomLine-TopLine loop
+                     if CurrentCurs /= Directory_Buffer.First then
+                        Directory_List.Previous(CurrentCurs);
+                     end if;
+                  end loop;
+                  if Line_Position(Count_Back(CurrentCurs)) < BottomLine-TopLine then
+                     CurrentLine := 0;
+                  end if;
+                  Redraw_Screen;
+               when Key_Home =>
+                  CurrentCurs := Directory_Buffer.First;
+                  CurrentLine := 0;
+                  Redraw_Screen;
+               when Key_End =>
+                  CurrentCurs := Directory_Buffer.Last;
+                  CurrentLine := BottomLine-TopLine;
+                  Redraw_Screen;
             when Key_Resize =>
                Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
                BottomLine := TermLnth - 4;
                Clear;
                Redraw_Screen;
-            when Key_End => exit;
+        --    when Key_End => exit;
             when others => null;
             end case;
          elsif c in Real_Key_Code'Range then
@@ -407,7 +443,7 @@ package body Message.Reader is
                   end if;
 
                end;
-            when ESC => Null;
+            when ESC => Exit;
             when others => null;
             end case;
          end if;

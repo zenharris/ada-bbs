@@ -221,7 +221,7 @@ package body Pong_Bot is
           (new String'("Try the wine!"),new String'("I see you enjoya fine wine, Have another Glass!"),new String'("And the water turned wine")),0),
          (new String'(".*\bcat\b.*"),
           (new String'("Hep Cats"),new String'("Cool for Cats"),new String'("Stop Saying the word cat")),0),
-         (new String'(".*\strange\b.*"),
+         (new String'(".*\bstrange\b.*|.*/bweird/b.*"),
           (new String'("STSSTSTTRARRARAANGNNGNGGEGEE"),new String'("That IS strange"),new String'("Never a stranger")),0),
          (new String'(".*\bfish\b.*"),
           (new String'("Neither fish nor flesh"),new String'("and to eat no fish"),new String'("But enough of fish")),0),
@@ -294,13 +294,13 @@ package body Pong_Bot is
 
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
-      Add (Column => 0,Line => Lines - 3,Str => "Enter Nick : ");
+      Add (Column => ((Columns-30)/2)-14,Line => Lines/2 ,Str => "Enter Nick : ");
       Clear_To_End_Of_Line;
 
       Edline := To_Unbounded_String("");
       Texaco.Line_Editor(Standard_Window,
-                         StartLine => Lines-3,
-                         StartColumn => 14,
+                         StartLine => Lines/2,
+                         StartColumn =>  (Columns-30)/2,
                          Editlength => 21,
                          Edline => Edline,
                          MaxLength => 20,

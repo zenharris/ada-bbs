@@ -273,7 +273,7 @@ begin
       Column : Column_Position := (Columns-35)/2;
       PostDate : Time := Clock;
    begin
-      Add (Line => Lines/2,Column => Column,Str => "Enter You Nick : ");
+      Add (Line => Lines/2,Column => Column,Str => "Enter Your Nick : ");
       Clear_To_End_Of_Line;
       loop
          Texaco.Line_Editor(Standard_Window,
