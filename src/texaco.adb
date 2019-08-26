@@ -201,6 +201,26 @@ package body Texaco is
 
             when CR | LF => exit;
 
+               when DEL =>
+
+               if Current_Char > 1 then
+                  Current_Char := Current_Char -1;
+
+                  Ada.Strings.Unbounded.Delete(Source => Edline,
+                                               From => Integer(Current_Char),
+                                               Through => Integer(Current_Char));
+
+               end if;
+
+               if Integer(Current_Char)-ScreenOffset = 0 then
+                  if ScreenOffset > Integer(Columns-StartColumn) -1 then
+                     ScreenOffset := ScreenOffset -(Integer(Columns-StartColumn) -1);
+                  else
+                     ScreenOffset := 0;
+                  end if;
+               end if;
+
+
                when ESC => exit;
 
                when others =>

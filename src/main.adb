@@ -30,6 +30,9 @@ with Pong_Bot;
 
 with Serpent;
 
+with Formatter;
+
+
 
 procedure Main is
    c : Key_Code;
@@ -182,6 +185,7 @@ procedure Main is
       Display_Window : Window;
       Width,Columns : Column_Position := 46;
       Length,Lines : Line_Position := 20;
+      c : Key_Code := 0;
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
       Display_Window := Sub_Window(Win => Standard_Window,
@@ -204,6 +208,7 @@ procedure Main is
          Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
                        Message.Reader.CharPad(Nick,15) &
                          Message.Reader.CharPad(Score,5) & Date ) );
+
         exit when not More_Entries(Dir_Search);
       end loop;
       End_Search(Dir_Search);
@@ -229,27 +234,31 @@ procedure Main is
          Linenum := Linenum + 1;
          Directory_List.Next(SortCurs);
          if Linenum = Length -2 then
+            Add(Display_Window,Linenum,2,Str => "Any Key More  Esc exit");
             Refresh(Display_Window);
             c := Texaco.GetKey;
             if not (c in Special_Key_Code'Range) then
                exit when (c in Real_Key_Code'Range) and then (Character'val(c) = ESC);
             end if;
-
             Clear(Display_Window);
             Box(Display_Window);
             Linenum := 1;
          end if;
-
          -- exit when Linenum = Length-2;
       end loop;
       Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
       Refresh(Display_Window);
-      if not (c in Special_Key_Code'Range) then
-         if not ( c in Real_Key_Code'Range and then Character'Val(c) = ESC) then
-            c := Texaco.GetKey;
-         end if;
+
+      if c = 0 or else Character'Val(c) /= ESC then
+         c := Texaco.GetKey;
       end if;
 
+
+    --  if not (c in Special_Key_Code'Range) then
+    --     if not ( c in Real_Key_Code'Range and then Character'Val(c) = ESC) then
+    --        c := Texaco.GetKey;
+    --     end if;
+    --  end if;
 
       Clear(Display_Window);
       Refresh(Display_Window);
@@ -269,6 +278,9 @@ procedure Main is
 
    Visibility : Cursor_Visibility := Invisible;
 begin
+
+
+
 
    Init_Screen;
    Set_Echo_Mode (False);
