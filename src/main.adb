@@ -202,14 +202,16 @@ procedure Main is
       Start_Search(Search => Dir_Search,
                    Directory => Curr_Dir&"/serpent",
                    Pattern => "*.score");
+      if More_Entries(Dir_Search) then
+
       loop
+         exit when not More_Entries(Dir_Search);
          Get_Next_Entry(Dir_Search, Dir);
          Read_Score_File(Full_Name(Dir),Nick,Score,Date);
          Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
                        Message.Reader.CharPad(Nick,15) &
                          Message.Reader.CharPad(Score,5) & Date ) );
 
-        exit when not More_Entries(Dir_Search);
       end loop;
       End_Search(Dir_Search);
 
@@ -248,17 +250,11 @@ procedure Main is
       end loop;
       Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
       Refresh(Display_Window);
-
+      end if;
       if c = 0 or else Character'Val(c) /= ESC then
          c := Texaco.GetKey;
       end if;
 
-
-    --  if not (c in Special_Key_Code'Range) then
-    --     if not ( c in Real_Key_Code'Range and then Character'Val(c) = ESC) then
-    --        c := Texaco.GetKey;
-    --     end if;
-    --  end if;
 
       Clear(Display_Window);
       Refresh(Display_Window);
