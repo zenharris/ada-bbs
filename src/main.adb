@@ -32,6 +32,8 @@ with Serpent;
 
 with Formatter;
 
+with Dbase.Scroller;
+
 
 
 procedure Main is
@@ -202,55 +204,57 @@ procedure Main is
       Start_Search(Search => Dir_Search,
                    Directory => Curr_Dir&"/serpent",
                    Pattern => "*.score");
+
       if More_Entries(Dir_Search) then
 
-      loop
-         exit when not More_Entries(Dir_Search);
-         Get_Next_Entry(Dir_Search, Dir);
-         Read_Score_File(Full_Name(Dir),Nick,Score,Date);
-         Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
-                       Message.Reader.CharPad(Nick,15) &
-                         Message.Reader.CharPad(Score,5) & Date ) );
+         loop
+            exit when not More_Entries(Dir_Search);
+            Get_Next_Entry(Dir_Search, Dir);
+            Read_Score_File(Full_Name(Dir),Nick,Score,Date);
+            Dbuff.Append( (To_Unbounded_String(Full_Name(Dir)),
+                          Message.Reader.CharPad(Nick,15) &
+                            Message.Reader.CharPad(Score,5) & Date ) );
 
-      end loop;
-      End_Search(Dir_Search);
-
-      loop
-         SortCurs := Dbuff.First;
-         swapped := False;
-         while SortCurs /= Dbuff.Last loop
-            I := SortCurs;
-            Directory_List.Next(SortCurs);
-            J := SortCurs;
-            if Element(J).FileName > Element(I).FileName then
-               Swap(Dbuff,I,J);
-               swapped := True;
-            end if;
          end loop;
-         exit when not swapped;
-      end loop;
+         End_Search(Dir_Search);
 
-      SortCurs := Dbuff.First;
-      while SortCurs /= Dbuff.Last loop
-         Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
-         Linenum := Linenum + 1;
-         Directory_List.Next(SortCurs);
-         if Linenum = Length -2 then
-            Add(Display_Window,Linenum,2,Str => "Any Key More  Esc exit");
-            Refresh(Display_Window);
-            c := Texaco.GetKey;
-            if not (c in Special_Key_Code'Range) then
+         loop
+            SortCurs := Dbuff.First;
+            swapped := False;
+            while SortCurs /= Dbuff.Last loop
+               I := SortCurs;
+               Directory_List.Next(SortCurs);
+               J := SortCurs;
+               if Element(J).FileName > Element(I).FileName then
+                  Swap(Dbuff,I,J);
+                  swapped := True;
+               end if;
+            end loop;
+            exit when not swapped;
+         end loop;
+
+         SortCurs := Dbuff.First;
+         while SortCurs /= Dbuff.Last loop
+            Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
+            Linenum := Linenum + 1;
+            Directory_List.Next(SortCurs);
+            if Linenum = Length -2 then
+               Add(Display_Window,Linenum,2,Str => "Any Key More  Esc exit");
+               Refresh(Display_Window);
+               c := Texaco.GetKey;
+
                exit when (c in Real_Key_Code'Range) and then (Character'val(c) = ESC);
+
+               Clear(Display_Window);
+               Box(Display_Window);
+               Linenum := 1;
             end if;
-            Clear(Display_Window);
-            Box(Display_Window);
-            Linenum := 1;
-         end if;
-         -- exit when Linenum = Length-2;
-      end loop;
-      Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
-      Refresh(Display_Window);
+
+         end loop;
+         Add (Display_Window,Line => Linenum,Column => 2,Str => To_String(Element(SortCurs).Prompt));
+         Refresh(Display_Window);
       end if;
+
       if c = 0 or else Character'Val(c) /= ESC then
          c := Texaco.GetKey;
       end if;
@@ -268,15 +272,15 @@ procedure Main is
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
-      (new String'("Line Editor"),Run_Line_Editor'Unrestricted_Access),
+      (new String'("Database"),Dbase.Scroller.Scroll'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 
    Visibility : Cursor_Visibility := Invisible;
 begin
 
-
-
+   -- Dbase.Scroller.test;
+   -- raise PROGRAM_ERROR with "Aborted because User Logout.  Bye";
 
    Init_Screen;
    Set_Echo_Mode (False);

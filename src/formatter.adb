@@ -75,12 +75,30 @@ package body Formatter is
       Text_Io.Put(Get(Format, Value));
    end Put;
 
+   procedure PutS(retStr : in out String;
+                  Format : in String;
+                 Value  : in Values) is
+   begin
+      -- Write formatted string returned by Formatter.Get
+      retStr := Get(Format, Value);
+   end PutS;
+
    function SPut(Format : in String;
                  Value  : in Values) return String is
    begin
       -- Write formatted string returned by Formatter.Get
       return Get(Format, Value);
    end SPut;
+   function SPut(Format : in String;
+                 Value  : in Contents) return String is
+
+      Value_List : Values(1..1) := (1 => Value);
+
+   begin
+      return SPut(Format => Format,
+          Value  => Value_List);
+   end SPut;
+
 
    procedure Put(Format : in String) is
       Value_List : Values (1..0);

@@ -41,10 +41,19 @@ package Formatter is
    function F(Data : in   Enumerated) return Contents;
 
    -- Output formatted values procedures (overloaded)
-   procedure Put(Format : In String;
-                 Value  : In Values);                        -- Multiple data values
+
+   procedure PutS(retStr : in out String;
+                  Format : in String;
+                 Value  : in Values);
+
    function SPut(Format : in String;
                  Value  : in Values) return String;
+   function SPut(Format : in String;
+                 Value  : in Contents) return String;
+
+   procedure Put(Format : In String;
+                 Value  : In Values);                        -- Multiple data values
+
    procedure Put(Format : In String;
                  Value  : In Contents);                        -- Single data value
    procedure Put(Format : In String);                        -- No data values
