@@ -26,14 +26,11 @@ package body Dbase.Scroller is
 
    Definition_List : Definition_Type  :=
      ((new String'("SELECT * FROM customers order by customerid:null:%6s| %-30s| %-20s| %-10s| %-10s:customerid:firstname:lastname:city:state:")),
-      --(new String'("SELECT * FROM orders where customerid = '%s':customerid:%6s| %-12s| %-6s| %10s| %10s| %10s:orderid:orderdate:customerid:netamount:tax:totalamount:")),
       (new String'("SELECT * FROM cust_hist where customerid = '%s':customerid:%6s| %-6s| %-6s|:customerid:orderid:prod_id:")),
-
-      --(new String'("SELECT * FROM orders where orderid = '%s':orderid:%6s| %-12s| %-6s| %10s| %10s| %10s:orderid:orderdate:customerid:netamount:tax:totalamount:"))
       (new String'("SELECT * FROM products where prod_id = '%s':prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:")),
       (new String'("SELECT * FROM products where common_prod_id = '%s':common_prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:"))
      );
-
+    --(new String'("SELECT * FROM orders where customerid = '%s':customerid:%6s| %-12s| %-6s| %10s| %10s| %10s:orderid:orderdate:customerid:netamount:tax:totalamount:")),
    type Days_of_Week is (Sunday,
                          Monday,
                          Tuesday,
@@ -56,7 +53,6 @@ package body Dbase.Scroller is
 
 
    function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String is
-      CIB :Direct_Cursor := CI;
    begin
       for i in 0..CI.Field_Count-1 loop
          if CI.Field_Name(i) = To_String(FldNme) then
@@ -79,98 +75,33 @@ package body Dbase.Scroller is
 
    end;
 
-  --  procedure Show_Scroll (Definition :String;SubDefinition : String;CIP : Direct_Cursor) is
 
-   Current_Cursor : Direct_Cursor;
+   procedure Read_Scroll (Scrl_Buffer : in out Scrl_List.List;
+                          SQLstatement :String;
+                          CI : in out Direct_Cursor;
+                          Fields : in out FieldsVector.Vector) is
 
-   procedure Read_Scroll (Scrl_Buffer : in out Scrl_List.List; SQLstatement :String;CI : in out Direct_Cursor;
-                         Fields : in out FieldsVector.Vector) is
-      -- CI : Direct_Cursor;
       Stmt : Prepared_Statement;
-      -- Fields : FieldsVector.Vector;
-      DepthFlag :Boolean := False;
-      scratch : Unbounded_String;
-
-      Crnt : Integer := 1;
-
    begin
 
       Clear(Scrl_Buffer);
-   --   Clear(Fields);
 
-    --  Split(Fields,Definition);
-
-  --    if Fields(1) = "null" then
-
-  --     Stmt:= Prepare (To_String(Fields(0)),
-  --            Use_Cache => True, Index_By => Field_Index'First);
-   ---   else
-  --       DepthFlag := True;
-  --       Add (Standard_Window,Line => 1,Column => 1, Str => To_String(Fields(1)));
-  --       refresh;
-  --       scratch := To_Unbounded_String(Ada_Format.SPut(To_String(Fields(0)),F(Fld(Current_Cursor,Fields(1)))));
-  --       Add (Standard_Window,Line => 2,Column => 1, Str => To_String(scratch));
-  --       Refresh;
-  --       Stmt := Prepare (To_String(scratch),Use_Cache => True, Index_By => Field_Index'First );
-
-  --    end if;
-
-         Stmt:= Prepare (SQLstatement, Index_By => Field_Index'First);
-
-
+      Stmt:= Prepare (SQLstatement, Index_By => Field_Index'First);
 
       CI.Fetch (DB, Stmt);
-      -- CI.Find (Id); -- Find record by Id
+
       if CI.Has_Row then
          CI.First;
          while CI.Has_Row loop
 
-            --      for i in 0..CI.Field_Count-1 loop
-            --      --   Put_Line (CI.Value(i));
-            --         Put_Line (CI.Field_Name(i) &" "& CI.Value(i));
-            --      end loop;
-
-
-            Scrl_Buffer.Append(New_Item => ( Crnt   ,
+            Scrl_Buffer.Append(New_Item => ( CI.Current   ,
                                              To_Unbounded_String(Ada_Format.SPut (To_String(Fields(2)),
                                                FieldsToValues(CI,Fields)))  ));
 
-            -- Ada_Format.Put (To_String(Fields(2)),FieldsToValues(CI,Fields));
-            -- Put_Line("");
-            -- if not DepthFlag then
-            --    Show_Scroll(SubDefinition,SubDefinition,CI);
-            -- end if;
-
-
-            --     SubStmt := Prepare (Ada_Format.SPut(To_String(SubFields(0)),F(Fld(CI,SubFields(1)))),Use_Cache => True );
-            --    CIB.Fetch (DB,SubStmt);
-            --     CIB.First;
-            --     while CIB.Has_Row loop
-            --        Ada_Format.Put (To_String(Fields(1)),FieldsToValues(CIB,Fields));
-            --        Put_Line("");
-            --        CIB.Next;
-            --    end loop;
-
-
-            -- Ada_Format.Put (To_String(Fields(1)),(F(Fld(CI,Fields(2))), F(Fld(CI,Fields(3))),
-            --                F(Fld(CI,Fields(4))),F(Fld(CI,Fields(5))), F(Fld(CI,Fields(6)))
-            --               ));
-
-
             CI.Next;
-            Crnt := Crnt + 1;
          end loop;
-
-
          CI.First;
-         --if not DepthFlag then
-        --    CIP := CI;
-         --end if;
-
       end if;
-
-
-
    end Read_Scroll;
 
 
@@ -205,12 +136,8 @@ package body Dbase.Scroller is
    end Split;
 
 
-
-
-   procedure OpenDb is
-
+   function OpenDb return Boolean is
       IsOpen   : Boolean;
-
    begin
       DB_Descr := Setup(Database => "dellstore2",
                         User => "postgres",
@@ -225,6 +152,7 @@ package body Dbase.Scroller is
       else
          Put_Line("Last Db error = " & DB.Error);
       end if;
+      return IsOpen;
    end OpenDb;
 
 
@@ -240,14 +168,7 @@ package body Dbase.Scroller is
    end CloseDb;
 
 
-  -- procedure Scroll is
-  -- begin
-     -- Split(Fields,ScrlDefine);
-
-  --    null;
-  -- end;
-
-   Pass_String : Unbounded_String;
+   Relation_Field : Unbounded_String;
 
    procedure Scroll (SQLstatement : String) is
       c : Key_Code;
@@ -377,8 +298,6 @@ package body Dbase.Scroller is
                Heading := To_Unbounded_String(SU.Slice(Heading,1,Integer(TermWdth)-2));
             end if;
 
-
-
             Add (Win => Display_Window,
                  Column => Column_Position((Integer(TermWdth) - SU.Length(Heading)) / 2),
                  Line => 2,
@@ -396,27 +315,17 @@ package body Dbase.Scroller is
       SQLQuery : Unbounded_String;
    begin
 
-      -- Display_Warning.Warning("Am Here");
-
       Clear(DefList);
 
       Split(DefList,SQLstatement);
 
       if DefList(1) = "null" then
 
-       SQLQuery := DefList(0);
+         SQLQuery := DefList(0);
       else
-      --   Add (Standard_Window,Line => 1,Column => 1, Str => To_String(Pass_String));
-      --Clear_To_End_Of_Line;
-      --refresh;
-      --   SQLQuery := To_Unbounded_String(Ada_Format.SPut(To_String(DefList(0)),F(Fld(Current_Cursor,DefList(1)))));
-         SQLQuery := To_Unbounded_String(Ada_Format.SPut(To_String(DefList(0)),F(To_String(Pass_String))));
+         SQLQuery := To_Unbounded_String(Ada_Format.SPut(To_String(DefList(0)),F(To_String(Relation_Field))));
 
       end if;
-
-    --  Add (Standard_Window,Line => 1,Column => 1, Str => To_String(SQLQuery));
-    --  Clear_To_End_Of_Line;
-    --  refresh;
 
 
       Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
@@ -525,20 +434,15 @@ package body Dbase.Scroller is
                   when LF | CR =>
                      begin
 
-                    --    CI.Find (Natural(Element(CurrentCurs).ID));
-                  --      Current_Cursor := CI;
-                  --      Current_Cursor.Find(Element(CurrentCurs).ID);
-
                         CI.Absolute(Element(CurrentCurs).ID);
 
                         if CI.Has_Row and then Definition_Ptr < Definition_List'Last then
                            Definition_Ptr := Definition_Ptr + 1;
                            Split(PassList,Definition_List(Definition_Ptr).all);
                            if PassList(1) /= "null" then
-                              -- Display_Warning.Warning("Am Here 2");
 
-                              Pass_String := To_Unbounded_String(Fld(CI,PassList(1)));
-                             -- Display_Warning.Warning(To_String(Pass_String));
+                              Relation_Field := To_Unbounded_String(Fld(CI,PassList(1)));
+
                            end if;
 
                            Scroll (Definition_List(Definition_Ptr).all);
@@ -568,15 +472,18 @@ package body Dbase.Scroller is
    end Scroll;
 
    procedure Run is
-      CI : Direct_Cursor;
+
    begin
 
-      OpenDb;
+      if OpenDb then
 
-      Definition_Ptr := 1;
+         Definition_Ptr := 1;
 
-      Scroll(Definition_List(Definition_Ptr).All); --ScrlDefine,CI);
-      CloseDb;
+         Scroll(Definition_List(Definition_Ptr).All);
+
+         CloseDb;
+      end if;
+
    end Run;
 
 
