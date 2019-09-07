@@ -17,8 +17,9 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
 
 package Dbase.Scroller is
-
-  type Scrl_Record is record
+   package SU renames Ada.Strings.Unbounded;
+   package SUIO renames Ada.Text_IO.Unbounded_IO;
+   type Scrl_Record is record
       ID : Integer;
       Prompt : Unbounded_String;
   --    Func : Function_Access;
@@ -26,17 +27,13 @@ package Dbase.Scroller is
 
    package Scrl_List is new Ada.Containers.Doubly_Linked_Lists(Scrl_Record);
    use Scrl_List;
-   Scrl_Buffer : Scrl_List.List;
-
-   CurrentLine : Line_Position := 0;
-   CurrentCurs : Cursor;
-   TopLine : Line_Position;
-   TermLnth : Line_Position;
-   TermWdth : Column_Position;
-   BottomLine : Line_Position ;
 
 
 
-    procedure Scroll;
+
+
+
+   procedure Scroll (SQLstatement : String); --; CI : in out Direct_Cursor);
+   procedure Run;
 
 end Dbase.Scroller;

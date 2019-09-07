@@ -272,7 +272,7 @@ procedure Main is
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
-      (new String'("Database"),Dbase.Scroller.Scroll'Unrestricted_Access),
+      (new String'("Database"),Dbase.Scroller.Run'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 
