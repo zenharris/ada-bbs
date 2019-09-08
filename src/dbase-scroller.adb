@@ -183,6 +183,7 @@ package body Dbase.Scroller is
       Scrl_Buffer : Scrl_List.List;
       Display_Window : Window;
       DefList,PassList : FieldsVector.Vector;
+      SQLQuery : Unbounded_String;
 
       procedure Scroll_Up is
       begin
@@ -269,7 +270,7 @@ package body Dbase.Scroller is
       procedure Redraw_Screen (Win : Window; Message : Unbounded_String :=To_Unbounded_String("")) is
          curs2 : Scrl_List.Cursor;
          LineNum : Line_Position := 0;
-         Heading : Unbounded_String := DefList(0); --Message;
+         Heading : Unbounded_String := SQLQuery; -- DefList(0); --Message;
       begin
          Clear_Region;
          if not Scrl_Buffer.Is_Empty then
@@ -283,7 +284,6 @@ package body Dbase.Scroller is
 
                Add(Win,Line => TopLine + LineNum,Column => 2,Str => To_String(Element(curs2).Prompt) );
                Clear_To_End_Of_Line(Win);
-               Refresh(Win);
 
                Scrl_List.Next(curs2);
 
@@ -292,7 +292,7 @@ package body Dbase.Scroller is
             end loop;
             Add(Win,Line => TopLine + LineNum,Column => 2,Str => To_String(Element(curs2).Prompt) );
             Clear_To_End_Of_Line(Win);
-            Refresh;
+            -- Refresh(Win);
 
             if SU.Length(Heading) > Integer(TermWdth)-2 then
                Heading := To_Unbounded_String(SU.Slice(Heading,1,Integer(TermWdth)-2));
@@ -312,7 +312,7 @@ package body Dbase.Scroller is
 
       Width : Column_Position := 90;
       Length : Line_Position := 20;
-      SQLQuery : Unbounded_String;
+
    begin
 
       Clear(DefList);
@@ -459,7 +459,6 @@ package body Dbase.Scroller is
 
             end loop;
 
-
             Clear(Scrl_Buffer);
          else
             Display_Warning.Warning("Terminal not wide enough");
@@ -482,6 +481,8 @@ package body Dbase.Scroller is
          Scroll(Definition_List(Definition_Ptr).All);
 
          CloseDb;
+      else
+         Display_Warning.Warning("No Open SQL Database");
       end if;
 
    end Run;

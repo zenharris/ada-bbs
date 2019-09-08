@@ -32,7 +32,7 @@ with Serpent;
 
 with Formatter;
 
-with Dbase.Scroller;
+with Dbase.Scroller;   -- comment out for No Gnatcoll compile
 
 
 
@@ -272,7 +272,7 @@ procedure Main is
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
-      (new String'("Database"),Dbase.Scroller.Run'Unrestricted_Access),
+      (new String'("Database"),Dbase.Scroller.Run'Unrestricted_Access), -- Comment Out
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 
