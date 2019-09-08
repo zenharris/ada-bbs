@@ -1,6 +1,6 @@
 # ada-bbs
 
-An ncurses based small menu system, IRC client and general purpose input line editor all under development to create a BBS system written in Ada.
+An ncurses based small menu system, IRC client and general purpose input line editor/text editor all under development to create a BBS system written in Ada.
 
 Now incudes Postgresql database scroller which requires Gnatcoll Postgresql. If you remove references to the Dbase objects in main it will compile without Gnatcoll. 
 
