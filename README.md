@@ -2,6 +2,8 @@
 
 An ncurses based small menu system, IRC client and general purpose input line editor all under development to create a BBS system written in Ada.
 
+Now incudes Postgresql database scroller which requires Gnatcoll Postgresql. If you remove references to the Dbase objects in main it will compile without Gnatcoll. 
+
 Thanks to Irc.bot code https://github.com/erik/ada-irc with which I made the IRC client.
       Demo Snake Game https://github.com/jybateman/snake
 
