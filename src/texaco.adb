@@ -98,12 +98,31 @@ package body Texaco is
       Columns : Column_Position := StartColumn+EditLength;
       ScreenOffset, endpoint : Integer := 0;
 
+
+      procedure Clear_Field is
+         padstr : Unbounded_String;
+      begin
+         for i in 1..MaxLength loop
+               padstr := padstr & " ";
+         end loop;
+
+         Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
+
+         Add (win1,Column => StartColumn,Line => StartLine,
+              Str => To_String(padstr));
+         Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
+         Refresh(win1);
+      end Clear_Field;
+
+
    begin
     --  Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
 
-      Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
-      Clear_To_End_Of_Line(win1);
-      Refresh(win1);
+      Clear_Field;
+
+     -- Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
+     -- Clear_To_End_Of_Line(win1);
+     -- Refresh(win1);
 
       if TextEditMode = False then
          Current_Char := 1;
@@ -111,8 +130,9 @@ package body Texaco is
 
 
       loop
-         Move_Cursor(win1,Line   => StartLine,Column => StartColumn);
-         Clear_To_End_Of_Line(win1);
+         Clear_Field;
+        -- Move_Cursor(win1,Line   => StartLine,Column => StartColumn);
+        -- Clear_To_End_Of_Line(win1);
 
          if Length(Edline) > ScreenOffset + Integer(Columns-StartColumn) then
             endpoint := ScreenOffset + Integer(Columns-StartColumn);
@@ -202,6 +222,10 @@ package body Texaco is
             when CR | LF => exit;
 
                when DEL =>
+
+               -- This is a copy of the Backspace code from above
+               -- ncurses has decided Backspace is not Special_Key_Code key anymore
+               -- and should rather return DEL
 
                if Current_Char > 1 then
                   Current_Char := Current_Char -1;

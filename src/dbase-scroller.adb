@@ -292,7 +292,6 @@ package body Dbase.Scroller is
             end loop;
             Add(Win,Line => TopLine + LineNum,Column => 2,Str => To_String(Element(curs2).Prompt) );
             Clear_To_End_Of_Line(Win);
-            -- Refresh(Win);
 
             if SU.Length(Heading) > Integer(TermWdth)-2 then
                Heading := To_Unbounded_String(SU.Slice(Heading,1,Integer(TermWdth)-2));
@@ -377,7 +376,9 @@ package body Dbase.Scroller is
                      --      if CurrentCurs = No_Element then
                      --         CurrentCurs := Directory_Buffer.Last;
                      --      end if;
+                     CI.Absolute(Element(CurrentCurs).ID);
 
+                     Templates.Display_Page(CI);
 
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);

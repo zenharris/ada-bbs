@@ -12,7 +12,7 @@ with Ada.Containers; use Ada.Containers;
 with Terminal_Interface.Curses; use Terminal_Interface.Curses;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
-
+with Templates;
 
 
 
@@ -30,7 +30,7 @@ package Dbase.Scroller is
 
 
 
-
+   function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String;
 
 
    procedure Scroll (SQLstatement : String); --; CI : in out Direct_Cursor);

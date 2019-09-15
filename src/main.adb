@@ -34,7 +34,7 @@ with Formatter;
 
 with Dbase.Scroller;   -- comment out for No Gnatcoll compile
 
-
+with Templates;
 
 procedure Main is
    c : Key_Code;
@@ -273,6 +273,7 @@ procedure Main is
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
       (new String'("Database"),Dbase.Scroller.Run'Unrestricted_Access), -- Comment Out
+      -- (new String'("Templates"),Templates.Display_Page'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
 
