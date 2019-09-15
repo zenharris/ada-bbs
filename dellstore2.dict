@@ -39,7 +39,6 @@ password:str:
 age:num:
 income:num:
 gender:str:
-runscroll:listscroll:orders.dict:select * from orders where customerid = '%s' order by orderdate:customerid:
 %LIST_DEF%
 SELECT * FROM customers order by customerid limit 100:%6.6s| %-30.30s| %-20.20s| %-10.10s| %-10.10s:customerid:firstname:lastname:city:state:
 null:null:
