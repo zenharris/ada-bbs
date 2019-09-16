@@ -12,6 +12,8 @@ with Ada.Containers; use Ada.Containers;
 with Terminal_Interface.Curses; use Terminal_Interface.Curses;
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
+with GNAT.Regpat; use GNAT.Regpat;
+
 with Templates;
 
 

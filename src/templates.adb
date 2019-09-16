@@ -5,11 +5,11 @@ package body Templates is
    InLine : Unbounded_String :=
      To_Unbounded_String("Customer ID : @0<<<<<  Name : @1<<<<<<<<<<<<<<<<<<<<<< @2<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
-   procedure Display_Page (CI :Direct_Cursor) is
-      c : Key_Code;
+   procedure Display_Page (CI :Direct_Cursor; TableName : String) is
+   --   c : Key_Code;
       FieldSize, FieldIndex : Integer;
       File : File_Type;
-      FileName : string := "dellstore2.dict";
+      FileName : string := TableName & ".dict";
       ScreenList : Screen_Vector.Vector;
       FieldsList : Screen_Vector.Vector;
       EditFieldsList : Edit_Fields_Vector.Vector;
@@ -22,6 +22,7 @@ package body Templates is
       Regex : GNAT.Regpat.Pattern_Matcher (1024);
       Matches : GNAT.Regpat.Match_Array (0 .. 1);
       Pattern : String := "@(\d+)<+";
+      FromPattern : String := "FROM\s+(\S+)\s+";
 
       function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String is
       begin
@@ -158,26 +159,50 @@ package body Templates is
 
          Read_Current_Record(CI,FieldsList);
 
-       --  for i in 0..FieldsList.Length-1 loop
-       --     FieldName := To_Unbounded_String(SU.Slice(FieldsList.Element(Integer(i)),1,SU.Index(FieldsList.Element(Integer(i)),":")-1));
-       --     Current_Record.Include(FieldName,To_Unbounded_String(Fld(CI,FieldName)));
-       --  end loop;
+
+         -- for i in 0..EditFieldsList.Length-1 loop
+         declare
+            i : Integer := 0;
+         begin
+            loop
+               Edline := Current_Record(EditFieldsList.Element(i).Name);
+               Texaco.Line_Editor(Display_Window,
+                                  StartLine => EditFieldsList.Element(i).Row,
+                                  StartColumn =>  EditFieldsList.Element(i).Col,
+                                  Editlength => Column_Position(EditFieldsList.Element(i).Length+1),
+                                  Edline => Edline,
+                                  MaxLength => EditFieldsList.Element(i).Length,
+                                  SuppressSpaces => False);
+
+               if Texaco.c in Special_Key_Code'Range then
+                  case Texaco.c is
+                  when Key_Cursor_Down | Key_Cursor_Right =>
+                     if i < Integer(EditFieldsList.Length)-1 then
+                        i := i + 1;
+                     end if;
+                  when Key_Cursor_Up | Key_Cursor_Left =>
+                     if i > 0 then
+                        i := i - 1;
+                     end if;
+                  when others => null;
+                  end case;
+               elsif Texaco.c in Real_Key_Code'Range then
+                  case Character'Val (Texaco.c) is
+                     when CR | LF =>
+                        if i < Integer(EditFieldsList.Length)-1 then
+                           i := i + 1;
+                        end if;
+                  when ESC => exit;
+                  when others => null;
+                  end case;
+               end if;
+
+            end loop;
+         end;
 
 
-         for i in 0..EditFieldsList.Length-1 loop
-            Edline := Current_Record(EditFieldsList.Element(Integer(i)).Name);
-            Texaco.Line_Editor(Display_Window,
-                               StartLine => EditFieldsList.Element(Integer(i)).Row,
-                               StartColumn =>  EditFieldsList.Element(Integer(i)).Col,
-                               Editlength => Column_Position(EditFieldsList.Element(Integer(i)).Length+1),
-                               Edline => Edline,
-                               MaxLength => EditFieldsList.Element(Integer(i)).Length,
-                               SuppressSpaces => False);
-         end loop;
+         -- c := Get_Keystroke;
 
-
-
-         c := Get_Keystroke;
          Clear(Display_Window);
          Refresh(Display_Window);
 

@@ -185,6 +185,12 @@ package body Dbase.Scroller is
       DefList,PassList : FieldsVector.Vector;
       SQLQuery : Unbounded_String;
 
+      Regex : GNAT.Regpat.Pattern_Matcher (1024);
+      Matches : GNAT.Regpat.Match_Array (0 .. 1);
+
+      FromPattern : String := "FROM\s+(\S+)\s+";
+      TableName : Unbounded_String;
+
       procedure Scroll_Up is
       begin
          Move_Cursor(Display_Window,Line   => TopLine,Column => 0);
@@ -302,7 +308,7 @@ package body Dbase.Scroller is
                  Line => 2,
                  Str => To_String(Heading));
 
-            Add (Win,Line => TermLnth - 2,Column => 1, Str => "  Esc to exit");
+            Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit   Esc to exit");
             Clear_To_End_Of_Line(Win);
             Box(Win);
          end if;
@@ -313,6 +319,11 @@ package body Dbase.Scroller is
       Length : Line_Position := 20;
 
    begin
+
+
+
+
+
 
       Clear(DefList);
 
@@ -325,6 +336,18 @@ package body Dbase.Scroller is
          SQLQuery := To_Unbounded_String(Ada_Format.SPut(To_String(DefList(0)),F(To_String(Relation_Field))));
 
       end if;
+
+
+      -- extract TableName from the SQL query by parsing out  FROM tablename by regular expression.
+      GNAT.Regpat.Compile (Regex, FromPattern);
+      GNAT.Regpat.Match (Regex, To_String(SQLQuery) , Matches);
+      if Matches (0) /= GNAT.Regpat.No_Match then
+          TableName := To_Unbounded_String(SU.Slice(SQLQuery,Matches(1).First,Matches(1).Last));
+      else
+         Display_Warning.Warning("No FROM in SQL");
+      end if;
+
+
 
 
       Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
@@ -378,7 +401,14 @@ package body Dbase.Scroller is
                      --      end if;
                      CI.Absolute(Element(CurrentCurs).ID);
 
-                     Templates.Display_Page(CI);
+                     if SU.Length(TableName) /= 0 then
+
+                        Templates.Display_Page(CI,To_String(TableName));
+
+                     else
+                        Display_Warning.Warning("No FROM in SQL");
+                     end if;
+
 
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);
@@ -461,6 +491,11 @@ package body Dbase.Scroller is
             end loop;
 
             Clear(Scrl_Buffer);
+
+            Clear(Display_Window);
+            Refresh(Display_Window);
+
+            Delete (Win => Display_Window);
          else
             Display_Warning.Warning("Terminal not wide enough");
          end if;

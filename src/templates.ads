@@ -37,7 +37,8 @@ package Templates is
                                                     Edit_Fields_Record);
    use Edit_Fields_Vector;
 
-    package Current_Record_Maps is new
+
+   package Current_Record_Maps is new
      Ada.Containers.Indefinite_Ordered_Maps
        (Key_Type        => Unbounded_String,
         Element_Type    => Unbounded_String);
@@ -47,7 +48,7 @@ package Templates is
    Current_Record : Map;
 
 
-   procedure Display_Page (CI : Direct_Cursor);
+   procedure Display_Page (CI : Direct_Cursor; TableName : String);
 
 
 end Templates;
