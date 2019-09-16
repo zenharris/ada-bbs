@@ -1,0 +1,29 @@
+
+                       Order Table for Selected Record
+Order ID : @0<<<<<  Date : @1<<<<<<<<<<<<<<< Customer : @2<<<<<<
+--------------------------------------------------------------------------------
+Net Amount :  @3<<<<<<<<   Tax : @4<<<<<<<<<<   Total Amount : @5<<<<<<    
+
+--------------------------------------------------------------------------------         
+                Customer History Table Entries for Order ID                           
+CustID|OrderID|ProdID |    Products Table Lookup For Each Product ID
+
+--------------------------------------------------------------------------------
+                                                                       
+                                                                       
+%FIELD_DEF%
+orderid:num:valid:
+orderdate:date:
+customerid:num:
+netamount:num:
+tax:num:
+totalamount:num:
+%LIST_DEF%
+SELECT * FROM orders order by orderdate LIMIT 200:%6.6s| %-12.12s| %-6.6s| %10.10s| %10.10s| %10.10s:orderid:orderdate:customerid:netamount:tax:totalamount:
+null:null:
+products.dict:select * from products where prod_id = '%s' limit 1:prod_id:
+%SERVER_DETAILS%
+userid:postgres:
+jdbc:postgresql://10.10.0.129:5432/dellstore2
+%END%
+
