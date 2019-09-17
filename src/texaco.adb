@@ -102,7 +102,7 @@ package body Texaco is
       procedure Clear_Field is
          padstr : Unbounded_String;
       begin
-         for i in 1..MaxLength loop
+         for i in 1..EditLength loop
                padstr := padstr & " ";
          end loop;
 
@@ -111,7 +111,7 @@ package body Texaco is
          Add (win1,Column => StartColumn,Line => StartLine,
               Str => To_String(padstr));
          Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
-         Refresh(win1);
+
       end Clear_Field;
 
 
@@ -122,7 +122,7 @@ package body Texaco is
 
      -- Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
      -- Clear_To_End_Of_Line(win1);
-     -- Refresh(win1);
+      Refresh(win1);
 
       if TextEditMode = False then
          Current_Char := 1;

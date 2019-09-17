@@ -18,11 +18,10 @@ package body Templates is
       Display_Window : Window;
       Edline : Unbounded_String;
 
-
-      Regex : GNAT.Regpat.Pattern_Matcher (1024);
-      Matches : GNAT.Regpat.Match_Array (0 .. 1);
       Pattern : String := "@(\d+)<+";
-      FromPattern : String := "FROM\s+(\S+)\s+";
+
+      Regex : GNAT.Regpat.Pattern_Matcher := GNAT.Regpat.Compile(Pattern); -- (1024);
+      Matches : GNAT.Regpat.Match_Array (0 .. 1);
 
       function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String is
       begin
@@ -100,7 +99,7 @@ package body Templates is
 
    begin
 
-      GNAT.Regpat.Compile (Regex, Pattern);
+      -- GNAT.Regpat.Compile (Regex, Pattern);
 
       declare
          scratch : Unbounded_String;
@@ -123,7 +122,6 @@ package body Templates is
             exit when SU.Index(scratch,"%LIST_DEF%") = 1;
             FieldsList.Append (scratch);
          end loop;
-
 
          Close (File);
       end;
@@ -173,6 +171,7 @@ package body Templates is
                                   Edline => Edline,
                                   MaxLength => EditFieldsList.Element(i).Length,
                                   SuppressSpaces => False);
+               Current_Record(EditFieldsList.Element(i).Name) := Edline;
 
                if Texaco.c in Special_Key_Code'Range then
                   case Texaco.c is
