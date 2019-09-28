@@ -1,0 +1,57 @@
+
+                              Ship Main Record 
+Ship ID : @0<<<<< Ship Name : @1<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Owner : @29<<<<<<<  Captain : @2<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+--------------------------------------------------------------------------------
+                                Navigation 
+Direction XY : @3<<<<<<<<<  XZ : @4<<<<<<<<<  Speed : @5<<<<<<<<<<<<<<<<<<<
+Dest Code    : @6<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+Loc X: @7<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst X: @10<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Loc Y: @8<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst Y: @11<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Loc Z: @9<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst Z: @12<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+          Navcom        Jmp Eng       Engine       Dflct
+funct : @13<<<<<<<<   @17<<<<<<<<   @21<<<<<<<<   @25<<<<<<<< % Function
+oprt  : @14<<<<<<<<   @18<<<<<<<<   @22<<<<<<<<   @26<<<<<<<< % Operation
+reli  : @15<<<<<<<<   @19<<<<<<<<   @23<<<<<<<<   @27<<<<<<<< % Reliable
+energ : @16<<<<<<<<   @20<<<<<<<<   @24<<<<<<<<   @28<<<<<<<< kW/h per Hour
+
+                                                                       
+%FIELD_DEF%
+ship_id:integer:pkey:noedit:
+ship_name:varchar:
+captain:varchar:
+direct_xy:integer:noedit:
+direct_xz:integer:noedit:
+speed:bigint:noedit:
+dest_code:varchar:noedit:
+loc_x:numeric:noedit:
+loc_y:numeric:noedit:
+loc_z:numeric:noedit:
+dest_x:numeric:noedit:
+dest_y:numeric:noedit:
+dest_z:numeric:noedit:
+navcom_funct:integer:noedit:
+navcom_oprt:integer:noedit:
+navcom_reli:integer:noedit:
+navcom_energ:bigint:noedit:
+jmpeng_funct:integer:noedit:
+jmpeng_oprt:integer:noedit:
+jmpeng_reli:integer:noedit:
+jmpeng_energ:bigint:noedit:
+engine_funct:integer:noedit:
+engine_oprt:integer:noedit:
+engine_reli:integer:noedit:
+engine_energ:bigint:noedit:
+deflect_funct:integer:noedit:
+deflect_oprt:integer:noedit:
+deflect_reli:integer:noedit:
+deflect_energ:bigint:noedit:
+shipowner:integer:noedit:
+%LIST_DEF%
+null:null:
+%SERVER_DETAILS%
+userid:postgres:
+jdbc:postgresql://10.10.0.129:5432/universe
+%END%
