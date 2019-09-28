@@ -18,6 +18,7 @@ with Templates;
 
 
 
+
 package Dbase.Scroller is
    package SU renames Ada.Strings.Unbounded;
    package SUIO renames Ada.Text_IO.Unbounded_IO;
@@ -31,9 +32,10 @@ package Dbase.Scroller is
    use Scrl_List;
 
 
-
    function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String;
 
+   function OpenDb return Boolean;
+   procedure CloseDb;
 
    procedure Scroll (SQLstatement : String); --; CI : in out Direct_Cursor);
    procedure Run;

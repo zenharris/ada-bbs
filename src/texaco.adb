@@ -88,7 +88,7 @@ package body Texaco is
    procedure Line_Editor (win1 : Window;
                           StartLine : Line_Position;
                           StartColumn :Column_Position;
-                          EditLength : Column_Position;
+                          EditLength : Column_Position;  -- make this an integer
                           Edline : in out Unbounded_String;
                           MaxLength : Integer;
                           TextEditMode : Boolean := False;
@@ -107,7 +107,6 @@ package body Texaco is
          end loop;
 
          Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
-
          Add (win1,Column => StartColumn,Line => StartLine,
               Str => To_String(padstr));
          Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
@@ -120,8 +119,6 @@ package body Texaco is
 
       Clear_Field;
 
-     -- Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
-     -- Clear_To_End_Of_Line(win1);
       Refresh(win1);
 
       if TextEditMode = False then
@@ -131,8 +128,6 @@ package body Texaco is
 
       loop
          Clear_Field;
-        -- Move_Cursor(win1,Line   => StartLine,Column => StartColumn);
-        -- Clear_To_End_Of_Line(win1);
 
          if Length(Edline) > ScreenOffset + Integer(Columns-StartColumn) then
             endpoint := ScreenOffset + Integer(Columns-StartColumn);
@@ -243,8 +238,9 @@ package body Texaco is
                      ScreenOffset := 0;
                   end if;
                end if;
+               when Apostrophe => null;
 
-
+               when HT => exit;
                when ESC => exit;
 
                when others =>

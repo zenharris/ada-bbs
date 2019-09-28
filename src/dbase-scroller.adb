@@ -1,8 +1,10 @@
 with Display_Warning;
+with Dbase.Login;
+
 
 package body Dbase.Scroller is
    DB_Descr : Database_Description;
-   DB       : Database_Connection;
+   -- DB       : Database_Connection;
 
    Definition_Ptr : Integer := 1;
 
@@ -24,13 +26,20 @@ package body Dbase.Scroller is
   -- end record;
    type Definition_Type is array (Positive range <>) of String_Access;
 
-   Definition_List : Definition_Type  :=
-     ((new String'("SELECT * FROM customers order by customerid:null:%6s| %-30s| %-20s| %-10s| %-10s:customerid:firstname:lastname:city:state:")),
-      (new String'("SELECT * FROM cust_hist where customerid = '%s':customerid:%6s| %-6s| %-6s|:customerid:orderid:prod_id:")),
-      (new String'("SELECT * FROM products where prod_id = '%s':prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:")),
-      (new String'("SELECT * FROM products where common_prod_id = '%s':common_prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:"))
-     );
+--   Definition_List : Definition_Type  :=
+--     ((new String'("SELECT * FROM customers order by customerid:null:%6s| %-30s| %-20s| %-10s| %-10s:customerid:firstname:lastname:city:state:")),
+--      (new String'("SELECT * FROM cust_hist where customerid = '%s':customerid:%6s| %-6s| %-6s|:customerid:orderid:prod_id:")),
+--      (new String'("SELECT * FROM products where prod_id = '%s':prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:")),
+--      (new String'("SELECT * FROM products where common_prod_id = '%s':common_prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:"))
+--     );
     --(new String'("SELECT * FROM orders where customerid = '%s':customerid:%6s| %-12s| %-6s| %10s| %10s| %10s:orderid:orderdate:customerid:netamount:tax:totalamount:")),
+
+   Definition_List : Definition_Type  :=
+     ((new String'("SELECT * FROM ships WHERE shipowner = '%s' order by ship_id:xtend:%10s| %-30s| %-30s|:ship_id:ship_name:captain:")),
+     (new String'("SELECT * FROM ships WHERE shipowner = '%s' order by ship_id:shipowner:%10s| %-30s| %-30s|:ship_id:ship_name:captain:"))
+     );
+
+
    type Days_of_Week is (Sunday,
                          Monday,
                          Tuesday,
@@ -139,7 +148,8 @@ package body Dbase.Scroller is
    function OpenDb return Boolean is
       IsOpen   : Boolean;
    begin
-      DB_Descr := Setup(Database => "dellstore2",
+    --  DB_Descr := Setup(Database => "dellstore2",
+      DB_Descr := Setup(Database => "universe",
                         User => "postgres",
                         Host => "10.10.0.129",
                         Password => "",
@@ -172,7 +182,8 @@ package body Dbase.Scroller is
 
    procedure Scroll (SQLstatement : String) is
       c : Key_Code;
-      -- FindElement : Scrl_Record;
+     -- FindElement : Scrl_Record;
+      SaveID : Integer;
       CI : Direct_Cursor;
       CurrentLine : Line_Position := 0;
       CurrentCurs : Scrl_List.Cursor;
@@ -253,7 +264,7 @@ package body Dbase.Scroller is
 
       procedure LoLite (Win : Window; Prompt : Unbounded_String; Line_Num : Line_Position) is
       begin
-         Set_Character_Attributes(Win, Normal_Video);
+         Set_Character_Attributes(Win,Attr => Normal_Video);
          Add (Win => Win,
               Line => Line_Num,
               Column => 2,
@@ -303,25 +314,23 @@ package body Dbase.Scroller is
                Heading := To_Unbounded_String(SU.Slice(Heading,1,Integer(TermWdth)-2));
             end if;
 
-            Add (Win => Display_Window,
-                 Column => Column_Position((Integer(TermWdth) - SU.Length(Heading)) / 2),
-                 Line => 2,
-                 Str => To_String(Heading));
-
-            Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit   Esc to exit");
-            Clear_To_End_Of_Line(Win);
-            Box(Win);
          end if;
+         Add (Win => Display_Window,
+              Column => Column_Position((Integer(TermWdth) - SU.Length(Heading)) / 2),
+              Line => 2,
+              Str => To_String(Heading));
+
+         Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  Esc to exit");
+         Clear_To_End_Of_Line(Win);
+         Box(Win);
       end Redraw_Screen;
 
 
       Width : Column_Position := 90;
       Length : Line_Position := 20;
+      package Display_Form is new Templates;
 
    begin
-
-
-
 
 
 
@@ -348,14 +357,16 @@ package body Dbase.Scroller is
       end if;
 
 
-
-
       Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
 
-      if  CI.Has_Row then --not  Scrl_Buffer.Is_Empty then
+   --   if  CI.Has_Row then --not  Scrl_Buffer.Is_Empty then
          Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
-
+      if not Scrl_Buffer.Is_Empty then
          Width := Column_Position(SU.Length(Element(Scrl_Buffer.First).Prompt) + 5);
+      else
+         Width := 90;
+      end if;
+
          if Width < TermWdth then
 
             Display_Window := Sub_Window(Win => Standard_Window,
@@ -385,33 +396,124 @@ package body Dbase.Scroller is
             Refresh(Display_Window);
 
             loop
-
+            if not Scrl_Buffer.Is_Empty then
                HiLite(Display_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
+            end if;
 
                c := Get_Keystroke;
 
                if c in Special_Key_Code'Range then
                   case c is
                   when Key_F2 =>
-                     --      FindElement := Element(CurrentCurs);
-                     ---      Process_Menu.Open_Menu (Function_Number => 2,Menu_Array => MessageMenu );
-                     ---     CurrentCurs := Directory_Buffer.Find(Item => FindElement);
-                     --      if CurrentCurs = No_Element then
-                     --         CurrentCurs := Directory_Buffer.Last;
-                     --      end if;
-                     CI.Absolute(Element(CurrentCurs).ID);
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
+
 
                      if SU.Length(TableName) /= 0 then
 
-                        Templates.Display_Page(CI,To_String(TableName));
-
+                        if Display_Form.Initialise(CI,To_String(TableName))  then
+                           Display_Form.Edit_Page;
+                           -- Display_Form.Command_Screen;
+                        end if;
                      else
                         Display_Warning.Warning("No FROM in SQL");
+                     end if;
+
+                     if Display_Form.Current_Record_Updated then
+                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                        CurrentCurs := Scrl_Buffer.First;
+                        while CurrentCurs /= Scrl_Buffer.Last loop
+                           exit when Element(CurrentCurs).ID = SaveID;
+                           CurrentCurs := Scrl_List.Next(CurrentCurs);
+                        end loop;
                      end if;
 
 
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);
+
+                  when Key_F3 =>
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
+
+
+                     if SU.Length(TableName) /= 0 then
+                        if Display_Form.Initialise(CI,To_String(TableName))  then
+                           Display_Form.Command_Screen;
+                        end if;
+                     else
+                        Display_Warning.Warning("No FROM in SQL");
+                     end if;
+
+                     Clear(Display_Window);
+                     Redraw_Screen(Display_Window);
+
+
+                  when Key_F4 =>
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
+
+
+                     if SU.Length(TableName) /= 0 then
+                        if Display_Form.Initialise(CI,To_String(TableName),True)  then
+
+
+                           Display_Form.Set_Default("shipowner",To_String(UserLoggedUserId));
+                           Display_Form.Set_Default("loc_x","0");
+                           Display_Form.Set_Default("loc_y","0");
+                           Display_Form.Set_Default("loc_z","0");
+                           Display_Form.Set_Default("dest_x","0");
+                           Display_Form.Set_Default("dest_y","0");
+                           Display_Form.Set_Default("dest_z","0");
+
+                           Display_Form.Set_Default("navcom_funct","100");
+                           Display_Form.Set_Default("navcom_oprt","100");
+                           Display_Form.Set_Default("navcom_reli","100");
+                           Display_Form.Set_Default("navcom_energ","5");
+
+                           Display_Form.Set_Default("jmpeng_funct","100");
+                           Display_Form.Set_Default("jmpeng_oprt","100");
+                           Display_Form.Set_Default("jmpeng_reli","100");
+                           Display_Form.Set_Default("jmpeng_energ","50000");
+
+                           Display_Form.Set_Default("engine_funct","100");
+                           Display_Form.Set_Default("engine_oprt","100");
+                           Display_Form.Set_Default("engine_reli","100");
+                           Display_Form.Set_Default("engine_energ","10000");
+
+                           Display_Form.Set_Default("deflect_funct","100");
+                           Display_Form.Set_Default("deflect_oprt","100");
+                           Display_Form.Set_Default("deflect_reli","100");
+                           Display_Form.Set_Default("deflect_energ","10000");
+
+
+                           Display_Form.Edit_Page;
+                        end if;
+                     else
+                        Display_Warning.Warning("No FROM in SQL");
+                     end if;
+
+                     if Display_Form.Current_Record_Updated then
+                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                        CurrentCurs := Scrl_Buffer.First;
+                        while CurrentCurs /= Scrl_Buffer.Last loop
+                           exit when Element(CurrentCurs).ID = SaveID;
+                           CurrentCurs := Scrl_List.Next(CurrentCurs);
+                        end loop;
+                     end if;
+
+
+                     Clear(Display_Window);
+                     Redraw_Screen(Display_Window);
+                     Refresh(Display_Window);
+
+
                   when Key_Cursor_Down =>
                      if (CurrentCurs /= Scrl_Buffer.Last) then
                         LoLite(Display_Window,Element(CurrentCurs).Prompt,CurrentLine+TopLine);
@@ -500,25 +602,31 @@ package body Dbase.Scroller is
             Display_Warning.Warning("Terminal not wide enough");
          end if;
 
-      else
-        Display_Warning.Warning("No Results for Search");
-      end if;
+    --  else
+    --    Display_Warning.Warning("No Results for Search");
+    --  end if;
 
    end Scroll;
 
    procedure Run is
 
    begin
+      if UserLoggedIn then
+         if OpenDb then
 
-      if OpenDb then
 
-         Definition_Ptr := 1;
+            Definition_Ptr := 1;
 
-         Scroll(Definition_List(Definition_Ptr).All);
+            Relation_Field := UserLoggedUserId;
 
-         CloseDb;
+            Scroll(Definition_List(Definition_Ptr).All);
+
+            CloseDb;
+         else
+            Display_Warning.Warning("No Open SQL Database");
+         end if;
       else
-         Display_Warning.Warning("No Open SQL Database");
+         Display_Warning.Warning("You Must be logged In");
       end if;
 
    end Run;

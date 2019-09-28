@@ -33,6 +33,7 @@ with Serpent;
 with Formatter;
 
 with Dbase.Scroller;   -- comment out for No Gnatcoll compile
+with Dbase.Login;
 
 with Templates;
 
@@ -269,10 +270,13 @@ procedure Main is
 
    Menu1 : Process_Menu.Menu_Type  :=
      ((new String'("Message Forum"),Message.Reader.Read_Messages'Unrestricted_Access),
+      (new String'("Drack Space"),Dbase.Scroller.Run'Unrestricted_Access), -- Comment Out
+      (new String'("Drack Space Login"),Dbase.Login.Login_User'Unrestricted_Access),
+      (new String'("Create DS User"),Dbase.Login.Create_User'Unrestricted_Access),
       (new String'("IRC Chat"),Pong_Bot.Irc_Client'Unrestricted_Access),
       (new String'("Serpent Game"),Run_Serpent'Unrestricted_Access),
       (new String'("Serpent Scores"),Serpent_Scoreboard'Unrestricted_Access),
-      (new String'("Database"),Dbase.Scroller.Run'Unrestricted_Access), -- Comment Out
+
       -- (new String'("Templates"),Templates.Display_Page'Unrestricted_Access),
       (new String'("Log Out"),logout'Unrestricted_Access));
 
@@ -298,7 +302,7 @@ begin
    Refresh;
 
 
-  -- Display_Current_Time.Start;
+  -- ;
 
    Move_Cursor (Line => 1, Column => 10);
    Add (Str => " This Is a Test  ");
