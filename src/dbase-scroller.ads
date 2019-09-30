@@ -15,6 +15,7 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 with GNAT.Regpat; use GNAT.Regpat;
 
 with Templates;
+-- with Dbase.DrackSpace;
 
 
 
@@ -31,6 +32,9 @@ package Dbase.Scroller is
    package Scrl_List is new Ada.Containers.Doubly_Linked_Lists(Scrl_Record);
    use Scrl_List;
 
+ --  package Drack is new Dbase.DrackSpace;
+
+   Definition_Ptr : Integer := 1;
 
    function Fld (CI : Direct_Cursor; FldNme : Unbounded_String) return String;
 

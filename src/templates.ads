@@ -22,13 +22,13 @@ with Dbase;
 with Texaco;
 with Process_Menu;
 with Formatter;
+-- with Dbase.DrackSpace;
 
 generic
 
 package Templates is
    package SU renames Ada.Strings.Unbounded;
    package SUIO renames Ada.Text_IO.Unbounded_IO;
-
 
    package Screen_Vector is new Ada.Containers.Vectors (Natural,
                                                     Unbounded_String);
@@ -56,6 +56,14 @@ package Templates is
 
    Current_Record : Map;
    Current_Record_Updated : Boolean := False;
+
+
+   ScreenList : Screen_Vector.Vector;
+   FieldsList : Screen_Vector.Vector;
+   EditFieldsList : Edit_Fields_Vector.Vector;
+   Display_Window : Window;
+   SaveTableName : Unbounded_String;
+
 
    type Days_of_Week is (Sunday,
                          Monday,

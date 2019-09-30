@@ -1,13 +1,13 @@
 with Ada.Text_IO;            use Ada.Text_IO;
 with Display_Warning;
+with Dbase.Scroller;
+-- with Dbase.DrackSpace;
 
 package body Templates is
 
-   ScreenList : Screen_Vector.Vector;
-   FieldsList : Screen_Vector.Vector;
-   EditFieldsList : Edit_Fields_Vector.Vector;
-   Display_Window : Window;
-   SaveTableName : Unbounded_String;
+
+  -- package Drack is new Dbase.DrackSpace;
+
 
 
    function CharPad(InStr : Unbounded_String; PadWidth : Integer) return Unbounded_String is
@@ -283,6 +283,8 @@ package body Templates is
                when CR | LF | HT =>
                   if i < Integer(EditFieldsList.Length)-1 then
                      i := i + 1;
+                  else
+                     i := 1;
                   end if;
                when ESC => exit;
                   when others => null;
@@ -527,7 +529,7 @@ package body Templates is
               Column => 1,
            Str => "Dest X : ");
       refresh(Display_Window);
-      destx := Current_Record(To_Unbounded_String("dest_x"));
+      destx := Current_Record(To_Unbounded_String("loc_x"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 2,
                          StartColumn =>  10,
@@ -540,7 +542,7 @@ package body Templates is
               Column => 1,
            Str => "Dest Y : ");
       refresh(Display_Window);
-      desty := Current_Record(To_Unbounded_String("dest_y"));
+      desty := Current_Record(To_Unbounded_String("loc_y"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 3,
                          StartColumn =>  10,
@@ -553,7 +555,7 @@ package body Templates is
               Column => 1,
            Str => "Dest Z : ");
       refresh(Display_Window);
-      destz := Current_Record(To_Unbounded_String("dest_z"));
+      destz := Current_Record(To_Unbounded_String("loc_z"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 4,
                          StartColumn =>  10,
@@ -676,9 +678,9 @@ package body Templates is
     --  SELECT loc_x, loc_y, loc_z INTO :savex, :savey, savez
     --       FROM ships WHERE ship_id = 3;
 
-      savex := Current_Record(To_Unbounded_String("loc_x"));
-      savey := Current_Record(To_Unbounded_String("loc_y"));
-      savez := Current_Record(To_Unbounded_String("loc_z"));
+      savex := Current_Record(To_Unbounded_String("dest_x"));
+      savey := Current_Record(To_Unbounded_String("dest_y"));
+      savez := Current_Record(To_Unbounded_String("dest_z"));
       destx := Current_Record(To_Unbounded_String("dest_x"));
       desty := Current_Record(To_Unbounded_String("dest_y"));
       destz := Current_Record(To_Unbounded_String("dest_z"));
@@ -716,6 +718,39 @@ package body Templates is
 
    end Jump_Dest_Coords;
 
+   L_Ack_Tail : string := ":null:%10s| %-30s| %-30s|:ship_id:ship_name:captain:";
+
+   procedure Radar_Scan is
+      RadRange : Long_Long_Integer := Long_Long_Integer(1000000000000000000);
+      XLocus,YLocus,ZLocus : Unbounded_String;
+      L_AckStatement : Unbounded_String;
+   begin
+
+      XLocus := Current_Record(To_Unbounded_String("loc_x"));
+      YLocus := Current_Record(To_Unbounded_String("loc_y"));
+      ZLocus := Current_Record(To_Unbounded_String("loc_z"));
+
+
+
+     L_AckStatement := L_AckStatement & "SELECT * FROM " & SaveTableName & " WHERE "
+      & "loc_x between "& XLocus &" - 10000 AND "& XLocus &" + 10000"
+        & " AND loc_y between "& YLocus &" - 10000 AND " & YLocus &" + 10000"
+        & " AND loc_z between "& ZLocus &" - 10000 AND " & ZLocus &" + 10000 order by loc_x,loc_y,loc_z"
+        & L_Ack_Tail;
+
+      Add (Standard_Window,
+              Line => 1,
+              Column => 1,
+           Str => To_String(L_AckStatement));
+      refresh;
+
+      Dbase.Scroller.Definition_Ptr := 1;
+      Dbase.Scroller.Scroll(To_String(L_AckStatement));
+
+
+   end Radar_Scan;
+
+
 
    procedure dummy is
    begin
@@ -727,8 +762,11 @@ package body Templates is
      ((new String'("Set Destination"),Set_Dest_Coords'Unrestricted_Access),
       (new String'("Start Engines"),dummy'Unrestricted_Access),
       (new String'("Initiate Jump"),Jump_Dest_Coords'Unrestricted_Access),
-      (new String'("Shut  Engines"),dummy'Unrestricted_Access));
+      (new String'("Radar Scan"),Radar_Scan'Unrestricted_Access));
 
+   Radar : Process_Menu.Menu_Type  :=
+     ((new String'("Radar Screen"),Radar_Scan'Unrestricted_Access),
+      (new String'("Null"),dummy'Unrestricted_Access));
 
 
    procedure Command_Screen is
@@ -785,7 +823,7 @@ package body Templates is
             when Key_F2 =>
                Process_Menu.Open_Menu (Function_Number => 2,Menu_Array => Navigation);
             when Key_F3 =>
-               Process_Menu.Open_Menu (Function_Number => 3,Menu_Array => Navigation);
+               Process_Menu.Open_Menu (Function_Number => 3,Menu_Array => Radar);
             when Key_F4 =>
                Process_Menu.Open_Menu (Function_Number => 4,Menu_Array => Navigation);
                when Key_F5 =>

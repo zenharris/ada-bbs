@@ -1,12 +1,17 @@
 with Display_Warning;
 with Dbase.Login;
 
+with Templates;
+-- with Dbase.DrackSpace;
+
 
 package body Dbase.Scroller is
    DB_Descr : Database_Description;
    -- DB       : Database_Connection;
 
-   Definition_Ptr : Integer := 1;
+
+
+ -- in .ads  Definition_Ptr : Integer := 1;
 
    ScrlDefine : String := "SELECT * FROM customers order by customerid limit 100:null:%6s| %-30s| %-20s| %-10s| %-10s:customerid:firstname:lastname:city:state:";
 
@@ -103,7 +108,7 @@ package body Dbase.Scroller is
          CI.First;
          while CI.Has_Row loop
 
-            Scrl_Buffer.Append(New_Item => ( CI.Current   ,
+            Scrl_Buffer.Append(New_Item => (  CI.Current   ,
                                              To_Unbounded_String(Ada_Format.SPut (To_String(Fields(2)),
                                                FieldsToValues(CI,Fields)))  ));
 
@@ -328,7 +333,11 @@ package body Dbase.Scroller is
 
       Width : Column_Position := 90;
       Length : Line_Position := 20;
-      package Display_Form is new Templates;
+
+     package Display_Form is new Templates; --  moved to .ads
+
+     -- package Drack is new Dbase.DrackSpace;
+
 
    begin
 
@@ -410,6 +419,7 @@ package body Dbase.Scroller is
                         CI.Absolute(Element(CurrentCurs).ID);
                      end if;
 
+                     if Fld(CI,To_Unbounded_String("shipowner")) = UserLoggedUserId then
 
                      if SU.Length(TableName) /= 0 then
 
@@ -429,7 +439,9 @@ package body Dbase.Scroller is
                            CurrentCurs := Scrl_List.Next(CurrentCurs);
                         end loop;
                      end if;
-
+                     else
+                        Display_Warning.Warning("Cannot edit a ship not yours");
+                     end if;
 
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);
@@ -440,13 +452,26 @@ package body Dbase.Scroller is
                         CI.Absolute(Element(CurrentCurs).ID);
                      end if;
 
+                     if Fld(CI,To_Unbounded_String("shipowner")) = UserLoggedUserId then
 
-                     if SU.Length(TableName) /= 0 then
-                        if Display_Form.Initialise(CI,To_String(TableName))  then
-                           Display_Form.Command_Screen;
+                        if SU.Length(TableName) /= 0 then
+                           if Display_Form.Initialise(CI,To_String(TableName))  then
+                              Display_Form.Command_Screen;
+                           end if;
+                        else
+                           Display_Warning.Warning("No FROM in SQL");
                         end if;
+
+                        -- if Display_Form.Current_Record_Updated then
+                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                        CurrentCurs := Scrl_Buffer.First;
+                        while CurrentCurs /= Scrl_Buffer.Last loop
+                           exit when Element(CurrentCurs).ID = SaveID;
+                           CurrentCurs := Scrl_List.Next(CurrentCurs);
+                        end loop;
+                        -- end if;
                      else
-                        Display_Warning.Warning("No FROM in SQL");
+                        Display_Warning.Warning("Cannot pilot a ship not yours");
                      end if;
 
                      Clear(Display_Window);
@@ -463,6 +488,8 @@ package body Dbase.Scroller is
                      if SU.Length(TableName) /= 0 then
                         if Display_Form.Initialise(CI,To_String(TableName),True)  then
 
+                          -- Dbase.DrackSpace.Initialise_Defaults;
+                            -- Drack.Initialise_Defaults;
 
                            Display_Form.Set_Default("shipowner",To_String(UserLoggedUserId));
                            Display_Form.Set_Default("loc_x","0");
@@ -512,6 +539,24 @@ package body Dbase.Scroller is
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);
                      Refresh(Display_Window);
+
+                  when Key_F5 =>
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
+
+                     -- if Display_Form.Current_Record_Updated then
+                     Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                     CurrentCurs := Scrl_Buffer.First;
+                     while CurrentCurs /= Scrl_Buffer.Last loop
+                        exit when Element(CurrentCurs).ID = SaveID;
+                        CurrentCurs := Scrl_List.Next(CurrentCurs);
+                     end loop;
+                     -- end if;
+
+                     Clear(Display_Window);
+                     Redraw_Screen(Display_Window);
 
 
                   when Key_Cursor_Down =>
