@@ -18,7 +18,7 @@ energ : @16<<<<<<<<   @20<<<<<<<<   @24<<<<<<<<   @28<<<<<<<< kW/h per Hour
 
                                                                        
 %FIELD_DEF%
-ship_id:integer:pkey:noedit:
+ship_id:serial:pkey:noedit:
 ship_name:varchar:
 captain:varchar:
 direct_xy:integer:noedit:
