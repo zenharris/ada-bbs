@@ -31,7 +31,7 @@ package body Dbase.Scroller is
   -- end record;
    type Definition_Type is array (Positive range <>) of String_Access;
 
---   Definition_List : Definition_Type  :=
+--   L_Ack_List : Definition_Type  :=
 --     ((new String'("SELECT * FROM customers order by customerid:null:%6s| %-30s| %-20s| %-10s| %-10s:customerid:firstname:lastname:city:state:")),
 --      (new String'("SELECT * FROM cust_hist where customerid = '%s':customerid:%6s| %-6s| %-6s|:customerid:orderid:prod_id:")),
 --      (new String'("SELECT * FROM products where prod_id = '%s':prod_id:%6s| %-30s| %-20s| %-10s| %-10s:prod_id:title:actor:price:common_prod_id:")),
@@ -39,7 +39,7 @@ package body Dbase.Scroller is
 --     );
     --(new String'("SELECT * FROM orders where customerid = '%s':customerid:%6s| %-12s| %-6s| %10s| %10s| %10s:orderid:orderdate:customerid:netamount:tax:totalamount:")),
 
-   Definition_List : Definition_Type  :=
+   L_Ack_List : Definition_Type  :=
      ((new String'("SELECT * FROM ships WHERE shipowner = '%s' order by ship_id:xtend:%10s| %-30s| %-30s|:ship_id:ship_name:captain:")),
      (new String'("SELECT * FROM ships WHERE shipowner = '%s' order by ship_id:shipowner:%10s| %-30s| %-30s|:ship_id:ship_name:captain:"))
      );
@@ -185,7 +185,7 @@ package body Dbase.Scroller is
 
    Relation_Field : Unbounded_String;
 
-   procedure Scroll (SQLstatement : String) is
+   procedure Scroll (L_AckStatement : String; Down : Integer := 0) is
       c : Key_Code;
      -- FindElement : Scrl_Record;
       SaveID : Integer;
@@ -345,7 +345,7 @@ package body Dbase.Scroller is
 
       Clear(DefList);
 
-      Split(DefList,SQLstatement);
+      Split(DefList,L_AckStatement);
 
       if DefList(1) = "null" then
 
@@ -371,7 +371,29 @@ package body Dbase.Scroller is
    --   if  CI.Has_Row then --not  Scrl_Buffer.Is_Empty then
          Get_Size(Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
       if not Scrl_Buffer.Is_Empty then
-         Width := Column_Position(SU.Length(Element(Scrl_Buffer.First).Prompt) + 5);
+
+         declare
+               promptlength : Integer;
+         begin
+
+            CurrentCurs := Scrl_Buffer.First;
+
+            while CurrentCurs /= Scrl_Buffer.Last loop
+               promptlength := SU.Length(Element(CurrentCurs).Prompt) + 5;
+               if promptlength > Integer(Width) then
+                  Width := Column_Position(promptlength);
+               end if;
+               Scrl_List.Next(CurrentCurs);
+            end loop;
+            promptlength := SU.Length(Element(CurrentCurs).Prompt) + 5;
+            if promptlength > Integer(Width) then
+               Width := Column_Position(promptlength);
+            end if;
+         end;
+
+
+
+        -- Width := Column_Position(SU.Length(Element(Scrl_Buffer.First).Prompt) + 5);
       else
          Width := 90;
       end if;
@@ -381,7 +403,7 @@ package body Dbase.Scroller is
             Display_Window := Sub_Window(Win => Standard_Window,
                                          Number_Of_Lines => Length,
                                          Number_Of_Columns => Width,
-                                         First_Line_Position => (TermLnth - Length) / 2,
+                                         First_Line_Position => ((TermLnth - Length) / 2)+Line_Position(Down),
                                          First_Column_Position => (TermWdth - Width) / 2);
 
             Clear(Display_Window);
@@ -614,16 +636,16 @@ package body Dbase.Scroller is
 
                         CI.Absolute(Element(CurrentCurs).ID);
 
-                        if CI.Has_Row and then Definition_Ptr < Definition_List'Last then
+                        if CI.Has_Row and then Definition_Ptr < L_Ack_List'Last then
                            Definition_Ptr := Definition_Ptr + 1;
-                           Split(PassList,Definition_List(Definition_Ptr).all);
+                           Split(PassList,L_Ack_List(Definition_Ptr).all);
                            if PassList(1) /= "null" then
 
                               Relation_Field := To_Unbounded_String(Fld(CI,PassList(1)));
 
                            end if;
 
-                           Scroll (Definition_List(Definition_Ptr).all);
+                           Scroll (L_Ack_List(Definition_Ptr).all);
                            Definition_Ptr := Definition_Ptr -1;
                            Clear(Display_Window);
                            Redraw_Screen(Display_Window);
@@ -664,7 +686,7 @@ package body Dbase.Scroller is
 
             Relation_Field := UserLoggedUserId;
 
-            Scroll(Definition_List(Definition_Ptr).All);
+            Scroll(L_Ack_List(Definition_Ptr).All);
 
             CloseDb;
          else

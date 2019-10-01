@@ -529,7 +529,7 @@ package body Templates is
               Column => 1,
            Str => "Dest X : ");
       refresh(Display_Window);
-      destx := Current_Record(To_Unbounded_String("loc_x"));
+      destx := Current_Record(To_Unbounded_String("dest_x"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 2,
                          StartColumn =>  10,
@@ -542,7 +542,7 @@ package body Templates is
               Column => 1,
            Str => "Dest Y : ");
       refresh(Display_Window);
-      desty := Current_Record(To_Unbounded_String("loc_y"));
+      desty := Current_Record(To_Unbounded_String("dest_y"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 3,
                          StartColumn =>  10,
@@ -555,7 +555,7 @@ package body Templates is
               Column => 1,
            Str => "Dest Z : ");
       refresh(Display_Window);
-      destz := Current_Record(To_Unbounded_String("loc_z"));
+      destz := Current_Record(To_Unbounded_String("dest_z"));
       Texaco.Line_Editor(Display_Window,
                          StartLine => 4,
                          StartColumn =>  10,
@@ -718,7 +718,7 @@ package body Templates is
 
    end Jump_Dest_Coords;
 
-   L_Ack_Tail : string := ":null:%10s| %-30s| %-30s|:ship_id:ship_name:captain:";
+   L_Ack_Tail : string := ":null:%10s| %s => %s.%s.%s:ship_id:ship_name:loc_x:loc_y:loc_z:";
 
    procedure Radar_Scan is
       RadRange : Long_Long_Integer := Long_Long_Integer(1000000000000000000);
@@ -745,7 +745,7 @@ package body Templates is
       refresh;
 
       Dbase.Scroller.Definition_Ptr := 1;
-      Dbase.Scroller.Scroll(To_String(L_AckStatement));
+      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3);
 
 
    end Radar_Scan;
@@ -814,6 +814,7 @@ package body Templates is
          StopOverwrite := False;
          c := Texaco.GetKey;  -- Get_Keystroke;
          StopOverwrite := True;
+         Nap_Milli_Seconds(400);
          if c in Special_Key_Code'Range then
             case c is
             when Key_F1 =>

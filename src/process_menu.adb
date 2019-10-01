@@ -82,6 +82,8 @@ package body Process_Menu is
             case Ch is
             when LF | CR =>
                begin
+                  Clear(Win => menu_win);
+                  Refresh(menu_win);
 
                   Menu_Array(Current_Line).Func.all;
 
