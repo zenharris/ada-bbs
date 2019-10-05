@@ -82,6 +82,7 @@ package Templates is
    procedure Set_Default (Fldnme : String; Default : String);
    procedure Close_Page;
  --  function Initialise (CI :Direct_Cursor; TableName : String) return Boolean;
-function Initialise (CI :Direct_Cursor; TableName : String;NewRecord : Boolean := False) return Boolean;
+   function Initialise (CI :Direct_Cursor; TableName : String;NewRecord : Boolean := False) return Boolean;
+   procedure Inflict_Damage (ShipID : Unbounded_String);
 
 end Templates;
