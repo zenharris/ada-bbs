@@ -161,6 +161,7 @@ package body Dbase.Scroller is
                         Port => 5432
                        );
       DB := DB_Descr.Build_Connection;
+      DB_Background := DB_Descr.Build_Connection;
       IsOpen := DB.Check_Connection;
       if IsOpen then
          Put_Line("Connection is open.");
@@ -178,6 +179,9 @@ package body Dbase.Scroller is
       Reset_Connection(DB);
 
       Free (DB);
+       Reset_Connection(DB_Background);
+
+      Free (DB_Background);
       Free (DB_Descr);
 
    end CloseDb;
@@ -185,7 +189,7 @@ package body Dbase.Scroller is
 
    Relation_Field : Unbounded_String;
 
-   procedure Scroll (L_AckStatement : String; Down : Integer := 0) is
+   procedure Scroll (L_AckStatement : String; Down : Integer := 0; AltFunctions : Boolean := False) is
       c : Key_Code;
      -- FindElement : Scrl_Record;
       SaveID : Integer;
@@ -325,13 +329,13 @@ package body Dbase.Scroller is
               Line => 2,
               Str => To_String(Heading));
 
-         Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  Esc to exit");
+         Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead  F6 Damage ");
          Clear_To_End_Of_Line(Win);
          Box(Win);
       end Redraw_Screen;
 
 
-      Width : Column_Position := 90;
+      Width : Column_Position := 0; -- 90;
       Length : Line_Position := 20;
 
      package Display_Form is new Templates; --  moved to .ads
@@ -389,6 +393,7 @@ package body Dbase.Scroller is
             if promptlength > Integer(Width) then
                Width := Column_Position(promptlength);
             end if;
+
          end;
 
 
@@ -579,6 +584,30 @@ package body Dbase.Scroller is
 
                      Clear(Display_Window);
                      Redraw_Screen(Display_Window);
+                  when Key_F6 =>
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
+
+                     if AltFunctions then
+
+                        Display_Form.Inflict_Damage(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+
+                     --   Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                     --   CurrentCurs := Scrl_Buffer.First;
+                     --   while CurrentCurs /= Scrl_Buffer.Last loop
+                     --      exit when Element(CurrentCurs).ID = SaveID;
+                     --      CurrentCurs := Scrl_List.Next(CurrentCurs);
+                     --   end loop;
+
+
+                     --   Clear(Display_Window);
+                     --   Redraw_Screen(Display_Window);
+                     else
+                        Display_Warning.Warning("Damage Only From Radar");
+                     end if;
+
 
 
                   when Key_Cursor_Down =>

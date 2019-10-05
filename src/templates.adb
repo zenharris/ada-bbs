@@ -36,6 +36,16 @@ package body Templates is
       return To_String(FldNme) & " Not Found";
    end;
 
+   function Fld (CI : Direct_Cursor; FldNme : String) return String is
+   begin
+      for i in 0..CI.Field_Count-1 loop
+         if CI.Field_Name(i) = FldNme then
+            return CI.Value(i);
+         end if;
+      end loop;
+      Display_Warning.Warning("No Field " & FldNme);
+      return FldNme & " Not Found";
+   end;
 
    function Xlat_Line (LineNum : Integer;InLine : Unbounded_String;ReadEditFields : Boolean := False) return Unbounded_String is
       scratch : Unbounded_String := InLine;
@@ -338,7 +348,7 @@ package body Templates is
       SQLstatement := SQLstatement & Fieldnames & ") VALUES (" & Fieldvalues & ")";
 
       Add (Standard_Window,
-              Line => 1,
+              Line => 2,
               Column => 1,
            Str => To_String(SQLstatement));
       refresh;
@@ -376,7 +386,7 @@ package body Templates is
       SQLstatement := SQLstatement & Current_Record(EditFieldsList.Element(0).Name) & "'";
 
        Add (Standard_Window,
-              Line => 1,
+              Line => 2,
               Column => 1,
            Str => To_String(SQLstatement));
       refresh;
@@ -478,7 +488,7 @@ package body Templates is
 
       Stmt:= Prepare (To_String(SQLstatement), Index_By => Field_Index'First);
 
-      CIB.Fetch (Dbase.DB, Stmt);
+      CIB.Fetch (Dbase.DB_Background, Stmt);
 
       if CIB.Has_Row then
          Read_Current_Record (CIB,FieldsList);
@@ -571,7 +581,7 @@ package body Templates is
 
 
        Add (Standard_Window,
-              Line => 1,
+              Line => 2,
               Column => 1,
            Str => To_String(SQLstatement));
       refresh;
@@ -694,7 +704,7 @@ package body Templates is
 
 
        Add (Standard_Window,
-              Line => 1,
+              Line => 2,
               Column => 1,
            Str => To_String(SQLstatement));
       refresh;
@@ -718,10 +728,12 @@ package body Templates is
 
    end Jump_Dest_Coords;
 
+
+
    L_Ack_Tail : string := ":null:%10s| %s => %s.%s.%s:ship_id:ship_name:loc_x:loc_y:loc_z:";
 
    procedure Radar_Scan is
-      RadRange : Long_Long_Integer := Long_Long_Integer(1000000000000000000);
+      RadRange : Long_Long_Float := Long_Long_Float(999999999999999999);
       XLocus,YLocus,ZLocus : Unbounded_String;
       L_AckStatement : Unbounded_String;
    begin
@@ -733,22 +745,139 @@ package body Templates is
 
 
      L_AckStatement := L_AckStatement & "SELECT * FROM " & SaveTableName & " WHERE "
-      & "loc_x between "& XLocus &" - 10000 AND "& XLocus &" + 10000"
+      & "loc_x between "& XLocus  &" - 10000 AND "& XLocus &" + 10000"
         & " AND loc_y between "& YLocus &" - 10000 AND " & YLocus &" + 10000"
         & " AND loc_z between "& ZLocus &" - 10000 AND " & ZLocus &" + 10000 order by loc_x,loc_y,loc_z"
         & L_Ack_Tail;
 
-      Add (Standard_Window,
-              Line => 1,
-              Column => 1,
-           Str => To_String(L_AckStatement));
-      refresh;
+   --   Add (Standard_Window,
+   --           Line => 1,
+   --           Column => 1,
+   --        Str => To_String(L_AckStatement));
+   --   refresh;
 
       Dbase.Scroller.Definition_Ptr := 1;
-      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3);
+      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,AltFunctions => True);
 
 
    end Radar_Scan;
+
+   procedure Inflict_Damage (ShipID : Unbounded_String) is
+         Stmt : Prepared_Statement;
+      CIB : Direct_Cursor;
+      SQLstatement : Unbounded_String;
+      navcom,jmpeng,engine,deflect : Integer;
+   begin
+
+      SQLstatement := SQLstatement & "SELECT * FROM ships WHERE ship_id = " & ShipID;
+
+    --   Add (Standard_Window,
+    --          Line => 1,
+    --          Column => 1,
+    --       Str => To_String(SQLstatement));
+    --  refresh;
+
+      Stmt:= Prepare (To_String(SQLstatement), Index_By => Field_Index'First);
+
+      CIB.Fetch (Dbase.DB, Stmt);
+
+      if CIB.Has_Row then
+         navcom := Integer'Value(Fld(CIB,"navcom_funct")) -1;
+         jmpeng := Integer'Value(Fld(CIB,"jmpeng_funct"))-1;
+         engine := Integer'Value(Fld(CIB,"engine_funct"))-1;
+         deflect:= Integer'Value(Fld(CIB,"deflect_funct"))-1;
+
+         SQLstatement := To_Unbounded_String("");
+         SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct = " & deflect'Image &
+           ", engine_funct = " &engine'Image& " WHERE ship_id = " & ShipID;
+
+         Add (Standard_Window,
+              Line => 2,
+              Column => 1,
+              Str => To_String(SQLstatement));
+         refresh;
+
+         Stmt:= Prepare (To_String(SQLstatement));
+
+         Dbase.DB.Execute(Stmt);
+         Dbase.DB.Commit;
+
+         if not Dbase.DB.Success then
+            Display_Warning.Warning("Panic Damage Failed");
+         end if;
+
+
+      end if;
+   end Inflict_Damage;
+
+
+
+   type Status_Record is record
+      Prompt : String_Access;
+      FieldName : String_Access;
+      Blinking :  Boolean;  --Function_Access;
+      SaveValue : Unbounded_String;
+   end record;
+   type Status_Field_Type is array (Positive range <>) of Status_Record;
+
+   Status_Field_List : Status_Field_Type  :=
+     ((new String'("NavCom"),new String'("navcom_funct"),False,To_Unbounded_String("")),
+      (new String'("JmpEng"),new String'("jmpeng_funct"),False,To_Unbounded_String("")),
+      (new String'("Engine"),new String'("engine_funct"),False,To_Unbounded_String("")),
+      (new String'("Dflctr"),new String'("deflect_funct"),False,To_Unbounded_String("")),
+      (new String'("Hull"),new String'("deflect_funct"),False,To_Unbounded_String(""))
+     );
+   SaveNavcom : Unbounded_String;
+   procedure Update_Status is
+      procedure Blink(fldnm : String) is
+      begin
+         for i in Status_Field_List'Range loop
+            if Status_Field_List(i).Prompt.all = fldnm then
+               Status_Field_List(i).Blinking := True;
+            end if;
+         end loop;
+
+
+      end Blink;
+
+   begin
+
+      for i in Status_Field_List'Range loop
+
+
+         if Status_Field_List(i).SaveValue /=
+           Current_Record(To_Unbounded_String(Status_Field_List(i).FieldName.all)) then
+            if Status_Field_List(i).Blinking then
+              -- Status_Field_List(i).Blinking := False;
+               Status_Field_List(i).SaveValue :=
+                 Current_Record(To_Unbounded_String(Status_Field_List(i).FieldName.all));
+            else
+               Status_Field_List(i).Blinking := True;
+            end if;
+         else
+            Status_Field_List(i).Blinking := False;
+         end if;
+
+
+         if Status_Field_List(i).Blinking then
+            Set_Character_Attributes(Standard_Window, (Reverse_Video => True,Blink => True,others => False));
+         else
+            Set_Character_Attributes(Standard_Window, Normal_Video);
+         end if;
+
+
+         Add (Standard_Window,
+              Line => 1,
+              Column => Column_Position(i * 8),
+              Str => Status_Field_List(i).Prompt.all);
+
+      end loop;
+      refresh;
+
+      Set_Character_Attributes(Standard_Window, Normal_Video);
+
+
+   end Update_Status;
 
 
 
@@ -765,7 +894,7 @@ package body Templates is
       (new String'("Radar Scan"),Radar_Scan'Unrestricted_Access));
 
    Radar : Process_Menu.Menu_Type  :=
-     ((new String'("Radar Screen"),Radar_Scan'Unrestricted_Access),
+     ((new String'("Radar Scope"),Radar_Scan'Unrestricted_Access),
       (new String'("Null"),dummy'Unrestricted_Access));
 
 
@@ -790,10 +919,12 @@ package body Templates is
 
             Next := Now + D;
 
-            Add (Win => Display_Window,Line => 1,Column => 48,Str => "Cronometer " & Image (Now));
+            Add (Win => Standard_Window,Line => 1,Column => 70,Str => Image (Now));
+            Recycle;
+            Update_Status;
 
             if not StopOverwrite then
-               Recycle;
+             --  Recycle;
                Redraw_Page;
            -- else
            --    Refresh(Display_Window);
