@@ -474,35 +474,37 @@ package body Dbase.Scroller is
                      Redraw_Screen(Display_Window);
 
                   when Key_F3 =>
-                     if CI.Has_Row then
-                        SaveID := Element(CurrentCurs).ID;
-                        CI.Absolute(Element(CurrentCurs).ID);
-                     end if;
-
-                     if Fld(CI,To_Unbounded_String("shipowner")) = UserLoggedUserId then
-
-                        if SU.Length(TableName) /= 0 then
-                           if Display_Form.Initialise(CI,To_String(TableName))  then
-                              Display_Form.Command_Screen;
-                           end if;
-                        else
-                           Display_Warning.Warning("No FROM in SQL");
+                     if not AltFunctions then
+                        if CI.Has_Row then
+                           SaveID := Element(CurrentCurs).ID;
+                           CI.Absolute(Element(CurrentCurs).ID);
                         end if;
 
-                        -- if Display_Form.Current_Record_Updated then
-                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
-                        CurrentCurs := Scrl_Buffer.First;
-                        while CurrentCurs /= Scrl_Buffer.Last loop
-                           exit when Element(CurrentCurs).ID = SaveID;
-                           CurrentCurs := Scrl_List.Next(CurrentCurs);
-                        end loop;
-                        -- end if;
-                     else
-                        Display_Warning.Warning("Cannot pilot a ship not yours");
-                     end if;
+                        if Fld(CI,To_Unbounded_String("shipowner")) = UserLoggedUserId then
 
-                     Clear(Display_Window);
-                     Redraw_Screen(Display_Window);
+                           if SU.Length(TableName) /= 0 then
+                              if Display_Form.Initialise(CI,To_String(TableName))  then
+                                 Display_Form.Command_Screen;
+                              end if;
+                           else
+                              Display_Warning.Warning("No FROM in SQL");
+                           end if;
+
+                           -- if Display_Form.Current_Record_Updated then
+                           Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                           CurrentCurs := Scrl_Buffer.First;
+                           while CurrentCurs /= Scrl_Buffer.Last loop
+                              exit when Element(CurrentCurs).ID = SaveID;
+                              CurrentCurs := Scrl_List.Next(CurrentCurs);
+                           end loop;
+                           -- end if;
+                        else
+                           Display_Warning.Warning("Cannot pilot a ship not yours");
+                        end if;
+
+                        Clear(Display_Window);
+                        Redraw_Screen(Display_Window);
+                     end if;
 
 
                   when Key_F4 =>

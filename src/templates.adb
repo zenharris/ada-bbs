@@ -762,11 +762,20 @@ package body Templates is
 
    end Radar_Scan;
 
+   type Value_Type is new Float;
+    package Value_Functions is new Ada.Numerics.Generic_Elementary_Functions (
+                                                                              Value_Type);
+   subtype Rand_Range is Integer range 1..5;   --Positive;
+   package Rand_Int is new Ada.Numerics.Discrete_Random(Rand_Range);
+
+   gen : Rand_Int.Generator;
+
    procedure Inflict_Damage (ShipID : Unbounded_String) is
          Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
-      SQLstatement : Unbounded_String;
-      navcom,jmpeng,engine,deflect : Integer;
+      SQLstatement, Damage_Report : Unbounded_String;
+      navcom,jmpeng,engine,deflect,hull : Integer;
+   --   n : Integer;
    begin
 
       SQLstatement := SQLstatement & "SELECT * FROM ships WHERE ship_id = " & ShipID;
@@ -777,24 +786,83 @@ package body Templates is
     --       Str => To_String(SQLstatement));
     --  refresh;
 
-      Stmt:= Prepare (To_String(SQLstatement), Index_By => Field_Index'First);
+      Stmt:= Prepare (To_String(SQLstatement));
 
       CIB.Fetch (Dbase.DB, Stmt);
 
       if CIB.Has_Row then
-         navcom := Integer'Value(Fld(CIB,"navcom_funct")) -1;
-         jmpeng := Integer'Value(Fld(CIB,"jmpeng_funct"))-1;
-         engine := Integer'Value(Fld(CIB,"engine_funct"))-1;
-         deflect:= Integer'Value(Fld(CIB,"deflect_funct"))-1;
+         navcom := Integer'Value(Fld(CIB,"navcom_funct"));
+         jmpeng := Integer'Value(Fld(CIB,"jmpeng_funct"));
+         engine := Integer'Value(Fld(CIB,"engine_funct"));
+         deflect:= Integer'Value(Fld(CIB,"deflect_funct"));
+         hull   := Integer'Value(Fld(CIB,"hull_value"));
+
+         if deflect in 95..100 then
+            case (Rand_Int.Random(gen)) is
+            when 1 => deflect := deflect - 1;
+            when others => null;
+            end case;
+            null;
+         elsif deflect in 80..94 then
+            case (Rand_Int.Random(gen)) is
+            when 1 => deflect := deflect - 1;
+            when 3 => hull := hull - 1;
+            when others => null;
+            end case;
+
+            null;
+         elsif deflect in 70..79 then
+            case (Rand_Int.Random(gen)) is
+            when 1 => deflect := deflect - 1;
+            when 3 => hull := hull - 1;
+            when others => null;
+            end case;
+            null;
+         elsif deflect in 50..69 then
+            case (Rand_Int.Random(gen)) is
+            when 1 => deflect := deflect - 1;
+            when 2 => hull := hull - 1;
+            when 3 => deflect := deflect -1;
+            when others => null;
+            end case;
+         elsif deflect in 1..49 then
+            case (Rand_Int.Random(gen)) is
+            when 1 => deflect := deflect - 1;
+            when 2 => hull := hull - 1;
+            when 3 => deflect := deflect - 1;
+            when 4 => hull := hull - 1;
+            when others => null;
+            end case;
+         elsif deflect = 0 then
+            case (Rand_Int.Random(gen)) is
+            when 2 => jmpeng := jmpeng - 1;
+            when 4 => navcom := navcom - 1;
+            when 3 => engine := engine - 1;
+            when 1 => hull := hull - 1;
+            when 5 => hull := hull - 1;
+            when others => null;
+
+            end case;
+         end if;
+
+
+
+
 
          SQLstatement := To_Unbounded_String("");
-         SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct = " & deflect'Image &
-           ", engine_funct = " &engine'Image& " WHERE ship_id = " & ShipID;
+         SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct =" & deflect'Image &
+           ", engine_funct =" &engine'Image& ",navcom_funct=" &navcom'Image&
+           ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
+
+         Damage_Report := Damage_Report & "Damage to Ship ID "& ShipID&" : Deflector " & deflect'Image &
+           ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+           ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
          Add (Standard_Window,
               Line => 2,
               Column => 1,
-              Str => To_String(SQLstatement));
+              Str => To_String(Damage_Report));
+         Clear_To_End_Of_Line;
          refresh;
 
          Stmt:= Prepare (To_String(SQLstatement));
@@ -805,6 +873,9 @@ package body Templates is
          if not Dbase.DB.Success then
             Display_Warning.Warning("Panic Damage Failed");
          end if;
+
+
+
 
 
       end if;
@@ -825,7 +896,7 @@ package body Templates is
       (new String'("JmpEng"),new String'("jmpeng_funct"),False,To_Unbounded_String("")),
       (new String'("Engine"),new String'("engine_funct"),False,To_Unbounded_String("")),
       (new String'("Dflctr"),new String'("deflect_funct"),False,To_Unbounded_String("")),
-      (new String'("Hull"),new String'("deflect_funct"),False,To_Unbounded_String(""))
+      (new String'("Hull"),new String'("hull_value"),False,To_Unbounded_String(""))
      );
    SaveNavcom : Unbounded_String;
    procedure Update_Status is
@@ -975,7 +1046,9 @@ package body Templates is
       Abort Display_Current_Time;
    end Command_Screen;
 
+begin
 
+   Rand_Int.Reset(gen);
 
 
 end Templates;

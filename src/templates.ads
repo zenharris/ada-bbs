@@ -24,6 +24,9 @@ with Process_Menu;
 with Formatter;
 -- with Dbase.DrackSpace;
 
+with Ada.Numerics.Generic_Elementary_Functions;
+with Ada.Numerics.discrete_Random;
+
 generic
 
 package Templates is
