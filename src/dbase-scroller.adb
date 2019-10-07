@@ -301,11 +301,13 @@ package body Dbase.Scroller is
          Clear_Region;
          if not Scrl_Buffer.Is_Empty then
             curs2 := CurrentCurs;
+
             for i in 1 .. CurrentLine loop
                if curs2 /= Scrl_Buffer.First then
                   Scrl_List.Previous(curs2);
                end if;
             end loop;
+
             while curs2 /= Scrl_Buffer.Last loop
 
                Add(Win,Line => TopLine + LineNum,Column => 2,Str => To_String(Element(curs2).Prompt) );
@@ -335,7 +337,7 @@ package body Dbase.Scroller is
       end Redraw_Screen;
 
 
-      Width : Column_Position := 0; -- 90;
+      Width : Column_Position :=  60;
       Length : Line_Position := 20;
 
      package Display_Form is new Templates; --  moved to .ads

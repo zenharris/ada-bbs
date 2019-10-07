@@ -543,9 +543,9 @@ package body Templates is
       Texaco.Line_Editor(Display_Window,
                          StartLine => 2,
                          StartColumn =>  10,
-                         Editlength => 32,
+                         Editlength => 16,
                          Edline => destx,
-                         MaxLength => 31,
+                         MaxLength => 15,
                          SuppressSpaces => True);
        Add (Display_Window,
               Line => 3,
@@ -556,9 +556,9 @@ package body Templates is
       Texaco.Line_Editor(Display_Window,
                          StartLine => 3,
                          StartColumn =>  10,
-                         Editlength => 32,
+                         Editlength => 16,
                          Edline => desty,
-                         MaxLength => 31,
+                         MaxLength => 15,
                          SuppressSpaces => True);
        Add (Display_Window,
               Line => 4,
@@ -569,9 +569,9 @@ package body Templates is
       Texaco.Line_Editor(Display_Window,
                          StartLine => 4,
                          StartColumn =>  10,
-                         Editlength => 32,
+                         Editlength => 16,
                          Edline => destz,
-                         MaxLength => 31,
+                         MaxLength => 15,
                          SuppressSpaces => True);
 
       SQLstatement := SQLstatement & "UPDATE " & SaveTableName & " SET ";
@@ -750,11 +750,11 @@ package body Templates is
         & " AND loc_z between "& ZLocus &" - 10000 AND " & ZLocus &" + 10000 order by loc_x,loc_y,loc_z"
         & L_Ack_Tail;
 
-   --   Add (Standard_Window,
-   --           Line => 1,
-   --           Column => 1,
-   --        Str => To_String(L_AckStatement));
-   --   refresh;
+     -- Add (Standard_Window,
+     --        Line => 2,
+     --        Column => 1,
+     --     Str => To_String(L_AckStatement));
+     -- refresh;
 
       Dbase.Scroller.Definition_Ptr := 1;
       Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,AltFunctions => True);
@@ -797,13 +797,13 @@ package body Templates is
          deflect:= Integer'Value(Fld(CIB,"deflect_funct"));
          hull   := Integer'Value(Fld(CIB,"hull_value"));
 
-         if deflect in 95..100 then
+         if deflect in 90..100 then
             case (Rand_Int.Random(gen)) is
             when 1 => deflect := deflect - 1;
             when others => null;
             end case;
             null;
-         elsif deflect in 80..94 then
+         elsif deflect in 80..89 then
             case (Rand_Int.Random(gen)) is
             when 1 => deflect := deflect - 1;
             when 3 => hull := hull - 1;
@@ -875,7 +875,7 @@ package body Templates is
          end if;
 
 
-
+         Nap_Milli_Seconds(300); -- limit firing rate.
 
 
       end if;
@@ -898,7 +898,7 @@ package body Templates is
       (new String'("Dflctr"),new String'("deflect_funct"),False,To_Unbounded_String("")),
       (new String'("Hull"),new String'("hull_value"),False,To_Unbounded_String(""))
      );
-   SaveNavcom : Unbounded_String;
+
    procedure Update_Status is
       procedure Blink(fldnm : String) is
       begin
@@ -942,10 +942,13 @@ package body Templates is
               Column => Column_Position(i * 8),
               Str => Status_Field_List(i).Prompt.all);
 
+         refresh;
+
       end loop;
+      Set_Character_Attributes(Standard_Window, Normal_Video);
       refresh;
 
-      Set_Character_Attributes(Standard_Window, Normal_Video);
+
 
 
    end Update_Status;
@@ -986,11 +989,9 @@ package body Templates is
          accept Start;
 
          loop
-            Now := Clock;
-
-            Next := Now + D;
 
             Add (Win => Standard_Window,Line => 1,Column => 70,Str => Image (Now));
+            Refresh;
             Recycle;
             Update_Status;
 
@@ -1000,6 +1001,9 @@ package body Templates is
            -- else
            --    Refresh(Display_Window);
             end if;
+            Now := Clock;
+
+            Next := Now + D;
 
             delay until Next;
          end loop;
