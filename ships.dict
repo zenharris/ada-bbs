@@ -6,9 +6,9 @@ Owner : @29<<<<<<<  Captain : @2<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Direction XY : @3<<<<<<<<<  XZ : @4<<<<<<<<<  Speed : @5<<<<<<<<<<<<<<<<<<<
 Dest Code    : @6<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-Loc X: @7<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst X: @10<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-Loc Y: @8<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst Y: @11<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-Loc Z: @9<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Dst Z: @12<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Loc X: @7<<<<<<<<<<<<<                  Dst X: @10<<<<<<<<<<<<
+Loc Y: @8<<<<<<<<<<<<<                  Dst Y: @11<<<<<<<<<<<<
+Loc Z: @9<<<<<<<<<<<<<                  Dst Z: @12<<<<<<<<<<<<
 
           Navcom        Jmp Eng       Engine       Dflct
 funct : @13<<<<<<<<   @17<<<<<<<<   @21<<<<<<<<   @25<<<<<<<< % Function
@@ -25,12 +25,12 @@ direct_xy:integer:noedit:
 direct_xz:integer:noedit:
 speed:bigint:noedit:
 dest_code:varchar:noedit:
-loc_x:numeric:noedit:
-loc_y:numeric:noedit:
-loc_z:numeric:noedit:
-dest_x:numeric:noedit:
-dest_y:numeric:noedit:
-dest_z:numeric:noedit:
+loc_x:double precision:noedit:
+loc_y:double precision:noedit:
+loc_z:double precision:noedit:
+dest_x:double precision:noedit:
+dest_y:double precision:noedit:
+dest_z:double precision:noedit:
 navcom_funct:integer:noedit:
 navcom_oprt:integer:noedit:
 navcom_reli:integer:noedit:
