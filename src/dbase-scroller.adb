@@ -77,6 +77,13 @@ package body Dbase.Scroller is
       return To_String(FldNme) & " Not Found";
    end;
 
+   function Fld (CI : Direct_Cursor; FldNme : String) return String is
+   begin
+      return Fld(CI,To_Unbounded_String(FldNme));
+   end Fld;
+
+
+
    function FieldsToValues (CI : in out Direct_Cursor; InVector : in out FieldsVector.Vector) return Values is
       retArray : Values(1..Integer(InVector.Length)-3); -- := (1 => Value);
    begin
@@ -96,6 +103,9 @@ package body Dbase.Scroller is
                           Fields : in out FieldsVector.Vector) is
 
       Stmt : Prepared_Statement;
+      targx,targy,targz,distance : Long_Long_Float;
+
+      scratch : Unbounded_String;
    begin
 
       Clear(Scrl_Buffer);
@@ -108,9 +118,30 @@ package body Dbase.Scroller is
          CI.First;
          while CI.Has_Row loop
 
-            Scrl_Buffer.Append(New_Item => (  CI.Current   ,
-                                             To_Unbounded_String(Ada_Format.SPut (To_String(Fields(2)),
-                                               FieldsToValues(CI,Fields)))  ));
+            if Radar_Mode then
+               targx := Long_Long_Float'Value(Fld(CI,"loc_x"));
+               targy := Long_Long_Float'Value(Fld(CI,"loc_y"));
+               targz := Long_Long_Float'Value(Fld(CI,"loc_z"));
+
+               distance := Value_Functions.Sqrt (((MyLocX - targx)**2) + ((MyLocY-targy)**2) + ((MyLocZ-targz)**2)) ;
+
+               --  scratch := To_Unbounded_String("");
+             --  scratch := scratch & distance'Image &" ";
+
+               scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+
+
+            else
+               scratch := To_Unbounded_String("");
+            end if;
+
+            scratch := scratch & To_Unbounded_String(Ada_Format.SPut (To_String(Fields(2)),
+                                                     FieldsToValues(CI,Fields)));
+            Scrl_Buffer.Append(New_Item => (  CI.Current   , scratch  ));
+
+          --  Scrl_Buffer.Append(New_Item => (  CI.Current   ,
+          --                                   To_Unbounded_String(Ada_Format.SPut (To_String(Fields(2)),
+          --                                     FieldsToValues(CI,Fields)))  ));
 
             CI.Next;
          end loop;
@@ -595,10 +626,14 @@ package body Dbase.Scroller is
                      end if;
 
                      if AltFunctions then
+                       -- if Display_Form.Initialise(CI,To_String(TableName),NoWindow => True)  then
 
-                        Display_Form.Inflict_Damage(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+                        Display_Form.Inflict_Damage(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))),
+                                                      MyLocX,MyLocY,MyLocZ
+                                                   );
+                       -- end if;
 
-                     --   Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                        --   Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
                      --   CurrentCurs := Scrl_Buffer.First;
                      --   while CurrentCurs /= Scrl_Buffer.Last loop
                      --      exit when Element(CurrentCurs).ID = SaveID;
@@ -606,8 +641,8 @@ package body Dbase.Scroller is
                      --   end loop;
 
 
-                     --   Clear(Display_Window);
-                     --   Redraw_Screen(Display_Window);
+                        Clear(Display_Window);
+                        Redraw_Screen(Display_Window);
                      else
                         Display_Warning.Warning("Damage Only From Radar");
                      end if;

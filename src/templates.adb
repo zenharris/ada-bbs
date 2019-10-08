@@ -181,7 +181,10 @@ package body Templates is
 
    EmptyScroll : Boolean;
 
-   function Initialise (CI :Direct_Cursor; TableName : String;NewRecord : Boolean := False) return Boolean is
+   function Initialise (CI :Direct_Cursor;
+                        TableName : String;
+                        NewRecord : Boolean := False;
+                        NoWindow : Boolean := False) return Boolean is
 
       Width : Column_Position := 90;
       Length : Line_Position := 25;
@@ -198,6 +201,10 @@ package body Templates is
          EmptyScroll := True;
       elsif CI.Has_Row then
          Read_Current_Record(CI,FieldsList);
+         Dbase.Scroller.MyLocX := Long_Long_Float'Value(Fld(CI,"loc_x"));
+         Dbase.Scroller.MyLocY := Long_Long_Float'Value(Fld(CI,"loc_y"));
+         Dbase.Scroller.MyLocZ := Long_Long_Float'Value(Fld(CI,"loc_z"));
+
       else
          Init_Current_Record(FieldsList);
          EmptyScroll := True;
@@ -205,25 +212,28 @@ package body Templates is
 
       Read_Edit_Fields;
 
-      Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+      if not NoWindow then
+         Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
 
-      -- Width := Column_Position(SU.Length(Element(Scrl_Buffer.First).Prompt) + 5);
-      Length := Line_Position(ScreenList.Length+2);
-      if Width < TermWdth then
+         -- Width := Column_Position(SU.Length(Element(Scrl_Buffer.First).Prompt) + 5);
+         Length := Line_Position(ScreenList.Length+2);
+         if Width < TermWdth then
 
-         Display_Window := Sub_Window(Win => Standard_Window,
-                                      Number_Of_Lines => Length,
-                                      Number_Of_Columns => Width,
-                                      First_Line_Position => (TermLnth - Length) / 2,
-                                      First_Column_Position => (TermWdth - Width) / 2);
+            Display_Window := Sub_Window(Win => Standard_Window,
+                                         Number_Of_Lines => Length,
+                                         Number_Of_Columns => Width,
+                                         First_Line_Position => (TermLnth - Length) / 2,
+                                         First_Column_Position => (TermWdth - Width) / 2);
 
-         Clear(Display_Window);
-         Box(Display_Window);
-         Refresh(Display_Window);
-      else
-         Display_Warning.Warning("Terminal not wide enough");
-         return False;
+            Clear(Display_Window);
+            Box(Display_Window);
+            Refresh(Display_Window);
+         else
+            Display_Warning.Warning("Terminal not wide enough");
+            return False;
+         end if;
       end if;
+
 
       return True;
    end Initialise;
@@ -680,9 +690,9 @@ package body Templates is
            Str => "Jump Completed");
       Refresh(Display_Window);
 
-      Now := Clock;
-      Next := Now + D;
-      delay until Next;
+    --  Now := Clock;
+    --  Next := Now + D;
+    --  delay until Next;
 
     --  EXEC SQL
     --  SELECT loc_x, loc_y, loc_z INTO :savex, :savey, savez
@@ -716,6 +726,10 @@ package body Templates is
 
       if not Dbase.DB.Success then
          Display_Warning.Warning("Panic Jump Failed");
+      else
+         Dbase.Scroller.MyLocX := Long_Long_Float'Value(To_String(destx));
+         Dbase.Scroller.MyLocY := Long_Long_Float'Value(To_String(desty));
+         Dbase.Scroller.MyLocZ := Long_Long_Float'Value(To_String(destz));
       end if;
 
 
@@ -756,27 +770,32 @@ package body Templates is
      --     Str => To_String(L_AckStatement));
      -- refresh;
 
+      Dbase.Scroller.Radar_Mode := True;
       Dbase.Scroller.Definition_Ptr := 1;
       Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,AltFunctions => True);
-
+      Dbase.Scroller.Radar_Mode := False;
 
    end Radar_Scan;
 
-   type Value_Type is new Float;
-    package Value_Functions is new Ada.Numerics.Generic_Elementary_Functions (
-                                                                              Value_Type);
+
+
    subtype Rand_Range is Integer range 1..5;   --Positive;
    package Rand_Int is new Ada.Numerics.Discrete_Random(Rand_Range);
 
    gen : Rand_Int.Generator;
 
-   procedure Inflict_Damage (ShipID : Unbounded_String) is
+   procedure Inflict_Damage (ShipID : Unbounded_String;
+                            Xloc,Yloc,Zloc : Long_Long_Float) is
          Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQLstatement, Damage_Report : Unbounded_String;
       navcom,jmpeng,engine,deflect,hull : Integer;
+      locx,locy,locz,targx,targy,targz,distance : Long_Long_Float;
+      scratch : Unbounded_String;
    --   n : Integer;
    begin
+
+     -- Recycle;
 
       SQLstatement := SQLstatement & "SELECT * FROM ships WHERE ship_id = " & ShipID;
 
@@ -797,88 +816,114 @@ package body Templates is
          deflect:= Integer'Value(Fld(CIB,"deflect_funct"));
          hull   := Integer'Value(Fld(CIB,"hull_value"));
 
-         if deflect in 90..100 then
-            case (Rand_Int.Random(gen)) is
-            when 1 => deflect := deflect - 1;
-            when others => null;
-            end case;
-            null;
-         elsif deflect in 80..89 then
-            case (Rand_Int.Random(gen)) is
-            when 1 => deflect := deflect - 1;
-            when 3 => hull := hull - 1;
-            when others => null;
-            end case;
+        -- Display_Warning.Warning(Dbase.Scroller.MyLocX'Image);
 
-            null;
-         elsif deflect in 70..79 then
-            case (Rand_Int.Random(gen)) is
-            when 1 => deflect := deflect - 1;
-            when 3 => hull := hull - 1;
-            when others => null;
-            end case;
-            null;
-         elsif deflect in 50..69 then
-            case (Rand_Int.Random(gen)) is
-            when 1 => deflect := deflect - 1;
-            when 2 => hull := hull - 1;
-            when 3 => deflect := deflect -1;
-            when others => null;
-            end case;
-         elsif deflect in 1..49 then
-            case (Rand_Int.Random(gen)) is
-            when 1 => deflect := deflect - 1;
-            when 2 => hull := hull - 1;
-            when 3 => deflect := deflect - 1;
-            when 4 => hull := hull - 1;
-            when others => null;
-            end case;
-         elsif deflect = 0 then
-            case (Rand_Int.Random(gen)) is
-            when 2 => jmpeng := jmpeng - 1;
-            when 4 => navcom := navcom - 1;
-            when 3 => engine := engine - 1;
-            when 1 => hull := hull - 1;
-            when 5 => hull := hull - 1;
-            when others => null;
+         locx := Dbase.Scroller.MyLocX; --Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_x"))));
 
-            end case;
+         locy := Dbase.Scroller.MyLocY;  --Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_y"))));
+         locz := Dbase.Scroller.MyLocZ; -- Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_z"))));
+
+         targx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
+         targy := Long_Long_Float'Value(Fld(CIB,"loc_y"));
+         targz := Long_Long_Float'Value(Fld(CIB,"loc_z"));
+
+         distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
+         if distance < 200.0 then
+            -- Display_Warning.Warning(distance'Image);
+
+            if deflect in 80..100 then
+               case (Rand_Int.Random(gen)) is
+               when 1 => deflect := deflect - 1;
+               when others => null;
+               end case;
+               null;
+
+            elsif deflect in 70..79 then
+               case (Rand_Int.Random(gen)) is
+               when 1 => deflect := deflect - 1;
+               when 3 => hull := hull - 1;
+               when others => null;
+               end case;
+               null;
+            elsif deflect in 50..69 then
+               case (Rand_Int.Random(gen)) is
+               when 1 => deflect := deflect - 1;
+               when 2 => hull := hull - 1;
+               when 3 => deflect := deflect -1;
+               when others => null;
+               end case;
+            elsif deflect in 1..49 then
+               case (Rand_Int.Random(gen)) is
+               when 1 => deflect := deflect - 1;
+               when 2 => hull := hull - 1;
+               when 3 => deflect := deflect - 1;
+               when 4 => hull := hull - 1;
+               when 5 => hull := hull - 1;
+               when others => null;
+               end case;
+            elsif deflect = 0 then
+               case (Rand_Int.Random(gen)) is
+               when 2 => jmpeng := jmpeng - 1;
+               when 4 => navcom := navcom - 1;
+               when 3 => engine := engine - 1;
+               when 1 => hull := hull - 1;
+               when 5 => hull := hull - 1;
+               when others => null;
+
+               end case;
+            end if;
+
+
+
+
+
+            SQLstatement := To_Unbounded_String("");
+            SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct =" & deflect'Image &
+              ", engine_funct =" &engine'Image& ",navcom_funct=" &navcom'Image&
+              ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
+
+            scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+            Damage_Report := Damage_Report & "Range"& scratch & " Ship ID "& ShipID&" : Deflector" & deflect'Image &
+              ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+              ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+
+            Add (Standard_Window,
+                 Line => 2,
+                 Column => 1,
+                 Str => To_String(Damage_Report));
+            Clear_To_End_Of_Line;
+            refresh;
+
+            Stmt:= Prepare (To_String(SQLstatement));
+
+            Dbase.DB.Execute(Stmt);
+            Dbase.DB.Commit;
+
+            if not Dbase.DB.Success then
+               Display_Warning.Warning("Panic Damage Failed");
+            end if;
+
+
+            Nap_Milli_Seconds(300); -- limit firing rate.
+
+
+         else
+            scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+
+            Damage_Report := Damage_Report & "Out Of Range"& scratch & " Ship ID "& ShipID&" : Deflector" & deflect'Image &
+              ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+              ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+
+            Add (Standard_Window,
+                 Line => 2,
+                 Column => 1,
+                 Str => To_String(Damage_Report));
+            Clear_To_End_Of_Line;
+            refresh;
          end if;
-
-
-
-
-
-         SQLstatement := To_Unbounded_String("");
-         SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct =" & deflect'Image &
-           ", engine_funct =" &engine'Image& ",navcom_funct=" &navcom'Image&
-           ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
-
-         Damage_Report := Damage_Report & "Damage to Ship ID "& ShipID&" : Deflector " & deflect'Image &
-           ", Engine" &engine'Image& ",Navcom" &navcom'Image&
-           ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
-
-         Add (Standard_Window,
-              Line => 2,
-              Column => 1,
-              Str => To_String(Damage_Report));
-         Clear_To_End_Of_Line;
-         refresh;
-
-         Stmt:= Prepare (To_String(SQLstatement));
-
-         Dbase.DB.Execute(Stmt);
-         Dbase.DB.Commit;
-
-         if not Dbase.DB.Success then
-            Display_Warning.Warning("Panic Damage Failed");
-         end if;
-
-
-         Nap_Milli_Seconds(300); -- limit firing rate.
-
-
       end if;
+
+
    end Inflict_Damage;
 
 

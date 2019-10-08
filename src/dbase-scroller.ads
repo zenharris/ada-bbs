@@ -16,7 +16,7 @@ with GNAT.Regpat; use GNAT.Regpat;
 
 with Templates;
 -- with Dbase.DrackSpace;
-
+with Ada.Numerics.Generic_Elementary_Functions;
 
 
 
@@ -32,7 +32,21 @@ package Dbase.Scroller is
    package Scrl_List is new Ada.Containers.Doubly_Linked_Lists(Scrl_Record);
    use Scrl_List;
 
- --  package Drack is new Dbase.DrackSpace;
+   --  package Drack is new Dbase.DrackSpace;
+
+   MyLocX : Long_Long_Float := Long_Long_Float(0);
+   MyLocY : Long_Long_Float := Long_Long_Float(0);
+   MyLocZ : Long_Long_Float := Long_Long_Float(0);
+
+   Radar_Mode : Boolean := False;
+
+
+
+   subtype Value_Type is Long_Long_Float;
+   package Value_Functions is new Ada.Numerics.Generic_Elementary_Functions (
+                                                                              Value_Type);
+   use Value_Functions;
+
 
    Definition_Ptr : Integer := 1;
 

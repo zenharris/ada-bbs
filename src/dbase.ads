@@ -9,6 +9,9 @@ package Dbase is
 
 
    DB       : Database_Connection;
+   DB_Background       : Database_Connection;
+
+
 
    UserLoggedIn : Boolean := False;
    UserLoggedName : Unbounded_String;

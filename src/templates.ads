@@ -60,7 +60,6 @@ package Templates is
    Current_Record : Map;
    Current_Record_Updated : Boolean := False;
 
-
    ScreenList : Screen_Vector.Vector;
    FieldsList : Screen_Vector.Vector;
    EditFieldsList : Edit_Fields_Vector.Vector;
@@ -79,13 +78,22 @@ package Templates is
      new Formatter (Enumerated => Days_of_Week);
    use     Ada_Format; -- Direct visibility of F conversion functions
 
+   subtype Value_Type is Long_Long_Float;
+   package Value_Functions is new Ada.Numerics.Generic_Elementary_Functions (
+                                                                              Value_Type);
+   use Value_Functions;
+
    procedure Redraw_Page ;
    procedure Edit_Page ;
    procedure Command_Screen;
    procedure Set_Default (Fldnme : String; Default : String);
    procedure Close_Page;
  --  function Initialise (CI :Direct_Cursor; TableName : String) return Boolean;
-   function Initialise (CI :Direct_Cursor; TableName : String;NewRecord : Boolean := False) return Boolean;
-   procedure Inflict_Damage (ShipID : Unbounded_String);
+   function Initialise (CI :Direct_Cursor;
+                        TableName : String;
+                        NewRecord : Boolean := False;
+                        NoWindow : Boolean := False
+                       ) return Boolean;
+   procedure Inflict_Damage (ShipID : Unbounded_String;Xloc,Yloc,Zloc : Long_Long_Float);
 
 end Templates;
