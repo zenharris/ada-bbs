@@ -66,6 +66,8 @@ package Templates is
    Display_Window : Window;
    SaveTableName : Unbounded_String;
 
+   DebugMode : Boolean := False;
+
 
    type Days_of_Week is (Sunday,
                          Monday,

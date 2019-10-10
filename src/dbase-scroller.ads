@@ -34,9 +34,7 @@ package Dbase.Scroller is
 
    --  package Drack is new Dbase.DrackSpace;
 
-   MyLocX : Long_Long_Float := Long_Long_Float(0);
-   MyLocY : Long_Long_Float := Long_Long_Float(0);
-   MyLocZ : Long_Long_Float := Long_Long_Float(0);
+
 
    Radar_Mode : Boolean := False;
 

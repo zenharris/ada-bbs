@@ -361,9 +361,15 @@ package body Dbase.Scroller is
               Column => Column_Position((Integer(TermWdth) - SU.Length(Heading)) / 2),
               Line => 2,
               Str => To_String(Heading));
+         if AltFunctions then
+            Add (Win,Line => TermLnth - 2,
+                 Column => 1, Str => "F4 New Ship  F5 Ping  F6 Lasers ");
+         else
 
-         Add (Win,Line => TermLnth - 2,Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead  F6 Damage ");
-         Clear_To_End_Of_Line(Win);
+            Add (Win,Line => TermLnth - 2,
+                 Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead  F6 Damage ");
+         end if;
+            Clear_To_End_Of_Line(Win);
          Box(Win);
       end Redraw_Screen;
 
@@ -581,6 +587,8 @@ package body Dbase.Scroller is
                            Display_Form.Set_Default("deflect_reli","100");
                            Display_Form.Set_Default("deflect_energ","10000");
 
+                           Display_Form.Set_Default("hull_value","1000");
+                           Display_Form.Set_Default("fuel_value","500000000");
 
                            Display_Form.Edit_Page;
                         end if;
@@ -712,9 +720,17 @@ package body Dbase.Scroller is
                               Relation_Field := To_Unbounded_String(Fld(CI,PassList(1)));
 
                            end if;
+                           if AltFunctions then
+                              Radar_Mode := False;
+                           end if;
 
                            Scroll (L_Ack_List(Definition_Ptr).all);
                            Definition_Ptr := Definition_Ptr -1;
+
+                           if AltFunctions then
+                              Radar_Mode := True;
+                           end if;
+
                            Clear(Display_Window);
                            Redraw_Screen(Display_Window);
                         end if;
