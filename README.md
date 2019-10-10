@@ -2,9 +2,12 @@
 
 An ncurses based small menu system, IRC client and general purpose input line editor/text editor all under development to create a BBS system written in Ada.
 
-Now incudes Postgresql database scroller which requires Gnatcoll Postgresql. If you remove references to the Dbase objects in main it will compile without Gnatcoll. 
+Under development now is  an MMO Spaceship Simulation game based in Postgresql. I call this game "Drack Space".
 
-The Database scroller has now become a database game in the form of a MMO space ship simmulator. Good luck to anyone
+Requires Gnatcoll Postgresql. If you remove references to the Dbase objects in main it will compile without Gnatcoll but
+no Drack Space. 
+
+The original Database scroller has now become a database game in the form of a MMO space ship simmulator. Good luck to anyone
 who can compile and run it. I'd realy like to know if anyone ever gets it going.
 
 Thanks to Irc.bot code https://github.com/erik/ada-irc with which I made the IRC client.
