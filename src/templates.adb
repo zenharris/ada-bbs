@@ -436,6 +436,7 @@ package body Templates is
 
       Current_Record_Updated := False;
       if RecordEdited and then Display_Warning.GetYN("Save Changes Y/N") then
+
          Dbase.DB.Execute(Stmt);
          Dbase.DB.Commit;
 
@@ -445,6 +446,8 @@ package body Templates is
          else
             Display_Warning.Warning("Update Failed");
          end if;
+
+
       end if;
 
       Close_Page;
@@ -621,9 +624,9 @@ package body Templates is
       Dbase.DB.Commit;
 
       if Dbase.DB.Success then
-         Display_Warning.Warning("Dest Coords Set");
+         Display_Warning.Warning("Dest Coords Set",D => 0.7);
       else
-         Display_Warning.Warning("Update Failed");
+         Display_Warning.Warning("Update Failed",D => 0.7);
       end if;
 
 
@@ -804,8 +807,7 @@ package body Templates is
 
    gen : Rand_Int.Generator;
 
-   procedure Inflict_Damage (ShipID : Unbounded_String;
-                             Xloc,Yloc,Zloc : Long_Long_Float) is
+   procedure Inflict_Damage (ShipID : Unbounded_String) is
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQLstatement, Damage_Report : Unbounded_String;
@@ -813,7 +815,7 @@ package body Templates is
       locx,locy,locz,targx,targy,targz,distance : Long_Long_Float;
       scratch : Unbounded_String;
 
-      D    : Duration := 0.3;
+      D    : Duration := 0.4;
       Now : Time := Clock;
       Next : Time := Now + D;
       --   n : Integer;
@@ -832,7 +834,7 @@ package body Templates is
 
       Stmt:= Prepare (To_String(SQLstatement));
 
-      CIB.Fetch (Dbase.DB, Stmt);
+      CIB.Fetch (Dbase.DB_Guns, Stmt);
 
       if CIB.Has_Row then
          navcom := Integer'Value(Fld(CIB,"navcom_funct"));
@@ -841,12 +843,9 @@ package body Templates is
          deflect:= Integer'Value(Fld(CIB,"deflect_funct"));
          hull   := Integer'Value(Fld(CIB,"hull_value"));
 
-        -- Display_Warning.Warning(Dbase.Scroller.MyLocX'Image);
-
-         locx := Dbase.MyLocX; --Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_x"))));
-
-         locy := Dbase.MyLocY;  --Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_y"))));
-         locz := Dbase.MyLocZ; -- Long_Long_Float'Value(To_String(Current_Record(To_Unbounded_String("loc_z"))));
+         locx := Dbase.MyLocX;
+         locy := Dbase.MyLocY;
+         locz := Dbase.MyLocZ;
 
          targx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
          targy := Long_Long_Float'Value(Fld(CIB,"loc_y"));
@@ -911,7 +910,7 @@ package body Templates is
                  ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
 
                scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
-               Damage_Report := Damage_Report & "Range"& scratch & " Ship ID "& ShipID&" : Deflector" & deflect'Image &
+               Damage_Report := Damage_Report & "Firing on ShpId "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
                  ", Engine" &engine'Image& ",Navcom" &navcom'Image&
                  ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
@@ -920,28 +919,21 @@ package body Templates is
                     Column => 1,
                     Str => To_String(Damage_Report));
                Clear_To_End_Of_Line;
-               refresh;
+             --  refresh;
 
                Stmt:= Prepare (To_String(SQLstatement));
 
-               Dbase.DB.Execute(Stmt);
-               Dbase.DB.Commit;
+               Dbase.DB_Guns.Execute(Stmt);
+               Dbase.DB_Guns.Commit;
 
-               if not Dbase.DB.Success then
-                  Display_Warning.Warning("Panic Damage Failed");
+               if not Dbase.DB_Guns.Success then
+                  Display_Warning.Warning("Panic Damage Failed",D => 2.0);
                end if;
 
-
-              -- Nap_Milli_Seconds(600); -- limit firing rate.
-
-              -- Now := Clock;
-
-               -- Next := Now + D;
-
-               delay until Next;
+              delay until Next;
 
             else
-               Dbase.DB.Rollback;
+               Dbase.DB_Guns.Rollback;
 
                scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
 
@@ -954,14 +946,14 @@ package body Templates is
                     Column => 1,
                     Str => To_String(Damage_Report));
                Clear_To_End_Of_Line;
-               refresh;
+              -- refresh;
 
 
             end if;
 
          else
-            Dbase.DB.Rollback;
-            Display_Warning.Warning("No Firing at Midway");
+            Dbase.DB_Guns.Rollback;
+            Display_Warning.Warning("No Firing at Midway",D => 1.0);
 
          end if;
 
@@ -976,9 +968,10 @@ package body Templates is
    type Status_Record is record
       Prompt : String_Access;
       FieldName : String_Access;
-      Blinking :  Boolean;  --Function_Access;
+      Blinking :  Boolean;
       SaveValue : Unbounded_String;
    end record;
+
    type Status_Field_Type is array (Positive range <>) of Status_Record;
 
    Status_Field_List : Status_Field_Type  :=
@@ -1009,7 +1002,7 @@ package body Templates is
          if Status_Field_List(i).SaveValue /=
            Current_Record(To_Unbounded_String(Status_Field_List(i).FieldName.all)) then
             if Status_Field_List(i).Blinking then
-              -- Status_Field_List(i).Blinking := False;
+               -- Status_Field_List(i).Blinking := False;
                Status_Field_List(i).SaveValue :=
                  Current_Record(To_Unbounded_String(Status_Field_List(i).FieldName.all));
             else
@@ -1038,11 +1031,15 @@ package body Templates is
       Set_Character_Attributes(Standard_Window, Normal_Video);
       refresh;
 
-
-
-
    end Update_Status;
 
+   procedure Fire_Lasers (Ship_ID : Unbounded_String) is
+
+   begin
+      if Firing_Queue.Current_Use < 10 then
+         Firing_Queue.Enqueue(New_Item => Ship_ID);
+      end if;
+   end Fire_Lasers;
 
 
    procedure dummy is
@@ -1070,18 +1067,21 @@ package body Templates is
          entry Start;
       end Background_Processor;
 
+      task Firing_Processor;
+
       task body Background_Processor is
          Next : Time;
          D    : Duration := 1.0;
-         Now : Time := Clock;
+         Now : Time; -- := Clock;
 
       begin
          accept Start;
 
          loop
-
+            Now := Clock;
+            Next := Now + D;
             Add (Win => Standard_Window,Line => 1,Column => 70,Str => Image (Now));
-           -- Refresh;
+
             Recycle;
             Update_Status;
 
@@ -1091,13 +1091,21 @@ package body Templates is
            -- else
            --    Refresh(Display_Window);
             end if;
-            Now := Clock;
-
-            Next := Now + D;
 
             delay until Next;
          end loop;
       end Background_Processor;
+
+      task body Firing_Processor is
+         Ship_ID : Unbounded_String;
+      begin
+
+         loop
+            Firing_Queue.Dequeue(Element => Ship_ID);
+            Inflict_Damage(Ship_ID);
+         end loop;
+
+      end Firing_Processor;
 
 
    begin
@@ -1139,6 +1147,7 @@ package body Templates is
       end loop;
       Close_Page;
       Abort Background_Processor;
+      abort Firing_Processor;
    end Command_Screen;
 
 begin

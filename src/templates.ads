@@ -27,6 +27,10 @@ with Formatter;
 with Ada.Numerics.Generic_Elementary_Functions;
 with Ada.Numerics.discrete_Random;
 
+with Ada.Containers.Synchronized_Queue_Interfaces;
+with Ada.Containers.Unbounded_Synchronized_Queues;
+
+
 generic
 
 package Templates is
@@ -83,7 +87,23 @@ package Templates is
    subtype Value_Type is Long_Long_Float;
    package Value_Functions is new Ada.Numerics.Generic_Elementary_Functions (
                                                                               Value_Type);
-   use Value_Functions;
+      use Value_Functions;
+
+   type Work_Item is record
+      Ship_ID :Unbounded_String; -- new Integer; --range 1 .. 100;
+   end record;
+
+   package Work_Item_Queue_Interfaces is
+     new Ada.Containers.Synchronized_Queue_Interfaces
+           (Element_Type => Unbounded_String);
+
+   package Work_Item_Queues is
+     new Ada.Containers.Unbounded_Synchronized_Queues
+           (Queue_Interfaces => Work_Item_Queue_Interfaces);
+
+   Firing_Queue : Work_Item_Queues.Queue;
+
+
 
    procedure Redraw_Page ;
    procedure Edit_Page ;
@@ -96,6 +116,6 @@ package Templates is
                         NewRecord : Boolean := False;
                         NoWindow : Boolean := False
                        ) return Boolean;
-   procedure Inflict_Damage (ShipID : Unbounded_String;Xloc,Yloc,Zloc : Long_Long_Float);
-
+   procedure Inflict_Damage (ShipID : Unbounded_String);
+   procedure Fire_Lasers (Ship_ID : Unbounded_String);
 end Templates;

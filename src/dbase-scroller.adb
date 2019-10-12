@@ -193,6 +193,7 @@ package body Dbase.Scroller is
                        );
       DB := DB_Descr.Build_Connection;
       DB_Background := DB_Descr.Build_Connection;
+      DB_Guns := DB_Descr.Build_Connection;
       IsOpen := DB.Check_Connection;
       if IsOpen then
          Put_Line("Connection is open.");
@@ -208,15 +209,20 @@ package body Dbase.Scroller is
 
       -- reset state of connection for reuse
       Reset_Connection(DB);
-
       Free (DB);
-       Reset_Connection(DB_Background);
 
+      Reset_Connection(DB_Background);
       Free (DB_Background);
+
+      Reset_Connection(DB_Guns);
+      Free (DB_Guns);
+
       Free (DB_Descr);
 
    end CloseDb;
 
+
+   package Display_Form is new Templates; --  moved to .ads
 
    Relation_Field : Unbounded_String;
 
@@ -376,8 +382,6 @@ package body Dbase.Scroller is
 
       Width : Column_Position :=  60;
       Length : Line_Position := 20;
-
-     package Display_Form is new Templates; --  moved to .ads
 
      -- package Drack is new Dbase.DrackSpace;
 
@@ -547,68 +551,70 @@ package body Dbase.Scroller is
 
 
                   when Key_F4 =>
-                     if CI.Has_Row then
-                        SaveID := Element(CurrentCurs).ID;
-                        CI.Absolute(Element(CurrentCurs).ID);
-                     end if;
-
-
-                     if SU.Length(TableName) /= 0 then
-                        if Display_Form.Initialise(CI,To_String(TableName),True)  then
-
-                          -- Dbase.DrackSpace.Initialise_Defaults;
-                            -- Drack.Initialise_Defaults;
-
-                           Display_Form.Set_Default("shipowner",To_String(UserLoggedUserId));
-                           Display_Form.Set_Default("loc_x","0");
-                           Display_Form.Set_Default("loc_y","0");
-                           Display_Form.Set_Default("loc_z","0");
-                           Display_Form.Set_Default("dest_x","0");
-                           Display_Form.Set_Default("dest_y","0");
-                           Display_Form.Set_Default("dest_z","0");
-
-                           Display_Form.Set_Default("navcom_funct","100");
-                           Display_Form.Set_Default("navcom_oprt","100");
-                           Display_Form.Set_Default("navcom_reli","100");
-                           Display_Form.Set_Default("navcom_energ","5");
-
-                           Display_Form.Set_Default("jmpeng_funct","100");
-                           Display_Form.Set_Default("jmpeng_oprt","100");
-                           Display_Form.Set_Default("jmpeng_reli","100");
-                           Display_Form.Set_Default("jmpeng_energ","50000");
-
-                           Display_Form.Set_Default("engine_funct","100");
-                           Display_Form.Set_Default("engine_oprt","100");
-                           Display_Form.Set_Default("engine_reli","100");
-                           Display_Form.Set_Default("engine_energ","10000");
-
-                           Display_Form.Set_Default("deflect_funct","100");
-                           Display_Form.Set_Default("deflect_oprt","100");
-                           Display_Form.Set_Default("deflect_reli","100");
-                           Display_Form.Set_Default("deflect_energ","10000");
-
-                           Display_Form.Set_Default("hull_value","1000");
-                           Display_Form.Set_Default("fuel_value","500000000");
-
-                           Display_Form.Edit_Page;
+                     if not AltFunctions then
+                        if CI.Has_Row then
+                           SaveID := Element(CurrentCurs).ID;
+                           CI.Absolute(Element(CurrentCurs).ID);
                         end if;
-                     else
-                        Display_Warning.Warning("No FROM in SQL");
+
+
+                        if SU.Length(TableName) /= 0 then
+                           if Display_Form.Initialise(CI,To_String(TableName),True)  then
+
+                              -- Dbase.DrackSpace.Initialise_Defaults;
+                              -- Drack.Initialise_Defaults;
+
+                              Display_Form.Set_Default("shipowner",To_String(UserLoggedUserId));
+                              Display_Form.Set_Default("loc_x","0");
+                              Display_Form.Set_Default("loc_y","0");
+                              Display_Form.Set_Default("loc_z","0");
+                              Display_Form.Set_Default("dest_x","0");
+                              Display_Form.Set_Default("dest_y","0");
+                              Display_Form.Set_Default("dest_z","0");
+
+                              Display_Form.Set_Default("navcom_funct","100");
+                              Display_Form.Set_Default("navcom_oprt","100");
+                              Display_Form.Set_Default("navcom_reli","100");
+                              Display_Form.Set_Default("navcom_energ","5");
+
+                              Display_Form.Set_Default("jmpeng_funct","100");
+                              Display_Form.Set_Default("jmpeng_oprt","100");
+                              Display_Form.Set_Default("jmpeng_reli","100");
+                              Display_Form.Set_Default("jmpeng_energ","50000");
+
+                              Display_Form.Set_Default("engine_funct","100");
+                              Display_Form.Set_Default("engine_oprt","100");
+                              Display_Form.Set_Default("engine_reli","100");
+                              Display_Form.Set_Default("engine_energ","10000");
+
+                              Display_Form.Set_Default("deflect_funct","100");
+                              Display_Form.Set_Default("deflect_oprt","100");
+                              Display_Form.Set_Default("deflect_reli","100");
+                              Display_Form.Set_Default("deflect_energ","10000");
+
+                              Display_Form.Set_Default("hull_value","1000");
+                              Display_Form.Set_Default("fuel_value","500000000");
+
+                              Display_Form.Edit_Page;
+                           end if;
+                        else
+                           Display_Warning.Warning("No FROM in SQL");
+                        end if;
+
+                        if Display_Form.Current_Record_Updated then
+                           Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                           CurrentCurs := Scrl_Buffer.First;
+                           while CurrentCurs /= Scrl_Buffer.Last loop
+                              exit when Element(CurrentCurs).ID = SaveID;
+                              CurrentCurs := Scrl_List.Next(CurrentCurs);
+                           end loop;
+                        end if;
+
+
+                        Clear(Display_Window);
+                        Redraw_Screen(Display_Window);
+                        Refresh(Display_Window);
                      end if;
-
-                     if Display_Form.Current_Record_Updated then
-                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
-                        CurrentCurs := Scrl_Buffer.First;
-                        while CurrentCurs /= Scrl_Buffer.Last loop
-                           exit when Element(CurrentCurs).ID = SaveID;
-                           CurrentCurs := Scrl_List.Next(CurrentCurs);
-                        end loop;
-                     end if;
-
-
-                     Clear(Display_Window);
-                     Redraw_Screen(Display_Window);
-                     Refresh(Display_Window);
 
                   when Key_F5 =>
                      if CI.Has_Row then
@@ -636,8 +642,7 @@ package body Dbase.Scroller is
                      if AltFunctions then
                        -- if Display_Form.Initialise(CI,To_String(TableName),NoWindow => True)  then
 
-                        Display_Form.Inflict_Damage(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))),
-                                                      MyLocX,MyLocY,MyLocZ
+                        Display_Form.Fire_Lasers(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id")))
                                                    );
                        -- end if;
 

@@ -3,7 +3,7 @@
 
 package body Display_Warning is
 
-   procedure Warning (Message : String; Down :Integer := 0) is
+   procedure Warning (Message : String; Down :Integer := 0;D : Duration := 0.0) is
       Display_Window : Window;
       Width : Column_Position := 40;
       Length : Line_Position := 5;
@@ -11,6 +11,9 @@ package body Display_Warning is
       Lines : Line_Position;
       Columns : Column_Position;
 
+      -- D    : Duration := 0.3;
+      Now : Time := Clock;
+      Next : Time := Now + D;
    begin
       Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
 
@@ -28,9 +31,16 @@ package body Display_Warning is
            Line => 2,
            Str => Message);
 
-      Add (Win => Display_Window,Column => 1,Line => 4,Str => "Any Key to Continue");
+
       Refresh(Display_Window);
-      c := Get_Keystroke;
+      if D > 0.0 then
+         delay until Next;
+      else
+         Add (Win => Display_Window,Column => 1,Line => 4,Str => "Any Key to Continue");
+         Refresh(Display_Window);
+         c := Get_Keystroke;
+      end if;
+
       Clear(Display_Window);
       Refresh(Display_Window);
       Delete (Win => Display_Window);
