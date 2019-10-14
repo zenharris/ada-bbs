@@ -373,7 +373,7 @@ package body Dbase.Scroller is
          else
 
             Add (Win,Line => TermLnth - 2,
-                 Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead  F6 Damage ");
+                 Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead ");
          end if;
             Clear_To_End_Of_Line(Win);
          Box(Win);

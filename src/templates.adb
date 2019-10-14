@@ -557,40 +557,56 @@ package body Templates is
            Str => "Dest X : ");
       refresh(Display_Window);
       destx := Current_Record(To_Unbounded_String("dest_x"));
-      Texaco.Line_Editor(Display_Window,
-                         StartLine => 2,
-                         StartColumn =>  10,
-                         Editlength => 16,
-                         Edline => destx,
-                         MaxLength => 15,
-                         SuppressSpaces => True);
-       Add (Display_Window,
-              Line => 3,
-              Column => 1,
+      loop
+         Texaco.Line_Editor(Display_Window,
+                            StartLine => 2,
+                            StartColumn =>  10,
+                            Editlength => 16,
+                            Edline => destx,
+                            MaxLength => 15,
+                            SuppressSpaces => True,
+                            Number => True);
+
+         exit when destx /= "";
+      end loop;
+
+
+      Add (Display_Window,
+           Line => 3,
+           Column => 1,
            Str => "Dest Y : ");
       refresh(Display_Window);
       desty := Current_Record(To_Unbounded_String("dest_y"));
-      Texaco.Line_Editor(Display_Window,
-                         StartLine => 3,
-                         StartColumn =>  10,
-                         Editlength => 16,
-                         Edline => desty,
-                         MaxLength => 15,
-                         SuppressSpaces => True);
-       Add (Display_Window,
-              Line => 4,
+      loop
+         Texaco.Line_Editor(Display_Window,
+                            StartLine => 3,
+                            StartColumn =>  10,
+                            Editlength => 16,
+                            Edline => desty,
+                            MaxLength => 15,
+                            SuppressSpaces => True,
+                            Number => True);
+
+         exit when desty /= "";
+      end loop;
+      Add (Display_Window,
+           Line => 4,
               Column => 1,
            Str => "Dest Z : ");
       refresh(Display_Window);
       destz := Current_Record(To_Unbounded_String("dest_z"));
-      Texaco.Line_Editor(Display_Window,
-                         StartLine => 4,
-                         StartColumn =>  10,
-                         Editlength => 16,
-                         Edline => destz,
-                         MaxLength => 15,
-                         SuppressSpaces => True);
+      loop
+         Texaco.Line_Editor(Display_Window,
+                            StartLine => 4,
+                            StartColumn =>  10,
+                            Editlength => 16,
+                            Edline => destz,
+                            MaxLength => 15,
+                            SuppressSpaces => True,
+                            Number => True);
 
+         exit when destz /= "";
+      end loop;
 
       targx := Long_Long_Float'Value(To_String(destx));
       targy := Long_Long_Float'Value(To_String(desty));
@@ -1118,7 +1134,7 @@ package body Templates is
          StopOverwrite := False;
          c := Texaco.GetKey;  -- Get_Keystroke;
          StopOverwrite := True;
-         Nap_Milli_Seconds(400);
+         Nap_Milli_Seconds(200);
          if c in Special_Key_Code'Range then
             case c is
             when Key_F1 =>

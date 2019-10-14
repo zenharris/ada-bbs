@@ -60,6 +60,22 @@ package body Texaco is
             case Ch is
             when CR | LF => exit;
             when ESC => exit;
+            when DEL =>
+
+               if Current_Char > 1 then
+                  Current_Char := Current_Char -1;
+
+                  Add (win1,Ch => ' ',
+                          Line => StartLine,
+                          Column => StartColumn + Current_Char -1 );
+
+
+                  Ada.Strings.Unbounded.Delete(Source => Edline,
+                                               From => Integer(Current_Char),
+                                               Through => Integer(Current_Char));
+               end if;
+
+
             when others =>
                if Length(Edline) < MaxLength then
                   if Ch /= ' ' then
@@ -92,7 +108,9 @@ package body Texaco is
                           Edline : in out Unbounded_String;
                           MaxLength : Integer;
                           TextEditMode : Boolean := False;
-                         SuppressSpaces : Boolean := False) is
+                          SuppressSpaces : Boolean := False;
+                          Number :Boolean := False
+                         ) is
 
     --  Lines : Line_Position;
       Columns : Column_Position := StartColumn+EditLength;
@@ -112,6 +130,7 @@ package body Texaco is
          Move_Cursor(Win => win1,Line => StartLine,Column => StartColumn);
 
       end Clear_Field;
+
 
 
    begin
@@ -147,7 +166,11 @@ package body Texaco is
                      Column => StartColumn + (Current_Char-Column_Position(ScreenOffset)) -1);
 
          Refresh(win1);
+
+
          c := GetKey;
+
+
          if c in Special_Key_Code'Range then
             case c is
             when Key_Backspace =>
@@ -238,38 +261,45 @@ package body Texaco is
                      ScreenOffset := 0;
                   end if;
                end if;
+
                when Apostrophe => null;
 
                when HT => exit;
                when ESC => exit;
 
                when others =>
-               if Length(Edline) < MaxLength  then
-                  if (not SuppressSpaces) or else (SuppressSpaces and then Ch /= ' ') then
-                     Add (win1,Ch => Ch,
-                          Line => StartLine,
-                          Column => StartColumn + Current_Char-Column_Position(ScreenOffset)-1 );
-                     Refresh(win1);
+                  if Length(Edline) < MaxLength  then
+                     if (not Number) or else
+                       (Number and then
+                          (Ch in '0'..'9' or else (Ch = Full_Stop and then SU.Index(Edline,".") = 0) or else
+                               (Current_Char=1 and then
+                                    (Ch = Minus_Sign and then SU.Index(Edline,"-") /= 1)))) then
 
-                     if TextEditMode then     --  if the character position is greater than length then pad it
-                        while Integer(Current_Char) > SU.Length(Edline)+1 loop
-                           SU.Insert(Edline,SU.Length(Edline)+1," ");
-                        end loop;
-                     end if;
+                        if (not SuppressSpaces) or else (SuppressSpaces and then Ch /= ' ') then
+                           Add (win1,Ch => Ch,
+                                Line => StartLine,
+                                Column => StartColumn + Current_Char-Column_Position(ScreenOffset)-1 );
+                           Refresh(win1);
+
+                           if TextEditMode then     --  if the character position is greater than length then pad it
+                              while Integer(Current_Char) > SU.Length(Edline)+1 loop
+                                 SU.Insert(Edline,SU.Length(Edline)+1," ");
+                              end loop;
+                           end if;
 
 
-                     Ada.Strings.Unbounded.Insert (Source => Edline,
-                                                   Before => Integer(Current_Char),
-                                                   New_Item => ("" & Ch));
+                           Ada.Strings.Unbounded.Insert (Source => Edline,
+                                                         Before => Integer(Current_Char),
+                                                         New_Item => ("" & Ch));
 
-                     Current_Char := Current_Char +1;
+                           Current_Char := Current_Char +1;
 
-                     if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 then
-                        ScreenOffset := ScreenOffset + (Integer(Columns-StartColumn)-1);
+                           if Integer(Current_Char)-ScreenOffset = Integer(Columns-StartColumn)+1 then
+                              ScreenOffset := ScreenOffset + (Integer(Columns-StartColumn)-1);
+                           end if;
+                        end if;
                      end if;
                   end if;
-
-               end if;
 
             end case;
          end if;

@@ -30,7 +30,9 @@ package Texaco is
                           Edline : in out Unbounded_String;
                           MaxLength : Integer;
                           TextEditMode : Boolean := False;
-                         SuppressSpaces : Boolean := False);
+                          SuppressSpaces : Boolean := False;
+                          Number : Boolean := False
+                         );
 
    procedure Text_Editor (win1 : Window;
                           TopLine : Line_Position;
