@@ -2,7 +2,6 @@
 Ship ID : @0<<<<< Ship Name : @1<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Owner : @29<<<<<<<  Captain : @2<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 --------------------------------------------------------------------------------
-                                Navigation 
 Direction XY : @3<<<<<<<<<  XZ : @4<<<<<<<<<  Speed : @5<<<<<<<<<<<<<<<<<<<
 Dest Code    : @6<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -16,6 +15,8 @@ oprt  : @14<<<<<<<<   @18<<<<<<<<   @22<<<<<<<<   @26<<<<<<<< % Operation
 reli  : @15<<<<<<<<   @19<<<<<<<<   @23<<<<<<<<   @27<<<<<<<< % Reliable
 energ : @16<<<<<<<<   @20<<<<<<<<   @24<<<<<<<<   @28<<<<<<<< kW/h per Hour
 fuel  : @31<<<<<<<<<<<<<<<          Hull Integrity : @30<<<<<<<<
+Created : @34<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+TorpTime: @33<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                                                                        
 %FIELD_DEF%
 ship_id:serial:pkey:noedit:
@@ -50,6 +51,9 @@ deflect_energ:bigint:noedit:
 shipowner:integer:noedit:
 hull_value:integer:noedit:
 fuel_value:bigint:noedit:
+torp_lock:integer:noedit:
+torp_time:timestamp:noedit:
+created_on:timestamp with time zone:noedit:
 %LIST_DEF%
 null:null:
 %SERVER_DETAILS%
