@@ -53,7 +53,7 @@ package Dbase.Scroller is
    function OpenDb return Boolean;
    procedure CloseDb;
 
-   procedure Scroll (L_AckStatement : String; Down : Integer := 0; AltFunctions : Boolean := False); --; CI : in out Direct_Cursor);
+   procedure Scroll (L_AckStatement : String; Down : Integer := 0; Left : Integer := 0; AltFunctions : Boolean := False); --; CI : in out Direct_Cursor);
    procedure Run;
 
 end Dbase.Scroller;

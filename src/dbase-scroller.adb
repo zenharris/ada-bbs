@@ -226,7 +226,7 @@ package body Dbase.Scroller is
 
    Relation_Field : Unbounded_String;
 
-   procedure Scroll (L_AckStatement : String; Down : Integer := 0; AltFunctions : Boolean := False) is
+   procedure Scroll (L_AckStatement : String; Down : Integer := 0; Left : Integer := 0; AltFunctions : Boolean := False) is
       c : Key_Code;
      -- FindElement : Scrl_Record;
       SaveID : Integer;
@@ -369,7 +369,7 @@ package body Dbase.Scroller is
               Str => To_String(Heading));
          if AltFunctions then
             Add (Win,Line => TermLnth - 2,
-                 Column => 1, Str => "F4 New Ship  F5 Ping  F6 Lasers ");
+                 Column => 1, Str => "F4 New Ship  F5 Ping  F6 Lasers  F7 Torpedo");
          else
 
             Add (Win,Line => TermLnth - 2,
@@ -452,7 +452,7 @@ package body Dbase.Scroller is
                                          Number_Of_Lines => Length,
                                          Number_Of_Columns => Width,
                                          First_Line_Position => ((TermLnth - Length) / 2)+Line_Position(Down),
-                                         First_Column_Position => (TermWdth - Width) / 2);
+                                         First_Column_Position => ((TermWdth - Width) / 2)-Column_Position(Left));
 
             Clear(Display_Window);
             Box(Display_Window);
@@ -594,6 +594,7 @@ package body Dbase.Scroller is
 
                               Display_Form.Set_Default("hull_value","1000");
                               Display_Form.Set_Default("fuel_value","500000000");
+                              -- Display_Form.Set_Default("torp_lock","0");
 
                               Display_Form.Edit_Page;
                            end if;
@@ -659,7 +660,20 @@ package body Dbase.Scroller is
                      else
                         Display_Warning.Warning("Damage Only From Radar");
                      end if;
+                  when Key_F7 =>
+                     if CI.Has_Row then
+                        SaveID := Element(CurrentCurs).ID;
+                        CI.Absolute(Element(CurrentCurs).ID);
+                     end if;
 
+                     if AltFunctions then
+
+                        Display_Form.Torpedo_Control(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+
+                        Clear(Display_Window);
+                        Redraw_Screen(Display_Window);
+
+                     end if;
 
 
                   when Key_Cursor_Down =>

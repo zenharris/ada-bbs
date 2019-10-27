@@ -6,6 +6,7 @@ with GNAT.Regpat; use GNAT.Regpat;
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO.Unbounded_IO;
+with Ada.Strings.Fixed;
 
 with Ada.Containers; use Ada.Containers;
 with Ada.Containers.Vectors;
@@ -36,6 +37,8 @@ generic
 package Templates is
    package SU renames Ada.Strings.Unbounded;
    package SUIO renames Ada.Text_IO.Unbounded_IO;
+    package SF renames Ada.Strings.Fixed;
+
 
    package Screen_Vector is new Ada.Containers.Vectors (Natural,
                                                     Unbounded_String);
@@ -116,6 +119,7 @@ package Templates is
                         NewRecord : Boolean := False;
                         NoWindow : Boolean := False
                        ) return Boolean;
-   procedure Inflict_Damage (ShipID : Unbounded_String);
+   procedure Inflict_Damage (ShipID : Unbounded_String; DamageX : Integer := 1);
    procedure Fire_Lasers (Ship_ID : Unbounded_String);
+   procedure Torpedo_Control (ShipID : Unbounded_String);
 end Templates;

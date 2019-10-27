@@ -133,11 +133,21 @@ package body Templates is
    procedure Read_Current_Record (CI : Direct_Cursor; FieldsList : Screen_Vector.Vector) is
       FieldName : Unbounded_String;
    begin
-      Clear(Current_Record);
-      for i in 0..FieldsList.Length-1 loop
-         FieldName := To_Unbounded_String(SU.Slice(FieldsList.Element(Integer(i)),1,SU.Index(FieldsList.Element(Integer(i)),":")-1));
-         Current_Record.Include(FieldName,To_Unbounded_String(Fld(CI,FieldName)));
-      end loop;
+
+      if Current_Record.Is_Empty then
+         Clear(Current_Record);
+         for i in 0..FieldsList.Length-1 loop
+            FieldName := To_Unbounded_String(SU.Slice(FieldsList.Element(Integer(i)),1,SU.Index(FieldsList.Element(Integer(i)),":")-1));
+            Current_Record.Include(FieldName,To_Unbounded_String(Fld(CI,FieldName)));
+         end loop;
+      else
+         for i in 0..FieldsList.Length-1 loop
+            FieldName := To_Unbounded_String(SU.Slice(FieldsList.Element(Integer(i)),1,SU.Index(FieldsList.Element(Integer(i)),":")-1));
+            Current_Record(FieldName) := To_Unbounded_String(Fld(CI,FieldName));
+         end loop;
+      end if;
+
+
    end Read_Current_Record;
 
    procedure Init_Current_Record (FieldsList : Screen_Vector.Vector) is
@@ -442,9 +452,9 @@ package body Templates is
 
          if Dbase.DB.Success then
             Current_Record_Updated := True;
-            Display_Warning.Warning("Update Successful");
+            Display_Warning.Warning("Update Successful",D => 0.7);
          else
-            Display_Warning.Warning("Update Failed");
+            Display_Warning.Warning("Update Failed",D => 0.7);
          end if;
 
 
@@ -502,17 +512,15 @@ package body Templates is
     --       Str => To_String(SQLstatement));
     --  refresh;
 
-      Stmt:= Prepare (To_String(SQLstatement), Index_By => Field_Index'First);
+      Stmt:= Prepare (To_String(SQLstatement));
 
       CIB.Fetch (Dbase.DB_Background, Stmt);
 
       if CIB.Has_Row then
          Read_Current_Record (CIB,FieldsList);
       else
-         Display_Warning.Warning("ReRead Failed");
+         Display_Warning.Warning("ReRead Failed",D => 0.7);
       end if;
-
-
 
    end Recycle;
 
@@ -566,7 +574,6 @@ package body Templates is
                             MaxLength => 15,
                             SuppressSpaces => True,
                             Number => True);
-
          exit when destx /= "";
       end loop;
 
@@ -586,7 +593,6 @@ package body Templates is
                             MaxLength => 15,
                             SuppressSpaces => True,
                             Number => True);
-
          exit when desty /= "";
       end loop;
       Add (Display_Window,
@@ -604,7 +610,6 @@ package body Templates is
                             MaxLength => 15,
                             SuppressSpaces => True,
                             Number => True);
-
          exit when destz /= "";
       end loop;
 
@@ -651,7 +656,11 @@ package body Templates is
 
       Delete (Win => Display_Window);
 
-
+   exception
+      when CONSTRAINT_ERROR => null;
+         Clear(Display_Window);
+         Refresh(Display_Window);
+         Delete (Win => Display_Window);
 
    end Set_Dest_Coords;
 
@@ -811,7 +820,7 @@ package body Templates is
 
       Dbase.Scroller.Radar_Mode := True;
       Dbase.Scroller.Definition_Ptr := 1;
-      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,AltFunctions => True);
+      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,Left => 15,AltFunctions => True);
       Dbase.Scroller.Radar_Mode := False;
 
    end Radar_Scan;
@@ -823,7 +832,7 @@ package body Templates is
 
    gen : Rand_Int.Generator;
 
-   procedure Inflict_Damage (ShipID : Unbounded_String) is
+   procedure Inflict_Damage (ShipID : Unbounded_String; DamageX : Integer := 1) is
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQLstatement, Damage_Report : Unbounded_String;
@@ -870,53 +879,57 @@ package body Templates is
          distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
          if (targx+targy+targz/=0.0) and then (locx+locy+locz/= 0.0) then
-            if distance < 200.0 then
+            if DamageX>1 or else distance < 200.0 then
                -- Display_Warning.Warning(distance'Image);
 
-               if deflect in 80..100 then
-                  case (Rand_Int.Random(gen)) is
-                  when 1 => deflect := deflect - 1;
-                  when others => null;
-                  end case;
-                  null;
+               for i in 1..DamageX loop
 
-               elsif deflect in 70..79 then
-                  case (Rand_Int.Random(gen)) is
-                  when 1 => deflect := deflect - 1;
-                  when 3 => hull := hull - 1;
-                  when others => null;
-                  end case;
-                  null;
-               elsif deflect in 50..69 then
-                  case (Rand_Int.Random(gen)) is
-                  when 1 => deflect := deflect - 1;
-                  when 2 => hull := hull - 1;
-                  when 3 => deflect := deflect -1;
-                  when others => null;
-                  end case;
-               elsif deflect in 1..49 then
-                  case (Rand_Int.Random(gen)) is
-                  when 1 => deflect := deflect - 1;
-                  when 2 => hull := hull - 1;
-                  when 3 => deflect := deflect - 1;
-                  when 4 => hull := hull - 1;
-                  when 5 => hull := hull - 1;
-                  when others => null;
-                  end case;
-               elsif deflect = 0 then
-                  case (Rand_Int.Random(gen)) is
-                  when 2 => jmpeng := jmpeng - 1;
-                  when 4 => navcom := navcom - 1;
-                  when 3 => engine := engine - 1;
-                  when 1 => hull := hull - 1;
-                  when 5 => hull := hull - 1;
-                  when 6 => hull := hull - 1;
-                  when others => null;
+                  if deflect in 80..100 then
+                     case (Rand_Int.Random(gen)) is
+                     when 1 => deflect := deflect - 1;
+                     when others => null;
+                     end case;
+                     null;
 
-                  end case;
-               end if;
+                  elsif deflect in 70..79 then
+                     case (Rand_Int.Random(gen)) is
+                     when 1 => deflect := deflect - 1;
+                     when 3 => hull := hull - 1;
+                     when others => null;
+                     end case;
+                     null;
+                  elsif deflect in 50..69 then
+                     case (Rand_Int.Random(gen)) is
+                     when 1 => deflect := deflect - 1;
+                     when 2 => hull := hull - 1;
+                     when 3 => deflect := deflect -1;
+                     when others => null;
+                     end case;
+                  elsif deflect in 1..49 then
+                     case (Rand_Int.Random(gen)) is
+                     when 1 => deflect := deflect - 1;
+                     when 2 => hull := hull - 1;
+                     when 3 => deflect := deflect - 1;
+                     when 4 => hull := hull - 1;
+                     when 5 => hull := hull - 1;
+                     when others => null;
+                     end case;
+                  elsif deflect = 0 then
+                     case (Rand_Int.Random(gen)) is
+                     when 2 => jmpeng := jmpeng - 1;
+                     when 4 => navcom := navcom - 1;
+                     when 3 => engine := engine - 1;
+                     when 1 => hull := hull - 1;
+                     when 5 => hull := hull - 1;
+                     when 6 => hull := hull - 1;
+                     when others => null;
+
+                     end case;
 
 
+                  end if;
+
+               end loop;
 
 
 
@@ -926,7 +939,7 @@ package body Templates is
                  ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
 
                scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
-               Damage_Report := Damage_Report & "Firing on ShpId "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
+               Damage_Report := Damage_Report & "Damage To Ship "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
                  ", Engine" &engine'Image& ",Navcom" &navcom'Image&
                  ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
@@ -969,7 +982,7 @@ package body Templates is
 
          else
             Dbase.DB_Guns.Rollback;
-            Display_Warning.Warning("No Firing at Midway",D => 1.0);
+            Display_Warning.Warning("No Firing at Midway",D => 3.0);
 
          end if;
 
@@ -978,6 +991,323 @@ package body Templates is
 
 
    end Inflict_Damage;
+
+   function Pad (InStr : String;PadWdth : Integer) return String is
+      padstr,tmpstr : Unbounded_String;
+   begin
+      tmpstr := To_Unbounded_String(SF.Trim(Instr,Ada.Strings.Left));
+      if SU.Length(tmpstr) < PadWdth then
+         for i in SU.Length(tmpstr) .. PadWdth-1 loop
+            padstr := padstr & '0';
+         end loop;
+         return To_String(padstr) & To_String(tmpstr);
+      else
+         return To_String(tmpstr);
+      end if;
+   end Pad;
+
+   function MkTimestamp (Now : Time) return String is
+      Now_Year    : Year_Number;
+      Now_Month   : Month_Number;
+      Now_Day     : Day_Number;
+    --  Now_Seconds : Day_Duration;
+      Now_Hour : Hour_Number;
+      Now_Minute: Minute_Number;
+      Now_Second : Second_Number;
+      Now_Sub_Second : Second_Duration;
+      scratch : Unbounded_String;
+   begin
+
+       Split (Now,
+                Now_Year,
+                Now_Month,
+                Now_Day,
+                Now_Hour,
+                Now_Minute,
+                Now_Second,
+                Now_Sub_Second
+               );
+
+         scratch := To_Unbounded_String(Now_Sub_Second'Image);
+
+      return Ada_Format.SPut ("%s-%s-%s %s:%s:%s%s ",(F(Pad(Now_Year'Image,4)),F(Pad(Now_Month'Image,2)),F(Pad(Now_Day'Image,2)),
+                              F(Pad(Now_Hour'Image,2)),F(Pad(Now_Minute'Image,2)),
+                F(Pad(Now_Second'Image,2)),F(Slice(scratch,SU.Index(scratch,"."),SU.Length(scratch))     )));
+
+   end MkTimestamp;
+
+   function RdTimestamp (TimeStamp : String) return Time is
+      Now_Year    : Year_Number;
+      Now_Month   : Month_Number;
+      Now_Day     : Day_Number;
+      Now_Hour : Hour_Number;
+      Now_Minute: Minute_Number;
+      Now_Second : Second_Number;
+      Now_Sub_Second : Second_Duration;
+      scratch : Unbounded_String := To_Unbounded_String(TimeStamp);
+      Cursor : Integer;
+
+   begin
+
+
+
+      Cursor := Index(scratch,"-");
+
+      Now_Year := Year_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+
+      Delete(scratch,1,Cursor);
+      Cursor := Index(scratch,"-");
+
+      Now_Month := Month_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+      Delete(scratch,1,Cursor);
+      Cursor := Index(scratch," ");
+
+      Now_Day := Day_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+      Delete(scratch,1,Cursor);
+
+      Cursor := Index(scratch,":");
+      Now_Hour := Hour_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+      Delete(scratch,1,Cursor);
+
+      Cursor := Index(scratch,":");
+      Now_Minute := Minute_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+      Delete(scratch,1,Cursor);
+
+      Cursor := Index(scratch,".");
+      Now_Second := Second_Number'Value(Slice (Source => scratch,Low => 1,High => Cursor-1));
+      Now_Sub_Second := Second_Duration'Value(Slice(scratch,cursor,Length(scratch)));
+
+
+       return Time_Of (Now_Year,
+                Now_Month,
+                Now_Day,
+                Now_Hour,
+                Now_Minute,
+                Now_Second,
+                Now_Sub_Second
+               );
+
+
+
+   end RdTimestamp;
+
+
+   procedure Torpedo_Control (ShipID : Unbounded_String) is
+
+      Width : Column_Position := 30;
+      Length : Line_Position := 13;
+
+      TermLnth : Line_Position;
+      TermWdth : Column_Position;
+      Display_Window : Window;
+      c : Key_Code;
+      Stmt : Prepared_Statement;
+      CIB : Direct_Cursor;
+      SQL, Damage_Report : Unbounded_String;
+    --  navcom,jmpeng,engine,deflect,hull : Integer;
+      locx,locy,locz,targx,targy,targz,distance,timett : Long_Long_Float;
+      torplock : Integer;
+      D    : Duration := 0.4;
+      Now : Time := Clock;
+      Next : Time := Now + D;
+
+      task Torp_Animate is
+         entry Start;
+      end Torp_Animate;
+
+      task body Torp_Animate is
+         Now : Time := Clock;
+         Timer : Time;
+         Diff : Duration;
+      begin
+         accept Start;
+         loop
+            Now := Clock;
+            Timer := Now + 1.0;
+            Diff := Next - Now;
+            Add (Display_Window,
+                 Line => 6,
+                 Column => 1,
+                 Str => "Torp Running " & Image(Diff,Include_Time_Fraction => True) );
+            Clear_To_End_Of_Line(Display_Window);
+            refresh(Display_Window);
+            delay until Timer;
+         end loop;
+      end Torp_Animate;
+
+
+
+
+
+   begin
+
+      Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+
+      if Width < TermWdth then
+
+         Display_Window := Sub_Window(Win => Standard_Window,
+                                      Number_Of_Lines => Length,
+                                      Number_Of_Columns => Width,
+                                      First_Line_Position => ((TermLnth - Length) / 2),
+                                      First_Column_Position => ((TermWdth - Width) / 2) + 28);
+
+         Clear(Display_Window);
+         Box(Display_Window);
+         Refresh(Display_Window);
+      else
+         Display_Warning.Warning("Terminal not wide enough");
+      end if;
+
+      SQL := SQL &
+        "SELECT * FROM ships WHERE ship_id = " & ShipID &" FOR UPDATE";
+
+
+      Stmt:= Prepare (To_String(SQL));
+
+      CIB.Fetch (Dbase.DB_Guns, Stmt);
+
+      if CIB.Has_Row then
+       --  navcom := Integer'Value(Fld(CIB,"navcom_funct"));
+       --  jmpeng := Integer'Value(Fld(CIB,"jmpeng_funct"));
+       --  engine := Integer'Value(Fld(CIB,"engine_funct"));
+       --  deflect:= Integer'Value(Fld(CIB,"deflect_funct"));
+       --  hull   := Integer'Value(Fld(CIB,"hull_value"));
+         torplock  := Integer'Value(Fld(CIB,"torp_lock"));
+        -- Next := RdTimestamp(Fld(CIB,"created_on2"));
+
+         locx := Dbase.MyLocX;
+         locy := Dbase.MyLocY;
+         locz := Dbase.MyLocZ;
+
+         targx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
+         targy := Long_Long_Float'Value(Fld(CIB,"loc_y"));
+         targz := Long_Long_Float'Value(Fld(CIB,"loc_z"));
+
+         distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
+
+         timett := ((distance / 50000.0)*60.0)*60.0;
+
+         Add (Display_Window,
+              Line => 1,
+              Column => 1,
+              Str => " Firing on Ship "& To_String(ShipID) );
+
+
+         Add (Display_Window,
+              Line => 2,
+              Column => 1,
+              Str => Ada_Format.SPut ("Rtt %f km",F(Float(distance))) );
+         Add (Display_Window,
+              Line => 3,
+              Column => 1,
+              Str => Ada_Format.SPut ("Ttt %f Secs",F(Float(timett))) );
+
+         Now := Clock;
+         Next := Now + Duration(timett);
+
+
+         Add (Display_Window,
+              Line => 4,
+              Column => 1,
+              Str =>  MkTimestamp(Next) );
+
+       --  Add (Display_Window,
+       --       Line => 6,
+       --       Column => 1,
+       --       Str =>  Image(Next) );
+         Refresh(Display_Window);
+
+
+
+         torplock := torplock + 1;
+
+         SQL := To_Unbounded_String("");
+         SQL := SQL & "UPDATE ships SET torp_time = '" & MkTimestamp(Next) & "' " &
+         ", torp_lock = " & torplock'Image &
+           " WHERE ship_id = " & ShipID;
+
+         Stmt:= Prepare (To_String(SQL));
+
+         Dbase.DB_Guns.Execute(Stmt);
+         Dbase.DB_Guns.Commit;
+
+         if not Dbase.DB_Guns.Success then
+            Display_Warning.Warning("Torpedo Lock Failed",D => 2.0);
+
+         else
+
+            Add (Standard_Window,
+                 Line => 2,
+                 Column => 1,
+                 Str => "" );
+            Clear_To_End_Of_Line;
+            refresh;
+
+            Torp_Animate.Start;
+
+            delay until Next;
+
+            SQL := To_Unbounded_String("");
+            SQL := SQL &
+              "SELECT * FROM ships WHERE ship_id = " & ShipID;
+
+
+            Stmt:= Prepare (To_String(SQL));
+
+            CIB.Fetch (Dbase.DB_Guns, Stmt);
+
+            if CIB.Has_Row then
+               locx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
+               locy := Long_Long_Float'Value(Fld(CIB,"loc_y"));
+               locz := Long_Long_Float'Value(Fld(CIB,"loc_z"));
+
+               distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
+
+               Now := Clock;
+               Add (Display_Window,
+                    Line => 7,
+                    Column => 1,
+                    Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance))) );
+               Add (Display_Window,
+                    Line => 8,
+                    Column => 1,
+                    Str => "at " & Image(Now,True));
+
+               refresh(Display_Window);
+               if distance < 200.0 then
+                  Inflict_Damage(ShipID,500);
+               else
+                Add (Display_Window,
+                    Line => 9,
+                    Column => 1,
+                     Str => "-No Damage-");
+                  refresh(Display_Window);
+               end if;
+
+            end if;
+
+         end if;
+
+      end if;
+
+
+
+
+
+
+
+
+
+
+      Abort Torp_Animate;
+
+      c := Texaco.GetKey;
+
+      Clear(Display_Window);
+      Refresh(Display_Window);
+
+      Delete (Win => Display_Window);
+   end Torpedo_Control;
 
 
 
@@ -1057,6 +1387,76 @@ package body Templates is
       end if;
    end Fire_Lasers;
 
+   TorpLockSave : Unbounded_String;
+   procedure torpedo_process is
+      Torp_Impact_Time : Time;
+      TorpImpactTimestamp,torp_lock : Unbounded_String;
+
+      task Torp_Animate is
+         entry Start;
+      end Torp_Animate;
+
+      task body Torp_Animate is
+         Now : Time := Clock;
+         Next : Time;
+         Diff : Duration;
+      begin
+          accept Start;
+         loop
+            Now := Clock;
+            Next := Now + 1.0;
+            Diff := Torp_Impact_Time - Now;
+            Set_Character_Attributes(Standard_Window, (Reverse_Video => True,Blink => True,others => False));
+            Add (Standard_Window,
+                 Line => 3,
+                 Column => 1,
+                 Str => "Incoming Torpedo impact in ");
+            Set_Character_Attributes(Standard_Window, Normal_Video);
+            Add (Standard_Window,
+                 Line => 3,
+                 Column => 28,
+                 Str => Image(Diff,Include_Time_Fraction => True) );
+
+            Clear_To_End_Of_Line;
+           -- refresh;
+            delay until Next;
+         end loop;
+      end Torp_Animate;
+
+
+   begin
+      torp_lock := Current_Record(To_Unbounded_String("torp_lock"));
+
+      if Length(TorpLockSave) = 0 then
+         TorpLockSave := torp_lock;
+      else
+         if TorpLockSave /= torp_lock then
+            TorpLockSave := torp_lock;
+            TorpImpactTimestamp := Current_Record(To_Unbounded_String("torp_time"));
+
+            Torp_Impact_Time := RdTimestamp(To_String(TorpImpactTimestamp));
+
+            Torp_Animate.Start;
+
+            delay until Torp_Impact_Time;
+            Abort Torp_Animate;
+            Torp_Impact_Time := Clock;
+
+            Add (Standard_Window,
+                 Line => 3,
+                 Column => 1,
+                 Str => "Torpedo Exploding at " & Image(Torp_Impact_Time,True));
+            Clear_To_End_Of_Line;
+            refresh;
+            -- Display_Warning.Warning("Torpedo Exploded On Ship",D => 3.0);
+
+         end if;
+      end if;
+
+      Abort Torp_Animate;
+
+   end torpedo_process;
+
 
    procedure dummy is
    begin
@@ -1078,27 +1478,41 @@ package body Templates is
    procedure Command_Screen is
       c : Key_Code;
       StopOverwrite : Boolean := False;
+    --  StopTorp :Boolean := False;
+
 
       task Background_Processor is
          entry Start;
       end Background_Processor;
 
       task Firing_Processor;
+      task Torpedo_Processor;
 
       task body Background_Processor is
          Next : Time;
          D    : Duration := 1.0;
          Now : Time; -- := Clock;
+         Clock_Window : Window;
 
       begin
          accept Start;
+         Clock_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 32,
+                         First_Line_Position => 1,
+                         First_Column_Position => 70);
+ --     -- Box(win1);
+ --     Refresh(Win => win1);
 
          loop
             Now := Clock;
             Next := Now + D;
-            Add (Win => Standard_Window,Line => 1,Column => 70,Str => Image (Now));
+            -- Add (Win => Clock_Window,Line => 1,Column => 70,Str => Image (Now));
+            Add (Win => Clock_Window,Line => 0,Column => 0,Str => Image (Now));
+            Refresh(Clock_Window);
 
             Recycle;
+
             Update_Status;
 
             if not StopOverwrite then
@@ -1123,8 +1537,27 @@ package body Templates is
 
       end Firing_Processor;
 
+      task body Torpedo_Processor is
+         Next : Time;
+         D    : Duration := 1.0;
+         Now : Time; -- := Clock;
+      begin
+         loop
+            Now := Clock;
+            Next := Now + D;
+            torpedo_process;
+
+            delay until Next;
+
+
+         end loop;
+
+      end Torpedo_Processor;
 
    begin
+
+
+
 
       Add (Line => Lines - 2,Column => 1, Str => "1 Navig  |2 Engine |3 Radar  |4 Weapons|");
       Refresh;
@@ -1164,11 +1597,15 @@ package body Templates is
       Close_Page;
       Abort Background_Processor;
       abort Firing_Processor;
+      abort Torpedo_Processor;
+   exception
+     when CONSTRAINT_ERROR => null;
+         Abort Background_Processor;
+         abort Firing_Processor;
+         abort Torpedo_Processor;
    end Command_Screen;
 
 begin
-
    Rand_Int.Reset(gen);
-
 
 end Templates;
