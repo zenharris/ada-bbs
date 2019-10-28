@@ -21,4 +21,7 @@ package Dbase is
    UserLoggedFullName : Unbounded_String;
    UserLoggedUserId : Unbounded_String;
 
+   ShipDestroyed : Boolean := False;
+
+
 end Dbase;

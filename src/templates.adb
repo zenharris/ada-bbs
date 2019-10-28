@@ -519,8 +519,14 @@ package body Templates is
       if CIB.Has_Row then
          Read_Current_Record (CIB,FieldsList);
       else
-         Display_Warning.Warning("ReRead Failed",D => 0.7);
+         Display_Warning.Warning("Ship Destroyed",D => 3.0);
+         Dbase.ShipDestroyed := True;
+          raise Program_Error;
       end if;
+--   exception
+--      when Program_Error =>
+--         Display_Warning.Warning("Exception Handled");
+--         raise;
 
    end Recycle;
 
@@ -931,17 +937,28 @@ package body Templates is
 
                end loop;
 
-
-
                SQLstatement := To_Unbounded_String("");
-               SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct =" & deflect'Image &
-                 ", engine_funct =" &engine'Image& ",navcom_funct=" &navcom'Image&
-                 ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
 
-               scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
-               Damage_Report := Damage_Report & "Damage To Ship "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
-                 ", Engine" &engine'Image& ",Navcom" &navcom'Image&
-                 ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+               if hull > 0 then
+
+                  SQLstatement := SQLstatement & "UPDATE ships SET deflect_funct =" & deflect'Image &
+                    ", engine_funct =" &engine'Image& ",navcom_funct=" &navcom'Image&
+                    ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
+
+                  scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+                  Damage_Report := Damage_Report & "Damage To Ship "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
+                    ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+                    ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+               else
+                   SQLstatement := SQLstatement & "DELETE FROM ships WHERE ship_id = " & ShipID;
+
+                  scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+                  Damage_Report := Damage_Report & "Totally Destroyed Ship "& ShipID;
+
+
+               end if;
+
+
 
                Add (Standard_Window,
                     Line => 2,
@@ -1503,6 +1520,7 @@ package body Templates is
                          First_Column_Position => 70);
  --     -- Box(win1);
  --     Refresh(Win => win1);
+         Dbase.ShipDestroyed := False;
 
          loop
             Now := Clock;
@@ -1512,6 +1530,8 @@ package body Templates is
             Refresh(Clock_Window);
 
             Recycle;
+
+           -- exit when Dbase.ShipDestroyed;
 
             Update_Status;
 
@@ -1524,6 +1544,15 @@ package body Templates is
 
             delay until Next;
          end loop;
+
+       --  raise Program_Error;
+
+      exception
+        when Program_Error =>
+            Display_Warning.Warning("Exception Handled",D => 1.0);
+            abort Firing_Processor;
+            abort Torpedo_Processor;
+            raise;
       end Background_Processor;
 
       task body Firing_Processor is
@@ -1566,6 +1595,9 @@ package body Templates is
          Redraw_Page;
          StopOverwrite := False;
          c := Texaco.GetKey;  -- Get_Keystroke;
+
+         exit when Dbase.ShipDestroyed;
+
          StopOverwrite := True;
          Nap_Milli_Seconds(200);
          if c in Special_Key_Code'Range then
@@ -1594,15 +1626,18 @@ package body Templates is
             end case;
          end if;
       end loop;
+      Dbase.ShipDestroyed := False;
       Close_Page;
       Abort Background_Processor;
       abort Firing_Processor;
       abort Torpedo_Processor;
    exception
-     when CONSTRAINT_ERROR => null;
+      when Program_Error =>
          Abort Background_Processor;
          abort Firing_Processor;
          abort Torpedo_Processor;
+         Display_Warning.Warning("Exit Command Screen");
+         raise;
    end Command_Screen;
 
 begin

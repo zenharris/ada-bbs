@@ -369,7 +369,7 @@ package body Dbase.Scroller is
               Str => To_String(Heading));
          if AltFunctions then
             Add (Win,Line => TermLnth - 2,
-                 Column => 1, Str => "F4 New Ship  F5 Ping  F6 Lasers  F7 Torpedo");
+                 Column => 1, Str => "F5 ReRead  F6 Lasers  F7 Torpedo");
          else
 
             Add (Win,Line => TermLnth - 2,
@@ -480,6 +480,8 @@ package body Dbase.Scroller is
             end if;
 
                c := Get_Keystroke;
+
+            exit when Dbase.ShipDestroyed;
 
                if c in Special_Key_Code'Range then
                   case c is
