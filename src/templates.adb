@@ -838,6 +838,8 @@ package body Templates is
 
    gen : Rand_Int.Generator;
 
+   Damage_Rpt_Window : Window;
+
    procedure Inflict_Damage (ShipID : Unbounded_String; DamageX : Integer := 1) is
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
@@ -950,22 +952,21 @@ package body Templates is
                     ", Engine" &engine'Image& ",Navcom" &navcom'Image&
                     ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
                else
-                   SQLstatement := SQLstatement & "DELETE FROM ships WHERE ship_id = " & ShipID;
 
-                  scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
+                  SQLstatement := SQLstatement & "DELETE FROM ships WHERE ship_id = " & ShipID;
+
                   Damage_Report := Damage_Report & "Totally Destroyed Ship "& ShipID;
-
 
                end if;
 
 
 
-               Add (Standard_Window,
-                    Line => 2,
+               Add (Damage_Rpt_Window,
+                    Line => 0,
                     Column => 1,
                     Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line;
-             --  refresh;
+               Clear_To_End_Of_Line(Damage_Rpt_Window);
+               refresh(Damage_Rpt_Window);
 
                Stmt:= Prepare (To_String(SQLstatement));
 
@@ -987,12 +988,12 @@ package body Templates is
                  ", Engine" &engine'Image& ",Navcom" &navcom'Image&
                  ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
-               Add (Standard_Window,
-                    Line => 2,
+               Add (Damage_Rpt_Window,
+                    Line => 0,
                     Column => 1,
                     Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line;
-              -- refresh;
+               Clear_To_End_Of_Line(Damage_Rpt_Window);
+               refresh(Damage_Rpt_Window);
 
 
             end if;
@@ -1176,7 +1177,7 @@ package body Templates is
       end if;
 
       SQL := SQL &
-        "SELECT * FROM ships WHERE ship_id = " & ShipID &" FOR UPDATE";
+        "SELECT * FROM ships WHERE ship_id = " & ShipID;
 
 
       Stmt:= Prepare (To_String(SQL));
@@ -1345,7 +1346,8 @@ package body Templates is
       (new String'("Hull"),new String'("hull_value"),False,To_Unbounded_String(""))
      );
 
-   procedure Update_Status is
+   procedure Update_Status(Win : Window) is
+      scratch : Unbounded_String;
       procedure Blink(fldnm : String) is
       begin
          for i in Status_Field_List'Range loop
@@ -1377,22 +1379,31 @@ package body Templates is
 
 
          if Status_Field_List(i).Blinking then
-            Set_Character_Attributes(Standard_Window, (Reverse_Video => True,Blink => True,others => False));
+            Set_Character_Attributes(Win, (Reverse_Video => True,Blink => True,others => False));
          else
-            Set_Character_Attributes(Standard_Window, Normal_Video);
+            Set_Character_Attributes(Win, Normal_Video);
          end if;
 
 
-         Add (Standard_Window,
-              Line => 1,
-              Column => Column_Position(i * 8),
+         Add (Win,
+              Line => 0,
+              Column => Column_Position(((i-1) * 12)+1),
               Str => Status_Field_List(i).Prompt.all);
 
-         refresh;
+         Set_Character_Attributes(Win, Normal_Video);
+
+         scratch := Current_Record(To_Unbounded_String(Status_Field_List(i).FieldName.all));
+
+         Add (Win,
+              Line => 0,
+              Column => Column_Position(((i-1) * 12)+8),
+              Str => Ada_Format.SPut ("%-4s",F(To_String(scratch))) );
+
+         refresh(Win);
 
       end loop;
-      Set_Character_Attributes(Standard_Window, Normal_Video);
-      refresh;
+      Set_Character_Attributes(Win, Normal_Video);
+      refresh(Win);
 
    end Update_Status;
 
@@ -1405,7 +1416,7 @@ package body Templates is
    end Fire_Lasers;
 
    TorpLockSave : Unbounded_String;
-   procedure torpedo_process is
+   procedure torpedo_process(Win : Window) is
       Torp_Impact_Time : Time;
       TorpImpactTimestamp,torp_lock : Unbounded_String;
 
@@ -1423,19 +1434,19 @@ package body Templates is
             Now := Clock;
             Next := Now + 1.0;
             Diff := Torp_Impact_Time - Now;
-            Set_Character_Attributes(Standard_Window, (Reverse_Video => True,Blink => True,others => False));
-            Add (Standard_Window,
-                 Line => 3,
+            Set_Character_Attributes(Win, (Reverse_Video => True,Blink => True,others => False));
+            Add (Win,
+                 Line => 0,
                  Column => 1,
                  Str => "Incoming Torpedo impact in ");
-            Set_Character_Attributes(Standard_Window, Normal_Video);
-            Add (Standard_Window,
-                 Line => 3,
+            Set_Character_Attributes(Win, Normal_Video);
+            Add (Win,
+                 Line => 0,
                  Column => 28,
                  Str => Image(Diff,Include_Time_Fraction => True) );
 
-            Clear_To_End_Of_Line;
-           -- refresh;
+            Clear_To_End_Of_Line(Win);
+            refresh(Win);
             delay until Next;
          end loop;
       end Torp_Animate;
@@ -1459,12 +1470,12 @@ package body Templates is
             Abort Torp_Animate;
             Torp_Impact_Time := Clock;
 
-            Add (Standard_Window,
-                 Line => 3,
+            Add (Win,
+                 Line => 0,
                  Column => 1,
                  Str => "Torpedo Exploding at " & Image(Torp_Impact_Time,True));
-            Clear_To_End_Of_Line;
-            refresh;
+            Clear_To_End_Of_Line(Win);
+            refresh(Win);
             -- Display_Warning.Warning("Torpedo Exploded On Ship",D => 3.0);
 
          end if;
@@ -1509,7 +1520,7 @@ package body Templates is
          Next : Time;
          D    : Duration := 1.0;
          Now : Time; -- := Clock;
-         Clock_Window : Window;
+         Clock_Window, Status_Window : Window;
 
       begin
          accept Start;
@@ -1517,10 +1528,17 @@ package body Templates is
                          Number_Of_Lines => 1,
                          Number_Of_Columns => 32,
                          First_Line_Position => 1,
-                         First_Column_Position => 70);
+                                    First_Column_Position => 73);
+
+         Status_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 70,
+                         First_Line_Position => 1,
+                         First_Column_Position => 1);
+
  --     -- Box(win1);
  --     Refresh(Win => win1);
-         Dbase.ShipDestroyed := False;
+
 
          loop
             Now := Clock;
@@ -1533,7 +1551,7 @@ package body Templates is
 
            -- exit when Dbase.ShipDestroyed;
 
-            Update_Status;
+            Update_Status(Status_Window);
 
             if not StopOverwrite then
              --  Recycle;
@@ -1570,11 +1588,19 @@ package body Templates is
          Next : Time;
          D    : Duration := 1.0;
          Now : Time; -- := Clock;
+         Torpedo_Track_Window : Window;
       begin
+
+         Torpedo_Track_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 70,
+                         First_Line_Position => 3,
+                         First_Column_Position => 1);
+
          loop
             Now := Clock;
             Next := Now + D;
-            torpedo_process;
+            torpedo_process(Torpedo_Track_Window);
 
             delay until Next;
 
@@ -1585,10 +1611,14 @@ package body Templates is
 
    begin
 
+      Damage_Rpt_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 100,
+                         First_Line_Position => 2,
+                         First_Column_Position => 1);
 
 
-
-      Add (Line => Lines - 2,Column => 1, Str => "1 Navig  |2 Engine |3 Radar  |4 Weapons|");
+      Add (Line => Lines - 2,Column => 1, Str => "1 Navig  |2 Engine |3 Radar  |4 Weapons| End Exit |");
       Refresh;
       Background_Processor.Start;
       loop
@@ -1615,18 +1645,25 @@ package body Templates is
                Process_Menu.Open_Menu (Function_Number => 4,Menu_Array => Navigation);
                when Key_F5 =>
                   Recycle;
+               when Key_End => exit;
 
             when others => null;
             end case;
          elsif c in Real_Key_Code'Range then
             case Character'Val (c) is
                when LF | CR =>  null;
-               when ESC => Exit;
+            --   when ESC => Exit;
                   when others => null;
             end case;
          end if;
       end loop;
+
       Dbase.ShipDestroyed := False;
+
+      Clear(Damage_Rpt_Window);
+      Refresh(Damage_Rpt_Window);
+      Delete (Win => Damage_Rpt_Window);
+
       Close_Page;
       Abort Background_Processor;
       abort Firing_Processor;
