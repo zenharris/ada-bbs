@@ -335,6 +335,9 @@ package body Dbase.Scroller is
          LineNum : Line_Position := 0;
          Heading : Unbounded_String := SQLQuery; -- DefList(0); --Message;
       begin
+
+
+
          Clear_Region;
          if not Scrl_Buffer.Is_Empty then
             curs2 := CurrentCurs;
@@ -369,14 +372,15 @@ package body Dbase.Scroller is
               Str => To_String(Heading));
          if AltFunctions then
             Add (Win,Line => TermLnth - 2,
-                 Column => 1, Str => "F5 ReRead  F6 Lasers  F7 Torpedo");
+                 Column => 1, Str => "F5 ReRead  F6 Lasers  F7 Torpedo  ESC exit");
          else
 
             Add (Win,Line => TermLnth - 2,
-                 Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead ");
+                 Column => 1, Str => "F2 Edit  F3 Activate  F4 New Ship  F5 ReRead  ESC exit ");
          end if;
             Clear_To_End_Of_Line(Win);
          Box(Win);
+
       end Redraw_Screen;
 
 

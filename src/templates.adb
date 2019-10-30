@@ -1000,7 +1000,7 @@ package body Templates is
 
          else
             Dbase.DB_Guns.Rollback;
-            Display_Warning.Warning("No Firing at Midway",D => 3.0);
+            Display_Warning.Warning("No Firing at Midway",D => 2.0);
 
          end if;
 
@@ -1118,7 +1118,7 @@ package body Templates is
       TermLnth : Line_Position;
       TermWdth : Column_Position;
       Display_Window : Window;
-      c : Key_Code;
+     -- c : Key_Code;
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQL, Damage_Report : Unbounded_String;
@@ -1282,24 +1282,27 @@ package body Templates is
                distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
                Now := Clock;
-               Add (Display_Window,
-                    Line => 7,
-                    Column => 1,
-                    Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance))) );
-               Add (Display_Window,
-                    Line => 8,
-                    Column => 1,
-                    Str => "at " & Image(Now,True));
+               Add (Damage_Rpt_Window,
+                    Line => 0,
+                    Column => 0,
+                    Str => Ada_Format.SPut ("Torp Det %f km away at %s",(F(Float(distance)),F(Image(Now,True))) ) );
+             --  Add (Damage_Rpt_Window,
+             --       Line => 0,
+             --       Column => 1,
+             --       Str => "at " & Image(Now,True));
 
-               refresh(Display_Window);
+               refresh(Damage_Rpt_Window);
+
                if distance < 200.0 then
+
                   Inflict_Damage(ShipID,500);
+
                else
-                Add (Display_Window,
-                    Line => 9,
-                    Column => 1,
-                     Str => "-No Damage-");
-                  refresh(Display_Window);
+                  Add (Damage_Rpt_Window,
+                       Line => 0,
+                       Column => 55,
+                       Str => "-No Damage-");
+                  refresh(Damage_Rpt_Window);
                end if;
 
             end if;
@@ -1319,7 +1322,7 @@ package body Templates is
 
       Abort Torp_Animate;
 
-      c := Texaco.GetKey;
+      -- c := Texaco.GetKey;
 
       Clear(Display_Window);
       Refresh(Display_Window);
@@ -1592,11 +1595,17 @@ package body Templates is
       begin
 
          Torpedo_Track_Window := Sub_Window(Win => Standard_Window,
-                         Number_Of_Lines => 1,
-                         Number_Of_Columns => 70,
-                         First_Line_Position => 3,
-                         First_Column_Position => 1);
+                                            Number_Of_Lines => 1,
+                                            Number_Of_Columns => 70,
+                                            First_Line_Position => 3,
+                                            First_Column_Position => 1);
 
+         Add (Torpedo_Track_Window,Line => 0,Column => 0,Str => "");
+         Clear_To_End_Of_Line(Torpedo_Track_Window);
+         --  Clear(Torpedo_Track_Window);
+         Refresh(Torpedo_Track_Window);
+
+         TorpLockSave := To_Unbounded_String("");
          loop
             Now := Clock;
             Next := Now + D;
