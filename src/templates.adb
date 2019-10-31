@@ -2,11 +2,14 @@ with Ada.Text_IO;            use Ada.Text_IO;
 with Display_Warning;
 with Dbase.Scroller;
 -- with Dbase.DrackSpace;
+with Extools; use Extools;
 
 package body Templates is
 
 
-  -- package Drack is new Dbase.DrackSpace;
+   -- package Drack is new Dbase.DrackSpace;
+
+
 
 
 
@@ -237,7 +240,7 @@ package body Templates is
 
             Clear(Display_Window);
             Box(Display_Window);
-            Refresh(Display_Window);
+            Refrosh(Display_Window);
          else
             Display_Warning.Warning("Terminal not wide enough");
             return False;
@@ -371,7 +374,7 @@ package body Templates is
               Line => 2,
               Column => 1,
               Str => To_String(SQLstatement));
-         refresh;
+         Refrosh;
       end if;
 
 
@@ -411,7 +414,7 @@ package body Templates is
               Line => 2,
               Column => 1,
               Str => To_String(SQLstatement));
-         refresh;
+         Refrosh;
       end if;
 
 
@@ -433,7 +436,7 @@ package body Templates is
               Str => To_String(Xlat_Line(Integer(i)+1,ScreenList.Element(Integer(i)),False )));
       end loop;
 
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
       Edit_Form;
 
@@ -480,7 +483,7 @@ package body Templates is
               Str => To_String(Xlat_Line(Integer(i)+1,ScreenList.Element(Integer(i)),False )));
       end loop;
       Box(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
 
    end Redraw_Page;
@@ -489,7 +492,7 @@ package body Templates is
    begin
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
       Delete (Win => Display_Window);
 
@@ -510,7 +513,7 @@ package body Templates is
     --          Line => 1,
     --          Column => 1,
     --       Str => To_String(SQLstatement));
-    --  refresh;
+    --  Refrosh;
 
       Stmt:= Prepare (To_String(SQLstatement));
 
@@ -558,7 +561,7 @@ package body Templates is
 
          Clear(Display_Window);
          Box(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
       else
          Display_Warning.Warning("Terminal not wide enough");
 
@@ -569,7 +572,7 @@ package body Templates is
               Line => 2,
               Column => 1,
            Str => "Dest X : ");
-      refresh(Display_Window);
+      Refrosh(Display_Window);
       destx := Current_Record(To_Unbounded_String("dest_x"));
       loop
          Texaco.Line_Editor(Display_Window,
@@ -588,7 +591,7 @@ package body Templates is
            Line => 3,
            Column => 1,
            Str => "Dest Y : ");
-      refresh(Display_Window);
+      Refrosh(Display_Window);
       desty := Current_Record(To_Unbounded_String("dest_y"));
       loop
          Texaco.Line_Editor(Display_Window,
@@ -605,7 +608,7 @@ package body Templates is
            Line => 4,
               Column => 1,
            Str => "Dest Z : ");
-      refresh(Display_Window);
+      Refrosh(Display_Window);
       destz := Current_Record(To_Unbounded_String("dest_z"));
       loop
          Texaco.Line_Editor(Display_Window,
@@ -641,7 +644,7 @@ package body Templates is
               Line => 2,
               Column => 1,
               Str => To_String(SQLstatement));
-         refresh;
+         Refrosh;
       end if;
 
 
@@ -658,14 +661,14 @@ package body Templates is
 
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
       Delete (Win => Display_Window);
 
    exception
       when CONSTRAINT_ERROR => null;
          Clear(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
          Delete (Win => Display_Window);
 
    end Set_Dest_Coords;
@@ -702,7 +705,7 @@ package body Templates is
 
          Clear(Display_Window);
          Box(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
       else
          Display_Warning.Warning("Terminal not wide enough");
       end if;
@@ -712,7 +715,7 @@ package body Templates is
            Line => 2,
            Column => 2,
            Str => "Spooling Up Jump Engine");
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       Set_Character_Attributes(Display_Window, Normal_Video);
 
       Now := Clock;
@@ -723,7 +726,7 @@ package body Templates is
            Line => 2,
            Column => 2,
            Str => "Jump Engine Ready To Jump");
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
 
       Set_Character_Attributes(Display_Window, (Reverse_Video => True,Blink => True,others => False));
@@ -731,7 +734,7 @@ package body Templates is
            Line => 3,
            Column => 2,
            Str => "Jump Underway");
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       Set_Character_Attributes(Display_Window, Normal_Video);
 
       Now := Clock;
@@ -741,7 +744,7 @@ package body Templates is
            Line => 3,
            Column => 2,
            Str => "Jump Completed");
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
     --  Now := Clock;
     --  Next := Now + D;
@@ -770,7 +773,7 @@ package body Templates is
               Line => 2,
               Column => 1,
            Str => To_String(SQLstatement));
-      refresh;
+      Refrosh;
       end if;
 
       Stmt:= Prepare (To_String(SQLstatement));
@@ -788,7 +791,7 @@ package body Templates is
 
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
       Delete (Win => Display_Window);
 
@@ -822,7 +825,7 @@ package body Templates is
      --        Line => 2,
      --        Column => 1,
      --     Str => To_String(L_AckStatement));
-     -- refresh;
+     -- Refrosh;
 
       Dbase.Scroller.Radar_Mode := True;
       Dbase.Scroller.Definition_Ptr := 1;
@@ -840,7 +843,9 @@ package body Templates is
 
    Damage_Rpt_Window : Window;
 
-   procedure Inflict_Damage (ShipID : Unbounded_String; DamageX : Integer := 1) is
+   procedure Inflict_Damage (ShipID : Unbounded_String;
+                             DamageX : Integer := 1;
+                             WeaponRange : Long_Long_Float := 200.0) is
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQLstatement, Damage_Report : Unbounded_String;
@@ -863,11 +868,11 @@ package body Templates is
     --          Line => 1,
     --          Column => 1,
     --       Str => To_String(SQLstatement));
-    --  refresh;
+    --  Refrosh;
 
       Stmt:= Prepare (To_String(SQLstatement));
 
-      CIB.Fetch (Dbase.DB_Guns, Stmt);
+      CIB.Fetch (Dbase.DB_Damage, Stmt);
 
       if CIB.Has_Row then
          navcom := Integer'Value(Fld(CIB,"navcom_funct"));
@@ -887,7 +892,7 @@ package body Templates is
          distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
          if (targx+targy+targz/=0.0) and then (locx+locy+locz/= 0.0) then
-            if DamageX>1 or else distance < 200.0 then
+            if distance < WeaponRange then
                -- Display_Warning.Warning(distance'Image);
 
                for i in 1..DamageX loop
@@ -966,21 +971,21 @@ package body Templates is
                     Column => 1,
                     Str => To_String(Damage_Report));
                Clear_To_End_Of_Line(Damage_Rpt_Window);
-               refresh(Damage_Rpt_Window);
+               Refrosh(Damage_Rpt_Window);
 
                Stmt:= Prepare (To_String(SQLstatement));
 
-               Dbase.DB_Guns.Execute(Stmt);
-               Dbase.DB_Guns.Commit;
+               Dbase.DB_Damage.Execute(Stmt);
+               Dbase.DB_Damage.Commit;
 
-               if not Dbase.DB_Guns.Success then
+               if not Dbase.DB_Damage.Success then
                   Display_Warning.Warning("Panic Damage Failed",D => 2.0);
                end if;
 
               delay until Next;
 
             else
-               Dbase.DB_Guns.Rollback;
+               Dbase.DB_Damage.Rollback;
 
                scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
 
@@ -993,13 +998,13 @@ package body Templates is
                     Column => 1,
                     Str => To_String(Damage_Report));
                Clear_To_End_Of_Line(Damage_Rpt_Window);
-               refresh(Damage_Rpt_Window);
+               Refrosh(Damage_Rpt_Window);
 
 
             end if;
 
          else
-            Dbase.DB_Guns.Rollback;
+            Dbase.DB_Damage.Rollback;
             Display_Warning.Warning("No Firing at Midway",D => 2.0);
 
          end if;
@@ -1105,9 +1110,10 @@ package body Templates is
                 Now_Sub_Second
                );
 
-
-
    end RdTimestamp;
+
+
+
 
 
    procedure Torpedo_Control (ShipID : Unbounded_String) is
@@ -1148,7 +1154,7 @@ package body Templates is
                  Column => 1,
                  Str => "Torp Running " & Image(Diff,Include_Time_Fraction => True) );
             Clear_To_End_Of_Line(Display_Window);
-            refresh(Display_Window);
+            refrosh(Display_Window);
             delay until Timer;
          end loop;
       end Torp_Animate;
@@ -1171,18 +1177,18 @@ package body Templates is
 
          Clear(Display_Window);
          Box(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
       else
          Display_Warning.Warning("Terminal not wide enough");
       end if;
 
       SQL := SQL &
-        "SELECT * FROM ships WHERE ship_id = " & ShipID;
+        "SELECT * FROM ships WHERE ship_id = " & ShipID &" FOR UPDATE";
 
 
       Stmt:= Prepare (To_String(SQL));
 
-      CIB.Fetch (Dbase.DB_Guns, Stmt);
+      CIB.Fetch (Dbase.DB_Torpedo, Stmt);
 
       if CIB.Has_Row then
        --  navcom := Integer'Value(Fld(CIB,"navcom_funct"));
@@ -1233,7 +1239,7 @@ package body Templates is
        --       Line => 6,
        --       Column => 1,
        --       Str =>  Image(Next) );
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
 
 
 
@@ -1246,20 +1252,22 @@ package body Templates is
 
          Stmt:= Prepare (To_String(SQL));
 
-         Dbase.DB_Guns.Execute(Stmt);
-         Dbase.DB_Guns.Commit;
+         Dbase.DB_Torpedo.Execute(Stmt);
+         Dbase.DB_Torpedo.Commit;
 
-         if not Dbase.DB_Guns.Success then
+         if not Dbase.DB_Torpedo.Success then
             Display_Warning.Warning("Torpedo Lock Failed",D => 2.0);
 
          else
 
-            Add (Standard_Window,
-                 Line => 2,
-                 Column => 1,
-                 Str => "" );
-            Clear_To_End_Of_Line;
-            refresh;
+          --  Add (Standard_Window,
+          --       Line => 2,
+          --       Column => 1,
+          --       Str => "" );
+          --  Clear_To_End_Of_Line;
+            Clear(Damage_Rpt_Window);
+            Refrosh(Damage_Rpt_Window);
+
 
             Torp_Animate.Start;
 
@@ -1272,7 +1280,7 @@ package body Templates is
 
             Stmt:= Prepare (To_String(SQL));
 
-            CIB.Fetch (Dbase.DB_Guns, Stmt);
+            CIB.Fetch (Dbase.DB_Torpedo, Stmt);
 
             if CIB.Has_Row then
                locx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
@@ -1284,25 +1292,25 @@ package body Templates is
                Now := Clock;
                Add (Damage_Rpt_Window,
                     Line => 0,
-                    Column => 0,
+                    Column => 1,
                     Str => Ada_Format.SPut ("Torp Det %f km away at %s",(F(Float(distance)),F(Image(Now,True))) ) );
              --  Add (Damage_Rpt_Window,
              --       Line => 0,
              --       Column => 1,
              --       Str => "at " & Image(Now,True));
 
-               refresh(Damage_Rpt_Window);
+               refrosh(Damage_Rpt_Window);
 
                if distance < 200.0 then
 
-                  Inflict_Damage(ShipID,500);
+                  Inflict_Damage(ShipID,500,WeaponRange => 10_000.0);
 
                else
                   Add (Damage_Rpt_Window,
                        Line => 0,
                        Column => 55,
                        Str => "-No Damage-");
-                  refresh(Damage_Rpt_Window);
+                  Refrosh(Damage_Rpt_Window);
                end if;
 
             end if;
@@ -1325,7 +1333,7 @@ package body Templates is
       -- c := Texaco.GetKey;
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
 
       Delete (Win => Display_Window);
    end Torpedo_Control;
@@ -1402,11 +1410,11 @@ package body Templates is
               Column => Column_Position(((i-1) * 12)+8),
               Str => Ada_Format.SPut ("%-4s",F(To_String(scratch))) );
 
-         refresh(Win);
+         Refrosh(Win);
 
       end loop;
       Set_Character_Attributes(Win, Normal_Video);
-      refresh(Win);
+      Refrosh(Win);
 
    end Update_Status;
 
@@ -1449,7 +1457,7 @@ package body Templates is
                  Str => Image(Diff,Include_Time_Fraction => True) );
 
             Clear_To_End_Of_Line(Win);
-            refresh(Win);
+            Refrosh(Win);
             delay until Next;
          end loop;
       end Torp_Animate;
@@ -1478,7 +1486,7 @@ package body Templates is
                  Column => 1,
                  Str => "Torpedo Exploding at " & Image(Torp_Impact_Time,True));
             Clear_To_End_Of_Line(Win);
-            refresh(Win);
+            Refrosh(Win);
             -- Display_Warning.Warning("Torpedo Exploded On Ship",D => 3.0);
 
          end if;
@@ -1540,7 +1548,7 @@ package body Templates is
                          First_Column_Position => 1);
 
  --     -- Box(win1);
- --     Refresh(Win => win1);
+ --     Refrosh(Win => win1);
 
 
          loop
@@ -1548,7 +1556,7 @@ package body Templates is
             Next := Now + D;
             -- Add (Win => Clock_Window,Line => 1,Column => 70,Str => Image (Now));
             Add (Win => Clock_Window,Line => 0,Column => 0,Str => Image (Now));
-            Refresh(Clock_Window);
+            Refrosh(Clock_Window);
 
             Recycle;
 
@@ -1560,13 +1568,12 @@ package body Templates is
              --  Recycle;
                Redraw_Page;
            -- else
-           --    Refresh(Display_Window);
+           --    Refrosh(Display_Window);
             end if;
 
             delay until Next;
          end loop;
 
-       --  raise Program_Error;
 
       exception
         when Program_Error =>
@@ -1582,7 +1589,7 @@ package body Templates is
 
          loop
             Firing_Queue.Dequeue(Element => Ship_ID);
-            Inflict_Damage(Ship_ID);
+            Inflict_Damage(Ship_ID,3,WeaponRange => 200.0);
          end loop;
 
       end Firing_Processor;
@@ -1600,10 +1607,10 @@ package body Templates is
                                             First_Line_Position => 3,
                                             First_Column_Position => 1);
 
-         Add (Torpedo_Track_Window,Line => 0,Column => 0,Str => "");
-         Clear_To_End_Of_Line(Torpedo_Track_Window);
-         --  Clear(Torpedo_Track_Window);
-         Refresh(Torpedo_Track_Window);
+       --  Add (Torpedo_Track_Window,Line => 0,Column => 0,Str => "");
+       --  Clear_To_End_Of_Line(Torpedo_Track_Window);
+         Clear(Torpedo_Track_Window);
+         Refrosh(Torpedo_Track_Window);
 
          TorpLockSave := To_Unbounded_String("");
          loop
@@ -1628,7 +1635,7 @@ package body Templates is
 
 
       Add (Line => Lines - 2,Column => 1, Str => "1 Navig  |2 Engine |3 Radar  |4 Weapons| End Exit |");
-      Refresh;
+      Refrosh;
       Background_Processor.Start;
       loop
          Redraw_Page;
@@ -1670,7 +1677,7 @@ package body Templates is
       Dbase.ShipDestroyed := False;
 
       Clear(Damage_Rpt_Window);
-      Refresh(Damage_Rpt_Window);
+      Refrosh(Damage_Rpt_Window);
       Delete (Win => Damage_Rpt_Window);
 
       Close_Page;

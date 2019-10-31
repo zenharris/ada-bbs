@@ -3,6 +3,7 @@ with Dbase.Login;
 
 with Templates;
 -- with Dbase.DrackSpace;
+with Extools; use Extools;
 
 
 package body Dbase.Scroller is
@@ -192,8 +193,11 @@ package body Dbase.Scroller is
                         Port => 5432
                        );
       DB := DB_Descr.Build_Connection;
+
       DB_Background := DB_Descr.Build_Connection;
-      DB_Guns := DB_Descr.Build_Connection;
+      DB_Damage := DB_Descr.Build_Connection;
+      DB_Torpedo := DB_Descr.Build_Connection;
+
       IsOpen := DB.Check_Connection;
       if IsOpen then
          Put_Line("Connection is open.");
@@ -214,8 +218,11 @@ package body Dbase.Scroller is
       Reset_Connection(DB_Background);
       Free (DB_Background);
 
-      Reset_Connection(DB_Guns);
-      Free (DB_Guns);
+      Reset_Connection(DB_Damage);
+      Free (DB_Damage);
+
+      Reset_Connection(DB_Torpedo);
+      Free (DB_Torpedo);
 
       Free (DB_Descr);
 
@@ -255,7 +262,7 @@ package body Dbase.Scroller is
          Move_Cursor(Display_Window,Line   => BottomLine,Column => 0);
          Insert_Line(Display_Window);
          Box(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
       end Scroll_Up;
 
       procedure Scroll_Down is
@@ -265,7 +272,7 @@ package body Dbase.Scroller is
          Move_Cursor(Display_Window,Line   => TopLine,Column => 0);
          Insert_Line(Display_Window);
          Box(Display_Window);
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
       end Scroll_Down;
 
       Procedure Clear_Region is
@@ -304,7 +311,7 @@ package body Dbase.Scroller is
               Line => Line_Num,
               Column => 2,
               Str => To_String(Prompt));
-         Refresh(Win);
+         Refrosh(Win);
          Set_Character_Attributes(Win, Normal_Video);
       end HiLite;
 
@@ -315,7 +322,7 @@ package body Dbase.Scroller is
               Line => Line_Num,
               Column => 2,
               Str => To_String(Prompt));
-         Refresh(Win);
+         Refrosh(Win);
       end LoLite;
 
       function Count_Back(Csr : Scrl_List.Cursor) return integer is
@@ -460,7 +467,7 @@ package body Dbase.Scroller is
 
             Clear(Display_Window);
             Box(Display_Window);
-            Refresh(Display_Window);
+            Refrosh(Display_Window);
 
             -- Clear;
 
@@ -476,7 +483,7 @@ package body Dbase.Scroller is
 
             Redraw_Screen(Display_Window);
 
-            Refresh(Display_Window);
+            Refrosh(Display_Window);
 
             loop
             if not Scrl_Buffer.Is_Empty then
@@ -620,7 +627,7 @@ package body Dbase.Scroller is
 
                         Clear(Display_Window);
                         Redraw_Screen(Display_Window);
-                        Refresh(Display_Window);
+                        Refrosh(Display_Window);
                      end if;
 
                   when Key_F5 =>
@@ -675,6 +682,14 @@ package body Dbase.Scroller is
                      if AltFunctions then
 
                         Display_Form.Torpedo_Control(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+
+
+                        Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
+                        CurrentCurs := Scrl_Buffer.First;
+                        while CurrentCurs /= Scrl_Buffer.Last loop
+                           exit when Element(CurrentCurs).ID = SaveID;
+                           CurrentCurs := Scrl_List.Next(CurrentCurs);
+                        end loop;
 
                         Clear(Display_Window);
                         Redraw_Screen(Display_Window);
@@ -771,7 +786,7 @@ package body Dbase.Scroller is
             Clear(Scrl_Buffer);
 
             Clear(Display_Window);
-            Refresh(Display_Window);
+            Refrosh(Display_Window);
 
             Delete (Win => Display_Window);
          else

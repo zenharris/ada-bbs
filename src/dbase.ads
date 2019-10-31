@@ -10,7 +10,8 @@ package Dbase is
 
    DB       : Database_Connection;
    DB_Background       : Database_Connection;
-   DB_Guns       : Database_Connection;
+   DB_Damage       : Database_Connection;
+   DB_Torpedo       : Database_Connection;
 
    MyLocX : Long_Long_Float := Long_Long_Float(0);
    MyLocY : Long_Long_Float := Long_Long_Float(0);

@@ -119,7 +119,9 @@ package Templates is
                         NewRecord : Boolean := False;
                         NoWindow : Boolean := False
                        ) return Boolean;
-   procedure Inflict_Damage (ShipID : Unbounded_String; DamageX : Integer := 1);
+   procedure Inflict_Damage (ShipID : Unbounded_String;
+                             DamageX : Integer := 1;
+                             WeaponRange : Long_Long_Float := 200.0);
    procedure Fire_Lasers (Ship_ID : Unbounded_String);
    procedure Torpedo_Control (ShipID : Unbounded_String);
 end Templates;

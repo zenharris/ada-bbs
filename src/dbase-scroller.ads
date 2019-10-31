@@ -14,7 +14,7 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
 with GNAT.Regpat; use GNAT.Regpat;
 
-with Templates;
+-- with Templates;
 -- with Dbase.DrackSpace;
 with Ada.Numerics.Generic_Elementary_Functions;
 
