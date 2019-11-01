@@ -953,9 +953,14 @@ package body Templates is
                     ",jmpeng_funct=" &jmpeng'Image& ",hull_value=" &hull'Image& " WHERE ship_id = " & ShipID;
 
                   scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
-                  Damage_Report := Damage_Report & "Damage To Ship "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
-                    ", Engine" &engine'Image& ",Navcom" &navcom'Image&
-                    ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+               --   Damage_Report := Damage_Report & "Damage To Ship "& ShipID & " Range "& scratch &" : Deflector" & deflect'Image &
+               --     ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+               --     ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+
+                   Damage_Report := Damage_Report & "Damage to "& ShipID & " : Dflctr" & deflect'Image &
+                    " Eng" &engine'Image& " Navcom" &navcom'Image&
+                    " Jmp Eng" &jmpeng'Image& " Hull" &hull'Image;
+
                else
 
                   SQLstatement := SQLstatement & "DELETE FROM ships WHERE ship_id = " & ShipID;
@@ -968,7 +973,7 @@ package body Templates is
 
                Add (Damage_Rpt_Window,
                     Line => 0,
-                    Column => 1,
+                    Column => 30,
                     Str => To_String(Damage_Report));
                Clear_To_End_Of_Line(Damage_Rpt_Window);
                Refrosh(Damage_Rpt_Window);
@@ -989,9 +994,11 @@ package body Templates is
 
                scratch := To_Unbounded_String(Ada_Format.SPut ("%f ",F(Float(distance))));
 
-               Damage_Report := Damage_Report & "Out Of Range"& scratch & " Ship ID "& ShipID&" : Deflector" & deflect'Image &
-                 ", Engine" &engine'Image& ",Navcom" &navcom'Image&
-                 ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+               Damage_Report := Damage_Report & "Out Of Range"& scratch;-- & " Ship ID "& ShipID&" : Deflector" & deflect'Image &
+                -- ", Engine" &engine'Image& ",Navcom" &navcom'Image&
+                -- ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
+
+
 
                Add (Damage_Rpt_Window,
                     Line => 0,
@@ -1121,9 +1128,9 @@ package body Templates is
       Width : Column_Position := 30;
       Length : Line_Position := 13;
 
-      TermLnth : Line_Position;
-      TermWdth : Column_Position;
-      Display_Window : Window;
+  --    TermLnth : Line_Position;
+  --    TermWdth : Column_Position;
+  --    Display_Window : Window;
      -- c : Key_Code;
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
@@ -1149,38 +1156,36 @@ package body Templates is
             Now := Clock;
             Timer := Now + 1.0;
             Diff := Next - Now;
-            Add (Display_Window,
-                 Line => 6,
+            Add (Damage_Rpt_Window,
+                 Line => 0,
                  Column => 1,
                  Str => "Torp Running " & Image(Diff,Include_Time_Fraction => True) );
-            Clear_To_End_Of_Line(Display_Window);
-            refrosh(Display_Window);
+            Clear_To_End_Of_Line(Damage_Rpt_Window);
+            refrosh(Damage_Rpt_Window);
             delay until Timer;
          end loop;
       end Torp_Animate;
 
 
 
-
-
    begin
 
-      Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+   --   Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
 
-      if Width < TermWdth then
+   --   if Width < TermWdth then
 
-         Display_Window := Sub_Window(Win => Standard_Window,
-                                      Number_Of_Lines => Length,
-                                      Number_Of_Columns => Width,
-                                      First_Line_Position => ((TermLnth - Length) / 2),
-                                      First_Column_Position => ((TermWdth - Width) / 2) + 28);
+   --      Display_Window := Sub_Window(Win => Standard_Window,
+   --                                   Number_Of_Lines => Length,
+   --                                   Number_Of_Columns => Width,
+   --                                   First_Line_Position => ((TermLnth - Length) / 2),
+   --                                   First_Column_Position => ((TermWdth - Width) / 2) + 28);
 
-         Clear(Display_Window);
-         Box(Display_Window);
-         Refrosh(Display_Window);
-      else
-         Display_Warning.Warning("Terminal not wide enough");
-      end if;
+   --      Clear(Display_Window);
+   --      Box(Display_Window);
+   --      Refrosh(Display_Window);
+   --   else
+   --      Display_Warning.Warning("Terminal not wide enough");
+   --   end if;
 
       SQL := SQL &
         "SELECT * FROM ships WHERE ship_id = " & ShipID &" FOR UPDATE";
@@ -1211,35 +1216,39 @@ package body Templates is
 
          timett := ((distance / 50000.0)*60.0)*60.0;
 
-         Add (Display_Window,
-              Line => 1,
-              Column => 1,
-              Str => " Firing on Ship "& To_String(ShipID) );
+ --        Add (Display_Window,
+ --             Line => 1,
+ --             Column => 1,
+ --             Str => " Firing on Ship "& To_String(ShipID) );
 
 
-         Add (Display_Window,
-              Line => 2,
-              Column => 1,
-              Str => Ada_Format.SPut ("Rtt %f km",F(Float(distance))) );
-         Add (Display_Window,
-              Line => 3,
-              Column => 1,
-              Str => Ada_Format.SPut ("Ttt %f Secs",F(Float(timett))) );
+ --        Add (Display_Window,
+ --             Line => 2,
+ --             Column => 1,
+ --             Str => Ada_Format.SPut ("Rtt %f km",F(Float(distance))) );
+ --        Add (Display_Window,
+ --             Line => 3,
+ --             Column => 1,
+ --             Str => Ada_Format.SPut ("Ttt %f Secs",F(Float(timett))) );
+
+
+
+
 
          Now := Clock;
          Next := Now + Duration(timett);
 
 
-         Add (Display_Window,
-              Line => 4,
-              Column => 1,
-              Str =>  MkTimestamp(Next) );
+   --      Add (Display_Window,
+   --           Line => 4,
+   --           Column => 1,
+   --           Str =>  MkTimestamp(Next) );
 
        --  Add (Display_Window,
        --       Line => 6,
        --       Column => 1,
        --       Str =>  Image(Next) );
-         Refrosh(Display_Window);
+   --      Refrosh(Display_Window);
 
 
 
@@ -1260,11 +1269,7 @@ package body Templates is
 
          else
 
-          --  Add (Standard_Window,
-          --       Line => 2,
-          --       Column => 1,
-          --       Str => "" );
-          --  Clear_To_End_Of_Line;
+
             Clear(Damage_Rpt_Window);
             Refrosh(Damage_Rpt_Window);
 
@@ -1272,6 +1277,8 @@ package body Templates is
             Torp_Animate.Start;
 
             delay until Next;
+
+            Abort Torp_Animate;
 
             SQL := To_Unbounded_String("");
             SQL := SQL &
@@ -1293,7 +1300,7 @@ package body Templates is
                Add (Damage_Rpt_Window,
                     Line => 0,
                     Column => 1,
-                    Str => Ada_Format.SPut ("Torp Det %f km away at %s",(F(Float(distance)),F(Image(Now,True))) ) );
+                    Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance)) ) );
              --  Add (Damage_Rpt_Window,
              --       Line => 0,
              --       Column => 1,
@@ -1308,7 +1315,7 @@ package body Templates is
                else
                   Add (Damage_Rpt_Window,
                        Line => 0,
-                       Column => 55,
+                       Column => 27,
                        Str => "-No Damage-");
                   Refrosh(Damage_Rpt_Window);
                end if;
@@ -1320,22 +1327,14 @@ package body Templates is
       end if;
 
 
-
-
-
-
-
-
-
-
-      Abort Torp_Animate;
+    --  Abort Torp_Animate;
 
       -- c := Texaco.GetKey;
 
-      Clear(Display_Window);
-      Refrosh(Display_Window);
+   --   Clear(Display_Window);
+   --   Refrosh(Display_Window);
 
-      Delete (Win => Display_Window);
+   --   Delete (Win => Display_Window);
    end Torpedo_Control;
 
 
@@ -1425,6 +1424,15 @@ package body Templates is
          Firing_Queue.Enqueue(New_Item => Ship_ID);
       end if;
    end Fire_Lasers;
+
+   procedure Fire_Torpedo (Ship_ID : Unbounded_String) is
+
+   begin
+      if Torpedo_Firing_Queue.Current_Use < 2 then
+         Torpedo_Firing_Queue.Enqueue(New_Item => Ship_ID);
+      end if;
+   end Fire_Torpedo;
+
 
    TorpLockSave : Unbounded_String;
    procedure torpedo_process(Win : Window) is
@@ -1525,6 +1533,7 @@ package body Templates is
       end Background_Processor;
 
       task Firing_Processor;
+      task Torpedo_Firing_Processor;
       task Torpedo_Processor;
 
       task body Background_Processor is
@@ -1589,10 +1598,25 @@ package body Templates is
 
          loop
             Firing_Queue.Dequeue(Element => Ship_ID);
+            Add (Damage_Rpt_Window,
+                    Line => 0,
+                    Column => 1,
+                    Str => Ada_Format.SPut ("Firing Lasers  at %s ",F(To_String(Ship_ID)) ) );
             Inflict_Damage(Ship_ID,3,WeaponRange => 200.0);
          end loop;
 
       end Firing_Processor;
+
+      task body Torpedo_Firing_Processor is
+         Ship_ID : Unbounded_String;
+      begin
+
+         loop
+            Torpedo_Firing_Queue.Dequeue(Element => Ship_ID);
+            Torpedo_Control(Ship_ID);
+         end loop;
+
+      end Torpedo_Firing_Processor;
 
       task body Torpedo_Processor is
          Next : Time;
@@ -1684,6 +1708,7 @@ package body Templates is
       Abort Background_Processor;
       abort Firing_Processor;
       abort Torpedo_Processor;
+      Abort Torpedo_Firing_Processor;
    exception
       when Program_Error =>
          Abort Background_Processor;

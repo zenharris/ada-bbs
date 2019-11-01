@@ -681,7 +681,7 @@ package body Dbase.Scroller is
 
                      if AltFunctions then
 
-                        Display_Form.Torpedo_Control(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+                        Display_Form.Fire_Torpedo(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
 
 
                         Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);
