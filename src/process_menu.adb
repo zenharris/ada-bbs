@@ -9,7 +9,7 @@ with Texaco;  -- For GetKey input function
 
 package body Process_Menu is
 
-   procedure Open_Menu (Function_Number : Column_Position; Menu_Array : Menu_Type) is
+   procedure Open_Menu (Function_Number : Column_Position; Menu_Array : Menu_Type; Win : Window := Standard_Window) is
       menu_win : Window;
       Ch :Character;
       Current_Line : Integer := 1;
@@ -41,8 +41,8 @@ package body Process_Menu is
 
 
    begin
-      Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns);
-      menu_win := Sub_Window(Win => Standard_Window,
+      Get_Size(Number_Of_Lines => Lines,Number_Of_Columns => Columns,Win => Win);
+      menu_win := Sub_Window(Win => Win, -- Standard_Window,
                              Number_Of_Lines => 10,
                              Number_Of_Columns => 20,
                              First_Line_Position => Lines -12,

@@ -3,6 +3,7 @@ with Display_Warning;
 with Dbase.Scroller;
 -- with Dbase.DrackSpace;
 with Extools; use Extools;
+-- with Process_Menu; use Process_Menu;
 
 package body Templates is
 
@@ -235,7 +236,7 @@ package body Templates is
             Display_Window := Sub_Window(Win => Standard_Window,
                                          Number_Of_Lines => Length,
                                          Number_Of_Columns => Width,
-                                         First_Line_Position => (TermLnth - Length) / 2,
+                                         First_Line_Position => ((TermLnth - Length) / 2)+2,
                                          First_Column_Position => (TermWdth - Width) / 2);
 
             Clear(Display_Window);
@@ -842,10 +843,15 @@ package body Templates is
    gen : Rand_Int.Generator;
 
    Damage_Rpt_Window : Window;
+   Tube1_Window : Window;
+   Tube2_Window : Window;
+
+
 
    procedure Inflict_Damage (ShipID : Unbounded_String;
                              DamageX : Integer := 1;
-                             WeaponRange : Long_Long_Float := 200.0) is
+                             WeaponRange : Long_Long_Float := 200.0;
+                             Win : Window) is
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
       SQLstatement, Damage_Report : Unbounded_String;
@@ -971,12 +977,12 @@ package body Templates is
 
 
 
-               Add (Damage_Rpt_Window,
+               Add (Win,
                     Line => 0,
                     Column => 30,
                     Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line(Damage_Rpt_Window);
-               Refrosh(Damage_Rpt_Window);
+               Clear_To_End_Of_Line(Win);
+               Refrosh(Win);
 
                Stmt:= Prepare (To_String(SQLstatement));
 
@@ -1000,12 +1006,12 @@ package body Templates is
 
 
 
-               Add (Damage_Rpt_Window,
+               Add (Win,
                     Line => 0,
                     Column => 1,
                     Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line(Damage_Rpt_Window);
-               Refrosh(Damage_Rpt_Window);
+               Clear_To_End_Of_Line(Win);
+               Refrosh(Win);
 
 
             end if;
@@ -1123,7 +1129,7 @@ package body Templates is
 
 
 
-   procedure Torpedo_Control (ShipID : Unbounded_String) is
+   procedure Torpedo_Control (ShipID : Unbounded_String; Win : Window) is
 
       Width : Column_Position := 30;
       Length : Line_Position := 13;
@@ -1156,12 +1162,12 @@ package body Templates is
             Now := Clock;
             Timer := Now + 1.0;
             Diff := Next - Now;
-            Add (Damage_Rpt_Window,
+            Add (Win,
                  Line => 0,
                  Column => 1,
                  Str => "Torp Running " & Image(Diff,Include_Time_Fraction => True) );
-            Clear_To_End_Of_Line(Damage_Rpt_Window);
-            refrosh(Damage_Rpt_Window);
+            Clear_To_End_Of_Line(Win);
+            refrosh(Win);
             delay until Timer;
          end loop;
       end Torp_Animate;
@@ -1270,8 +1276,8 @@ package body Templates is
          else
 
 
-            Clear(Damage_Rpt_Window);
-            Refrosh(Damage_Rpt_Window);
+            Clear(Win);
+            Refrosh(Win);
 
 
             Torp_Animate.Start;
@@ -1297,7 +1303,7 @@ package body Templates is
                distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
                Now := Clock;
-               Add (Damage_Rpt_Window,
+               Add (Win,
                     Line => 0,
                     Column => 1,
                     Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance)) ) );
@@ -1306,18 +1312,18 @@ package body Templates is
              --       Column => 1,
              --       Str => "at " & Image(Now,True));
 
-               refrosh(Damage_Rpt_Window);
+               refrosh(Win);
 
                if distance < 200.0 then
 
-                  Inflict_Damage(ShipID,500,WeaponRange => 10_000.0);
+                  Inflict_Damage(ShipID,500,WeaponRange => 10_000.0,Win => Win);
 
                else
-                  Add (Damage_Rpt_Window,
+                  Add (Win,
                        Line => 0,
                        Column => 27,
                        Str => "-No Damage-");
-                  Refrosh(Damage_Rpt_Window);
+                  Refrosh(Win);
                end if;
 
             end if;
@@ -1425,13 +1431,24 @@ package body Templates is
       end if;
    end Fire_Lasers;
 
+
+
+
    procedure Fire_Torpedo (Ship_ID : Unbounded_String) is
 
    begin
-      if Torpedo_Firing_Queue.Current_Use < 2 then
+      if Torpedo_Firing_Queue.Current_Use < 1 then
          Torpedo_Firing_Queue.Enqueue(New_Item => Ship_ID);
       end if;
    end Fire_Torpedo;
+
+   procedure Fire_Tube2_Torpedo (Ship_ID : Unbounded_String) is
+
+   begin
+      if Torpedo_Tube2_Firing_Queue.Current_Use < 1 then
+         Torpedo_Tube2_Firing_Queue.Enqueue(New_Item => Ship_ID);
+      end if;
+   end Fire_Tube2_Torpedo;
 
 
    TorpLockSave : Unbounded_String;
@@ -1533,7 +1550,7 @@ package body Templates is
       end Background_Processor;
 
       task Firing_Processor;
-      task Torpedo_Firing_Processor;
+
       task Torpedo_Processor;
 
       task body Background_Processor is
@@ -1602,10 +1619,12 @@ package body Templates is
                     Line => 0,
                     Column => 1,
                     Str => Ada_Format.SPut ("Firing Lasers  at %s ",F(To_String(Ship_ID)) ) );
-            Inflict_Damage(Ship_ID,3,WeaponRange => 200.0);
+            Inflict_Damage(Ship_ID,3,WeaponRange => 200.0,Win => Damage_Rpt_Window);
          end loop;
 
       end Firing_Processor;
+
+      task Torpedo_Firing_Processor;
 
       task body Torpedo_Firing_Processor is
          Ship_ID : Unbounded_String;
@@ -1613,10 +1632,27 @@ package body Templates is
 
          loop
             Torpedo_Firing_Queue.Dequeue(Element => Ship_ID);
-            Torpedo_Control(Ship_ID);
+            Torpedo_Control(Ship_ID,Tube1_Window);
          end loop;
 
       end Torpedo_Firing_Processor;
+
+      task Torpedo_Tube2_Firing_Processor;
+
+      task body Torpedo_Tube2_Firing_Processor is
+         Ship_ID : Unbounded_String;
+      begin
+
+         loop
+            Torpedo_Tube2_Firing_Queue.Dequeue(Element => Ship_ID);
+            Torpedo_Control(Ship_ID,Tube2_Window);
+         end loop;
+
+      end Torpedo_Tube2_Firing_Processor;
+
+
+
+
 
       task body Torpedo_Processor is
          Next : Time;
@@ -1631,8 +1667,7 @@ package body Templates is
                                             First_Line_Position => 3,
                                             First_Column_Position => 1);
 
-       --  Add (Torpedo_Track_Window,Line => 0,Column => 0,Str => "");
-       --  Clear_To_End_Of_Line(Torpedo_Track_Window);
+
          Clear(Torpedo_Track_Window);
          Refrosh(Torpedo_Track_Window);
 
@@ -1655,7 +1690,19 @@ package body Templates is
                          Number_Of_Lines => 1,
                          Number_Of_Columns => 100,
                          First_Line_Position => 2,
+                                      First_Column_Position => 1);
+
+      Tube1_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 100,
+                         First_Line_Position => 4,
+                                 First_Column_Position => 1);
+      Tube2_Window := Sub_Window(Win => Standard_Window,
+                         Number_Of_Lines => 1,
+                         Number_Of_Columns => 100,
+                         First_Line_Position => 5,
                          First_Column_Position => 1);
+
 
 
       Add (Line => Lines - 2,Column => 1, Str => "1 Navig  |2 Engine |3 Radar  |4 Weapons| End Exit |");
@@ -1709,6 +1756,7 @@ package body Templates is
       abort Firing_Processor;
       abort Torpedo_Processor;
       Abort Torpedo_Firing_Processor;
+      abort Torpedo_Tube2_Firing_Processor;
    exception
       when Program_Error =>
          Abort Background_Processor;

@@ -106,6 +106,7 @@ package Templates is
 
    Firing_Queue : Work_Item_Queues.Queue;
    Torpedo_Firing_Queue : Work_Item_Queues.Queue;
+   Torpedo_Tube2_Firing_Queue : Work_Item_Queues.Queue;
 
 
    procedure Redraw_Page ;
@@ -121,8 +122,10 @@ package Templates is
                        ) return Boolean;
    procedure Inflict_Damage (ShipID : Unbounded_String;
                              DamageX : Integer := 1;
-                             WeaponRange : Long_Long_Float := 200.0);
+                             WeaponRange : Long_Long_Float := 200.0;
+                             Win : Window);
    procedure Fire_Lasers (Ship_ID : Unbounded_String);
    procedure Fire_Torpedo (Ship_ID : Unbounded_String);
-   procedure Torpedo_Control (ShipID : Unbounded_String);
+   procedure Fire_Tube2_Torpedo (Ship_ID : Unbounded_String);
+   procedure Torpedo_Control (ShipID : Unbounded_String; Win : Window);
 end Templates;

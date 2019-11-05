@@ -4,6 +4,7 @@ with Dbase.Login;
 with Templates;
 -- with Dbase.DrackSpace;
 with Extools; use Extools;
+with Process_Menu;-- use Process_Menu;
 
 
 package body Dbase.Scroller is
@@ -680,8 +681,29 @@ package body Dbase.Scroller is
                      end if;
 
                      if AltFunctions then
+                        declare
 
-                        Display_Form.Fire_Torpedo(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+                           procedure Fire_Tube1 is
+                           begin
+                              Display_Form.Fire_Torpedo(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+                           end Fire_Tube1;
+
+                           procedure Fire_Tube2 is
+                           begin
+                              Display_Form.Fire_Tube2_Torpedo(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
+                           end Fire_Tube2;
+
+
+                           Torpedos : Process_Menu.Menu_Type  :=
+                             ((new String'("Fire Tube 1"),Fire_Tube1'Unrestricted_Access),
+                              (new String'("Fire Tube 2"),Fire_Tube2'Unrestricted_Access));
+                        begin
+
+                           Process_Menu.Open_Menu(5,Torpedos);
+
+                        end;
+
+                       -- Display_Form.Fire_Torpedo(To_Unbounded_String(Fld(CI,To_Unbounded_String("ship_id"))));
 
 
                         Read_Scroll(Scrl_Buffer,To_String(SQLQuery),CI,DefList);

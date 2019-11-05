@@ -14,6 +14,6 @@ package  Process_Menu is
    end record;
    type Menu_Type is array (Positive range <>) of Menu_Record;
 
-   procedure Open_Menu (Function_Number : Column_Position; Menu_Array : Menu_Type);
+   procedure Open_Menu (Function_Number : Column_Position; Menu_Array : Menu_Type; Win : Window := Standard_Window);
 
 end Process_Menu;
