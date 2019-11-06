@@ -1140,7 +1140,7 @@ package body Templates is
      -- c : Key_Code;
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
-      SQL, Damage_Report : Unbounded_String;
+      SQL, Damage_Report,dmgid : Unbounded_String;
     --  navcom,jmpeng,engine,deflect,hull : Integer;
       locx,locy,locz,targx,targy,targz,distance,timett : Long_Long_Float;
       torplock : Integer;
@@ -1287,46 +1287,67 @@ package body Templates is
             Abort Torp_Animate;
 
             SQL := To_Unbounded_String("");
-            SQL := SQL &
-              "SELECT * FROM ships WHERE ship_id = " & ShipID;
+           -- SQL := SQL &
+           --   "SELECT * FROM ships WHERE ship_id = " & ShipID;
+
+
+            SQL := SQL & "SELECT * FROM ships WHERE "
+              & "loc_x between "& targx'Image  &" - 200 AND "& targx'Image &" + 200"
+              & " AND loc_y between "& targy'Image &" - 200 AND " & targy'Image &" + 200"
+              & " AND loc_z between "& targz'Image &" - 200 AND " & targz'Image &" + 200";
+
 
 
             Stmt:= Prepare (To_String(SQL));
 
             CIB.Fetch (Dbase.DB_Torpedo, Stmt);
-
-            if CIB.Has_Row then
+            CIB.First;
+            while CIB.Has_Row loop
                locx := Long_Long_Float'Value(Fld(CIB,"loc_x"));
                locy := Long_Long_Float'Value(Fld(CIB,"loc_y"));
                locz := Long_Long_Float'Value(Fld(CIB,"loc_z"));
 
+               dmgid := To_Unbounded_String(Fld(CIB,"ship_id"));
+
+
                distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
                Now := Clock;
-               Add (Win,
-                    Line => 0,
-                    Column => 1,
-                    Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance)) ) );
-             --  Add (Damage_Rpt_Window,
-             --       Line => 0,
-             --       Column => 1,
-             --       Str => "at " & Image(Now,True));
 
-               refrosh(Win);
+
 
                if distance < 200.0 then
+                  if dmgid = ShipID then
+                     Add (Win,
+                          Line => 0,
+                          Column => 1,
+                          Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance)) ) );
+                     refrosh(Win);
 
-                  Inflict_Damage(ShipID,500,WeaponRange => 10_000.0,Win => Win);
+                     Inflict_Damage(dmgid,500,WeaponRange => 10_000.0,Win => Win);
+                  else
+                     Add (Damage_Rpt_Window,
+                          Line => 0,
+                          Column => 1,
+                          Str => "Collateral Damage");
+                     Refrosh(Damage_Rpt_Window);
+
+                     Inflict_Damage(dmgid,500,WeaponRange => 10_000.0,Win => Damage_Rpt_Window);
+                  end if;
+
 
                else
-                  Add (Win,
-                       Line => 0,
-                       Column => 27,
-                       Str => "-No Damage-");
-                  Refrosh(Win);
+                  null;
+              --    Add (Win,
+              --         Line => 0,
+              --         Column => 27,
+              --         Str => "-No Damage-");
+              --    Refrosh(Win);
+
                end if;
 
-            end if;
+               CIB.Next;
+            end loop;
 
          end if;
 
@@ -1435,7 +1456,6 @@ package body Templates is
 
 
    procedure Fire_Torpedo (Ship_ID : Unbounded_String) is
-
    begin
       if Torpedo_Firing_Queue.Current_Use < 1 then
          Torpedo_Firing_Queue.Enqueue(New_Item => Ship_ID);
@@ -1443,7 +1463,6 @@ package body Templates is
    end Fire_Torpedo;
 
    procedure Fire_Tube2_Torpedo (Ship_ID : Unbounded_String) is
-
    begin
       if Torpedo_Tube2_Firing_Queue.Current_Use < 1 then
          Torpedo_Tube2_Firing_Queue.Enqueue(New_Item => Ship_ID);
@@ -1573,9 +1592,6 @@ package body Templates is
                          First_Line_Position => 1,
                          First_Column_Position => 1);
 
- --     -- Box(win1);
- --     Refrosh(Win => win1);
-
 
          loop
             Now := Clock;
@@ -1687,21 +1703,21 @@ package body Templates is
    begin
 
       Damage_Rpt_Window := Sub_Window(Win => Standard_Window,
-                         Number_Of_Lines => 1,
-                         Number_Of_Columns => 100,
-                         First_Line_Position => 2,
+                                      Number_Of_Lines => 1,
+                                      Number_Of_Columns => 100,
+                                      First_Line_Position => 2,
                                       First_Column_Position => 1);
 
       Tube1_Window := Sub_Window(Win => Standard_Window,
-                         Number_Of_Lines => 1,
-                         Number_Of_Columns => 100,
-                         First_Line_Position => 4,
+                                 Number_Of_Lines => 1,
+                                 Number_Of_Columns => 100,
+                                 First_Line_Position => 4,
                                  First_Column_Position => 1);
       Tube2_Window := Sub_Window(Win => Standard_Window,
-                         Number_Of_Lines => 1,
-                         Number_Of_Columns => 100,
-                         First_Line_Position => 5,
-                         First_Column_Position => 1);
+                                 Number_Of_Lines => 1,
+                                 Number_Of_Columns => 100,
+                                 First_Line_Position => 5,
+                                 First_Column_Position => 1);
 
 
 
