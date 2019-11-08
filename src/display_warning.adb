@@ -1,4 +1,4 @@
-
+with Extools; use Extools;
 
 
 package body Display_Warning is
@@ -32,17 +32,17 @@ package body Display_Warning is
            Str => Message);
 
 
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       if D > 0.0 then
          delay until Next;
       else
          Add (Win => Display_Window,Column => 1,Line => 4,Str => "Any Key to Continue");
-         Refresh(Display_Window);
+         Refrosh(Display_Window);
          c := Get_Keystroke;
       end if;
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       Delete (Win => Display_Window);
    end;
 
@@ -73,7 +73,7 @@ package body Display_Warning is
 
 
       Add (Win => Display_Window,Column => 1,Line => 4,Str => "y/n Continue  Esc Cancel");
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       Cancel := False;
       loop
          c := Get_Keystroke;
@@ -94,7 +94,7 @@ package body Display_Warning is
 
 
       Clear(Display_Window);
-      Refresh(Display_Window);
+      Refrosh(Display_Window);
       Delete (Win => Display_Window);
       return retval;
    end;

@@ -6,6 +6,7 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 
 with Display_Warning; use Display_Warning;
 with Texaco;  -- For GetKey input function
+with Extools; use Extools;
 
 package body Process_Menu is
 
@@ -25,7 +26,7 @@ package body Process_Menu is
               Line => Line_Position(Item_Num),
               Column => 1,
               Str => Menu_Array(Item_Num).Prompt.all);
-         Refresh(Win);
+         Refrosh(Win);
       end HiLite;
 
       procedure LoLite (Win : Window; Menu_Array : Menu_Type; Item_Num : Integer) is
@@ -35,7 +36,7 @@ package body Process_Menu is
               Line => Line_Position(Item_Num),
               Column => 1,
               Str => Menu_Array(Item_Num).Prompt.all);
-         Refresh(Win);
+         Refrosh(Win);
       end LoLite;
 
 
@@ -56,7 +57,7 @@ package body Process_Menu is
               Column => 1,
               Str => Menu_Array(i).Prompt.all);
       end loop;
-      Refresh(Win => menu_win);
+      Refrosh(Win => menu_win);
 
       loop
          HiLite(menu_win,Menu_Array,Current_Line);
@@ -83,7 +84,7 @@ package body Process_Menu is
             when LF | CR =>
                begin
                   Clear(Win => menu_win);
-                  Refresh(menu_win);
+                  Refrosh(menu_win);
 
                   Menu_Array(Current_Line).Func.all;
 
@@ -99,7 +100,7 @@ package body Process_Menu is
 
       end loop;
       Clear(Win => menu_win);
-      Refresh(menu_win);
+      Refrosh(menu_win);
       Delete (Win => menu_win);
    end Open_Menu;
 end Process_Menu;

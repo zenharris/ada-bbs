@@ -804,11 +804,69 @@ package body Templates is
 
    L_Ack_Tail : string := ":null:%10s| %s => %s.%s.%s:ship_id:ship_name:loc_x:loc_y:loc_z:";
 
+   Report_Window : Window;
+   Report_CurLin : Line_Position := 1;
+   Report_Width : Column_Position := 40;
+   Report_Length : Line_Position := 21;
+
+   procedure Report_Print (OutLine : Unbounded_String) is
+      procedure ScrollUp is
+      begin
+         Move_Cursor(Report_Window,Line   => 1,Column => 0);
+         Delete_Line(Report_Window);
+         Move_Cursor(Report_Window,Line   => Report_Length-2,Column => 0);
+         Insert_Line(Report_Window);
+         Box(Report_Window);
+         Refrosh(Report_Window);
+      end ScrollUp;
+
+   begin
+      Add (Report_Window,
+           Line => Report_CurLin,
+           Column => 1,
+           Str => To_String(OutLine));
+      Clear_To_End_Of_Line(Report_Window);
+      Refrosh(Report_Window);
+
+      if Report_CurLin < Report_Length-2 then
+         Report_CurLin := Report_CurLin + 1;
+      else
+         ScrollUp;
+      end if;
+
+   end Report_Print;
+
+
    procedure Radar_Scan is
       RadRange : Long_Long_Float := Long_Long_Float(999999999999999999);
       XLocus,YLocus,ZLocus : Unbounded_String;
       L_AckStatement : Unbounded_String;
+
+
+      TermLnth : Line_Position;
+      TermWdth : Column_Position;
+
    begin
+
+
+      Get_Size(Standard_Window,Number_Of_Lines => TermLnth,Number_Of_Columns => TermWdth);
+
+      if Report_Width < TermWdth then
+
+         Report_Window := Sub_Window(Win => Standard_Window,
+                                      Number_Of_Lines => Report_Length,
+                                      Number_Of_Columns => Report_Width,
+                                      First_Line_Position => ((TermLnth - Report_Length) / 2)+4,
+                                      First_Column_Position => ((TermWdth - Report_Width) / 2) + 28);
+
+         Clear(Report_Window);
+         Box(Report_Window);
+         Refrosh(Report_Window);
+      else
+         Display_Warning.Warning("Terminal not wide enough");
+      end if;
+
+
 
       XLocus := Current_Record(To_Unbounded_String("loc_x"));
       YLocus := Current_Record(To_Unbounded_String("loc_y"));
@@ -829,10 +887,14 @@ package body Templates is
      -- Refrosh;
 
       Dbase.Scroller.Radar_Mode := True;
-      Dbase.Scroller.Definition_Ptr := 1;
-      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,Left => 15,AltFunctions => True);
+      Dbase.Scroller.Definition_Ptr := 2; --1;
+      Dbase.Scroller.Scroll(To_String(L_AckStatement),Down => 3,Left => 25,AltFunctions => True);
       Dbase.Scroller.Radar_Mode := False;
 
+      Clear(Report_Window);
+      Refrosh(Report_Window);
+
+      Delete (Win => Report_Window);
    end Radar_Scan;
 
 
@@ -896,6 +958,7 @@ package body Templates is
          targz := Long_Long_Float'Value(Fld(CIB,"loc_z"));
 
          distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
+         -- Display_Warning.Warning(distance'Image);
 
          if (targx+targy+targz/=0.0) and then (locx+locy+locz/= 0.0) then
             if distance < WeaponRange then
@@ -963,9 +1026,11 @@ package body Templates is
                --     ", Engine" &engine'Image& ",Navcom" &navcom'Image&
                --     ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
-                   Damage_Report := Damage_Report & "Damage to "& ShipID & " : Dflctr" & deflect'Image &
-                    " Eng" &engine'Image& " Navcom" &navcom'Image&
-                    " Jmp Eng" &jmpeng'Image& " Hull" &hull'Image;
+                 --  Damage_Report := Damage_Report & "Damage to "& ShipID & " : Dflctr" & deflect'Image &
+                 --   " Eng" &engine'Image& " Navcom" &navcom'Image&
+                 --   " Jmp Eng" &jmpeng'Image& " Hull" &hull'Image;
+
+                  Damage_Report := Damage_Report & "Damage "& ShipID & " : Dflctr" & deflect'Image & " Hull" &hull'Image;
 
                else
 
@@ -976,13 +1041,16 @@ package body Templates is
                end if;
 
 
-
-               Add (Win,
-                    Line => 0,
-                    Column => 30,
-                    Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line(Win);
-               Refrosh(Win);
+               if Win = Report_Window then
+                  Report_Print(Damage_Report);
+               else
+                  Add (Win,
+                       Line => 0,
+                       Column => 30,
+                       Str => To_String(Damage_Report));
+                  Clear_To_End_Of_Line(Win);
+                  Refrosh(Win);
+               end if;
 
                Stmt:= Prepare (To_String(SQLstatement));
 
@@ -1005,13 +1073,17 @@ package body Templates is
                 -- ",Jump Engine" &jmpeng'Image& ",Hull" &hull'Image;
 
 
+               if Win = Report_Window then
+                  Report_Print(Damage_Report);
+               else
 
-               Add (Win,
-                    Line => 0,
-                    Column => 1,
-                    Str => To_String(Damage_Report));
-               Clear_To_End_Of_Line(Win);
-               Refrosh(Win);
+                  Add (Win,
+                       Line => 0,
+                       Column => 1,
+                       Str => To_String(Damage_Report));
+                  Clear_To_End_Of_Line(Win);
+                  Refrosh(Win);
+               end if;
 
 
             end if;
@@ -1140,13 +1212,16 @@ package body Templates is
      -- c : Key_Code;
       Stmt : Prepared_Statement;
       CIB : Direct_Cursor;
-      SQL, Damage_Report,dmgid : Unbounded_String;
+      SQL, Damage_Report,dmgid,OutStr : Unbounded_String;
     --  navcom,jmpeng,engine,deflect,hull : Integer;
       locx,locy,locz,targx,targy,targz,distance,timett : Long_Long_Float;
-      torplock : Integer;
+      torplock,DamageFactor : Integer;
       D    : Duration := 0.4;
       Now : Time := Clock;
       Next : Time := Now + D;
+      MaxDamage : CONSTANT Long_Long_Float := 500.0;
+      MaxDamageRange : CONSTANT Long_Long_Float := 200.0;
+     -- OutWin : Window;
 
       task Torp_Animate is
          entry Start;
@@ -1296,8 +1371,6 @@ package body Templates is
               & " AND loc_y between "& targy'Image &" - 200 AND " & targy'Image &" + 200"
               & " AND loc_z between "& targz'Image &" - 200 AND " & targz'Image &" + 200";
 
-
-
             Stmt:= Prepare (To_String(SQL));
 
             CIB.Fetch (Dbase.DB_Torpedo, Stmt);
@@ -1309,14 +1382,11 @@ package body Templates is
 
                dmgid := To_Unbounded_String(Fld(CIB,"ship_id"));
 
-
                distance := Value_Functions.Sqrt(((locx - targx)**2) + ((locy-targy)**2) + ((locz-targz)**2));
 
                Now := Clock;
 
-
-
-               if distance < 200.0 then
+               if distance < MaxDamageRange then
                   if dmgid = ShipID then
                      Add (Win,
                           Line => 0,
@@ -1324,31 +1394,55 @@ package body Templates is
                           Str => Ada_Format.SPut ("Torp Det %f km away",F(Float(distance)) ) );
                      refrosh(Win);
 
-                     Inflict_Damage(dmgid,500,WeaponRange => 10_000.0,Win => Win);
+                     DamageFactor := Integer  ( MaxDamage - ( (MaxDamage/MaxDamageRange)*distance ) );
+
+                     Inflict_Damage(dmgid,DamageFactor,WeaponRange => 10_000.0,Win => Win);
                   else
-                     Add (Damage_Rpt_Window,
-                          Line => 0,
-                          Column => 1,
-                          Str => "Collateral Damage");
-                     Refrosh(Damage_Rpt_Window);
+                   --  Add (Damage_Rpt_Window,
+                   --       Line => 0,
+                   --       Column => 1,
+                   --       Str => Ada_Format.SPut ("Collateral %f km away",F(Float(distance)) ) );
+                   --  Refrosh(Damage_Rpt_Window);
 
-                     Inflict_Damage(dmgid,500,WeaponRange => 10_000.0,Win => Damage_Rpt_Window);
+                     Report_Print(To_Unbounded_String(Ada_Format.SPut ("Collateral %f km away",F(Float(distance)) ) ));
+
+                     DamageFactor := Integer( MaxDamage -  ((MaxDamage/MaxDamageRange)*distance)   );
+
+                     Inflict_Damage(dmgid,DamageFactor,WeaponRange => 10_000.0,Win => Report_Window);
                   end if;
-
 
                else
                   null;
-              --    Add (Win,
-              --         Line => 0,
-              --         Column => 27,
-              --         Str => "-No Damage-");
-              --    Refrosh(Win);
+                  OutStr := To_Unbounded_String(Ada_Format.SPut ("RangeTo %s %f km -No Damage-",
+                                                (F(To_String(dmgid)),F(Float(distance))) ));
+
+                  if dmgid = ShipID then
+                     --  OutWin := Win;
+
+                     Add (Win,
+                          Line => 0,
+                          Column => 1,
+                          Str => To_String(OutStr) );
+
+                     refrosh(Win);
+
+                  else
+                     -- OutWin := Damage_Rpt_Window;
+                     Report_Print(OutStr);
+                  end if;
+
+
+             --     Add (Win,
+             --          Line => 0,
+             --          Column => 27,
+             --          Str => "-No Damage-");
+             --     Refrosh(Win);
 
                end if;
 
                CIB.Next;
             end loop;
-
+            Report_Print(To_Unbounded_String(" ----------- "));
          end if;
 
       end if;
